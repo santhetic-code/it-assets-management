@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+pymysql
+jinja2
+python-multipart
+bcrypt
+PyJWT
+cryptography
+python-dotenv
+pandas
+openpyxl
+qrcode
+Pillow

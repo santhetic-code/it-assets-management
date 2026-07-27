@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Catatan IT - ITAM Pro{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Catatan Inventaris IT</h3>
+        <span class="text-muted small fw-semibold">Kelola aset fisik, tag, dan kepemilikan perangkat.</span>
+    </div>
+</div>
+
+<div class="card-custom border-top border-primary border-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-plus-square-fill text-primary me-2"></i>Registrasi Aset Baru</h6>
+        <button class="btn btn-sm btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#importMassalModal">
+            <i class="bi bi-file-earmark-excel-fill me-1"></i> Import Massal
+        </button>
+    </div>
+    <form id="formAsset" autocomplete="off">
+        <div class="row g-3 mb-3">
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Tag Aset / Kode</label><input type="text" id="tag" class="form-control" placeholder="Cth: LPT-001" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Nama Aset / Perangkat</label><input type="text" id="nama" class="form-control" placeholder="Cth: Lenovo ThinkPad T14" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kategori</label>
+                <select id="kategori" class="form-select" required>
+                    <option value="">-- Pilih Kategori --</option>
+                    <option value="Server">Server</option><option value="PC">PC</option><option value="Laptop">Laptop</option><option value="Router">Router / Switch</option>
+                    <option value="Monitor">Monitor</option><option value="SSD/HDD">SSD / HDD</option><option value="Keyboard">Keyboard</option><option value="Mouse">Mouse</option><option value="Printer">Printer / Scanner</option>
+                    <option value="AC">AC (Air Conditioner)</option><option value="Kendaraan">Kendaraan (Motor/Mobil)</option><option value="Fasilitas">Fasilitas Lainnya</option>
+                </select>
+            </div>
+            <div class="col-md-4"><label class="form-label small fw-bold text-muted">SN / PID (Serial Number)</label><input type="text" id="sn" class="form-control" required></div>
+        </div>
+        <div class="row g-3 align-items-end mb-3">
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Di Gunakan Oleh</label><input type="text" id="assigned_to" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Lokasi Aset</label><input type="text" id="lokasi" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Kondisi Fisik</label><select id="kondisi" class="form-select"><option value="Baru">Baru</option><option value="Bekas (Normal)">Bekas (Normal)</option><option value="Rusak">Rusak</option></select></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Status</label><select id="status" class="form-select"><option value="Digunakan">Digunakan</option><option value="Standby / Gudang">Standby / Gudang</option><option value="Service">Service</option></select></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">Simpan Data</button></div>
+        </div>
+    </form>
+</div>
+
+<div class="card-custom">
+    <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-table text-dark me-2"></i>Daftar Master Aset</h6>
+    <div class="table-responsive">
+        <table id="tabelAset" class="table table-hover align-middle">
+            <thead>
+                <tr><th>Tag Aset</th><th>Nama Perangkat</th><th>Kategori</th><th>SN / PID</th><th>Di Gunakan Oleh</th><th>Lokasi</th><th>Kondisi</th><th>Status</th><th>Aksi</th></tr>
+            </thead>
+            <tbody>
+                {% for asset in assets %}
+                <tr>
+                    <td><span class="badge bg-light text-dark border">{{ asset.asset_tag }}</span></td>
+                    <td class="fw-bold text-dark">{{ asset.name }}</td><td>{{ asset.category }}</td>
+                    <td><code class="text-primary bg-primary bg-opacity-10 px-2 py-1 rounded">{{ asset.serial_number }}</code></td>
+                    <td><i class="bi bi-person-fill text-success me-1"></i> {{ asset.assigned_to }}</td><td>{{ asset.location }}</td>
+                    <td>{% if asset.condition == 'Rusak' %}<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Rusak</span>{% else %}<span class="text-success">{{ asset.condition }}</span>{% endif %}</td>
+                    <td><span class="badge bg-secondary rounded-pill">{{ asset.usage_status }}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ asset.id }}', '{{ asset.asset_tag }}', '{{ asset.name }}', '{{ asset.category }}', '{{ asset.serial_number }}', '{{ asset.assigned_to }}', '{{ asset.location }}', '{{ asset.condition }}', '{{ asset.usage_status }}')"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-light text-dark border" onclick="printQR('{{ asset.asset_tag }}', '{{ asset.name }}')" title="Cetak QR"><i class="bi bi-qr-code"></i></button>
+                        <button class="btn btn-sm btn-light text-danger" onclick="deleteAsset({{ asset.id }})"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<div class="modal fade" id="editAssetModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Data Aset</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form id="formEditAsset" autocomplete="off">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_id">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Tag Aset / Kode</label><input type="text" id="edit_tag" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Nama Aset</label><input type="text" id="edit_nama" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Kategori</label>
+                            <select id="edit_kategori" class="form-select" required>
+                                <option value="Server">Server</option><option value="PC">PC</option><option value="Laptop">Laptop</option><option value="Router">Router / Switch</option>
+                                <option value="Monitor">Monitor</option><option value="SSD/HDD">SSD / HDD</option><option value="Keyboard">Keyboard</option><option value="Mouse">Mouse</option><option value="Printer">Printer / Scanner</option>
+                                <option value="AC">AC (Air Conditioner)</option><option value="Kendaraan">Kendaraan (Motor/Mobil)</option><option value="Fasilitas">Fasilitas Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6"><label class="form-label small fw-bold text-muted">SN / PID (Serial Number)</label><input type="text" id="edit_sn" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold text-muted">Di Gunakan Oleh</label><input type="text" id="edit_assigned_to" class="form-control" required></div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Lokasi Aset</label><input type="text" id="edit_lokasi" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Kondisi</label><select id="edit_kondisi" class="form-select"><option value="Baru">Baru</option><option value="Bekas (Normal)">Bekas (Normal)</option><option value="Rusak">Rusak</option></select></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Status</label><select id="edit_status" class="form-select"><option value="Digunakan">Digunakan</option><option value="Standby / Gudang">Standby / Gudang</option><option value="Service">Service</option></select></div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary fw-bold">Simpan Perubahan</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importMassalModal" tabindex="-1" aria-labelledby="importMassalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="importMassalModalLabel"><i class="bi bi-file-earmark-excel-fill text-success me-2"></i>Import Massal Aset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formImportAssets" autocomplete="off">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="import_file" class="form-label small fw-bold text-muted">Pilih File CSV / Excel</label>
+                        <input class="form-control" type="file" id="import_file" accept=".csv,.xlsx,.xls" required>
+                    </div>
+                    <div class="alert alert-info small mb-0">
+                        Format yang diterima: CSV atau Excel (.xlsx/.xls). Kolom yang dipakai: Tag Aset, Nama Perangkat, Kategori, SN, Pengguna, Lokasi.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success fw-bold">Impor Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    
+
+    $(document).ready(function() {
+        $('#tabelAset').DataTable({
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+            buttons: [
+                { extend: 'excelHtml5', className: 'btn btn-sm btn-success', text: '<i class="bi bi-file-earmark-excel"></i> Excel', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] } },
+                { extend: 'pdfHtml5', className: 'btn btn-sm btn-danger ms-2', text: '<i class="bi bi-file-earmark-pdf"></i> PDF', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }, orientation: 'landscape' },
+                { extend: 'print', className: 'btn btn-sm btn-secondary ms-2', text: '<i class="bi bi-printer"></i> Print', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] } }
+            ],
+            language: { search: "_INPUT_", searchPlaceholder: "Cari data aset..." },
+            
+            // 👇 PERUBAHAN UNTUK FITUR SCROLL VERTIKAL 👇
+            scrollY: '450px',        // Menentukan tinggi maksimal tabel (bisa disesuaikan)
+            scrollCollapse: true,    // Tinggi tabel akan mengecil otomatis jika data sedikit
+            pageLength: 50,          // Langsung menampilkan 50 baris per halaman (bukan 10)
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]] // Menu dropdown jumlah baris
+        });
+    });
+
+    document.getElementById('formAsset').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = { asset_tag: document.getElementById('tag').value, name: document.getElementById('nama').value, category: document.getElementById('kategori').value, serial_number: document.getElementById('sn').value, assigned_to: document.getElementById('assigned_to').value, location: document.getElementById('lokasi').value, condition: document.getElementById('kondisi').value, usage_status: document.getElementById('status').value };
+        try {
+            const response = await fetch('/assets/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) window.location.reload();
+            else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan data aset.' });
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+        }
+    });
+
+    async function deleteAsset(id) {
+        if (confirm("Yakin ingin menghapus aset ini?")) {
+            try {
+                const response = await fetch(`/assets/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
+                });
+                if (response.ok) window.location.reload();
+                else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menghapus data.' });
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+            }
+        }
+    }
+
+    const editModal = new bootstrap.Modal(document.getElementById('editAssetModal'));
+    function openEditModal(id, tag, name, cat, sn, assigned, loc, cond, status) {
+        document.getElementById('edit_id').value = id; document.getElementById('edit_tag').value = tag; document.getElementById('edit_nama').value = name; document.getElementById('edit_kategori').value = cat; document.getElementById('edit_sn').value = sn; document.getElementById('edit_assigned_to').value = assigned; document.getElementById('edit_lokasi').value = loc; document.getElementById('edit_kondisi').value = cond; document.getElementById('edit_status').value = status;
+        editModal.show();
+    }
+
+    document.getElementById('formEditAsset').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit_id').value;
+        const data = { asset_tag: document.getElementById('edit_tag').value, name: document.getElementById('edit_nama').value, category: document.getElementById('edit_kategori').value, serial_number: document.getElementById('edit_sn').value, assigned_to: document.getElementById('edit_assigned_to').value, location: document.getElementById('edit_lokasi').value, condition: document.getElementById('edit_kondisi').value, usage_status: document.getElementById('edit_status').value };
+        try {
+            const response = await fetch(`/assets/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) window.location.reload();
+            else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memperbarui data.' });
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+        }
+    });
+
+    document.getElementById('formImportAssets').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('file', document.getElementById('import_file').files[0]);
+        formData.append('csrf_token', csrfToken);
+
+        try {
+            const response = await fetch('/assets/import/', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': csrfToken },
+                body: formData
+            });
+            
+            if (response.ok) {
+                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data massal sukses diimpor.' }).then(() => window.location.reload());
+            } else {
+                // PERBAIKAN: Tangkap pesan error asli dari FastAPI
+                const errData = await response.json();
+                Swal.fire({ icon: 'error', title: 'Gagal Impor', text: errData.detail || 'Terjadi kesalahan sistem.' });
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Koneksi ke server terputus.' });
+        }
+    });
+
+    function printQR(assetTag, assetName) {
+        const printWindow = window.open('', '_blank', 'width=400,height=400');
+        printWindow.document.write(`
+            <html><head><title>Print QR - ${assetTag}</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+                .label-box { border: 2px solid #000; padding: 20px; display: inline-block; border-radius: 10px; }
+                h2 { margin: 0 0 10px 0; font-size: 24px; }
+                p { margin: 0 0 15px 0; font-size: 14px; color: #555; }
+                img { width: 160px; height: 160px; }
+            </style>
+            </head><body>
+            <div class="label-box">
+                <h2>${assetTag}</h2>
+                <p>${assetName}</p>
+                <img src="/api/qr/${assetTag}" alt="QR Code" onload="window.print(); window.close();" />
+            </div>
+            </body></html>
+        `);
+        printWindow.document.close();
+    }
+</script>
+{% endblock %}

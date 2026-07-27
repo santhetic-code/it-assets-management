@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}IP Jaringan - ITAM Pro{% endblock %}
+
+{% block content %}
+    <!-- AREA JUDUL (HEADER) -->
+<div class="d-flex flex-column mb-4 mt-2">
+    <h2 class="fw-bolder text-dark mb-1">Manajemen IP Jaringan</h2>
+    <span class="text-muted fw-semibold" style="font-size: 0.95rem;">
+        Alokasi IP Address, Subnet, dan Identifikasi Pengguna.
+    </span>
+</div>
+
+<div class="card-custom border-top border-info border-4">
+    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-node-plus-fill text-info me-2"></i>Alokasi IP Baru</h6>
+    <form id="formNetwork" autocomplete="off">
+        <div class="row g-3 mb-3">
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">IP Address</label><input type="text" id="ip_address" class="form-control text-primary fw-bold" required></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Tipe IP</label><select id="ip_type" class="form-select" required><option value="Operasional">Operasional</option><option value="Server">Server</option><option value="Lainnya">Lainnya</option></select></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Di Gunakan Oleh</label><input type="text" id="assigned_to" class="form-control" required></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Status</label><select id="status" class="form-select"><option value="Aktif">Aktif</option><option value="Reserved">Reserved (Dipesan)</option><option value="Offline">Offline</option></select></div>
+            <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-info text-white w-100 fw-bold shadow-sm">Simpan IP</button></div>
+        </div>
+    </form>
+</div>
+
+<div class="card-custom mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Visualisasi Subnet (192.168.1.X)</h6>
+        <div>
+            <span class="badge bg-success me-1">Aktif</span>
+            <span class="badge bg-warning text-dark me-1">Reserved</span>
+            <span class="badge bg-danger me-1">Offline</span>
+            <span class="badge bg-light text-dark border">Tersedia</span>
+        </div>
+    </div>
+    <div id="ipGridMap" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px;"></div>
+</div>
+
+<div class="card-custom">
+    <div class="table-responsive">
+        <table id="tabelIp" class="table table-hover align-middle">
+            <thead><tr><th>Alamat IP</th><th>Tipe Jaringan</th><th>Di Gunakan Oleh</th><th>Status Koneksi</th><th>Aksi</th></tr></thead>
+            <tbody>
+                {% for ip in ips %}
+                <tr>
+                    <td><code class="fs-6 text-primary bg-primary bg-opacity-10 px-2 py-1 rounded fw-bold">{{ ip.ip_address }}</code></td>
+                    <td>{% if ip.ip_type == 'Server' %}<span class="badge bg-purple text-purple bg-opacity-10 border border-purple px-2 py-1" style="color: #8e24aa; border-color: #8e24aa;"><i class="bi bi-server"></i> Server</span>{% else %}<span class="badge bg-info text-info bg-opacity-10 border border-info px-2 py-1"><i class="bi bi-pc-display"></i> Operasional</span>{% endif %}</td>
+                    <td class="fw-bold text-dark"><i class="bi bi-person-fill text-success me-1"></i> {{ ip.assigned_to }}</td>
+                    <td>{% if ip.status == 'Aktif' %}<span class="badge bg-success rounded-pill px-3">Aktif</span>{% elif ip.status == 'Reserved' %}<span class="badge bg-warning text-dark rounded-pill px-3">Reserved</span>{% else %}<span class="badge bg-danger rounded-pill px-3">Offline</span>{% endif %}</td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ ip.id }}', '{{ ip.ip_address }}', '{{ ip.ip_type }}', '{{ ip.assigned_to }}', '{{ ip.status }}')"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-light text-danger" onclick="deleteIp('{{ ip.id }}')"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<div class="modal fade" id="editIpModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-info me-2"></i>Edit Alokasi IP</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form id="formEditIp" autocomplete="off">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_id">
+                    <div class="mb-3"><label class="form-label small fw-bold text-muted">IP Address</label><input type="text" id="edit_ip_address" class="form-control text-primary fw-bold" required></div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-muted">Tipe IP</label><select id="edit_ip_type" class="form-select" required><option value="Operasional">Operasional</option><option value="Server">Server</option><option value="Lainnya">Lainnya</option></select></div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-muted">Di Gunakan Oleh</label><input type="text" id="edit_assigned_to" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-muted">Status</label><select id="edit_status" class="form-select"><option value="Aktif">Aktif</option><option value="Reserved">Reserved</option><option value="Offline">Offline</option></select></div>
+                </div>
+                <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-info text-white fw-bold">Simpan</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 0. Inisiasi Token CSRF Global untuk halaman ini
+ 
+const activeIps = [
+    {% for ip in ips %}
+    { address: "{{ ip.ip_address }}", status: "{{ ip.status }}" },
+    {% endfor %}
+];
+
+function renderIpMap() {
+    const gridContainer = document.getElementById('ipGridMap');
+    const baseIp = "192.168.1.";
+
+    for (let i = 1; i <= 254; i++) {
+        let currentIp = baseIp + i;
+        let found = activeIps.find(ip => ip.address === currentIp);
+
+        let colorClass = "bg-light text-dark border";
+        let tooltipText = "Tersedia";
+
+        if (found) {
+            if (found.status === 'Aktif') { colorClass = "bg-success text-white"; tooltipText = "Aktif"; }
+            else if (found.status === 'Reserved') { colorClass = "bg-warning text-dark"; tooltipText = "Reserved"; }
+            else { colorClass = "bg-danger text-white"; tooltipText = "Offline"; }
+        }
+
+        const box = document.createElement('div');
+        box.className = `p-1 rounded text-center small fw-bold shadow-sm ${colorClass}`;
+        box.style.cursor = "pointer";
+        box.style.fontSize = "0.75rem";
+        box.title = `${currentIp} - ${tooltipText}`;
+        box.innerText = i;
+        gridContainer.appendChild(box);
+    }
+}
+
+$(document).ready(function() {
+    renderIpMap();
+    // Pastikan ID tabelnya sesuai dengan ID di HTML Anda
+    $('#tabelIp').DataTable({
+        // 1. Kustomisasi Tombol Export agar terlihat rapi ala Bootstrap
+        buttons: [
+            { extend: 'excel', className: 'btn btn-sm btn-success fw-bold shadow-sm' },
+            { extend: 'pdf', className: 'btn btn-sm btn-danger fw-bold shadow-sm' },
+            { extend: 'print', className: 'btn btn-sm btn-secondary fw-bold shadow-sm' }
+        ],
+        // 2. DOM Layout: Kunci rahasia untuk menyusun posisi elemen tabel
+        dom: "<'row mb-3'<'col-md-6 d-flex align-items-center'B><'col-md-6 d-flex justify-content-end align-items-center'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
+        // 3. Pengaturan Scroll Vertikal
+        scrollY: "550px", 
+        scrollCollapse: true,
+        // 4. Panjang Halaman
+        pageLength: 50,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+        language: { search: "_INPUT_", searchPlaceholder: "Cari IP atau Pengguna..." }
+    });
+});
+
+// 1. FUNGSI CREATE: Event Listener untuk formNetwork
+document.getElementById('formNetwork').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        ip_address: document.getElementById('ip_address').value,
+        ip_type: document.getElementById('ip_type').value,
+        assigned_to: document.getElementById('assigned_to').value,
+        status: document.getElementById('status').value
+    };
+    try {
+        const response = await fetch('/ips/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
+            body: JSON.stringify(data)
+        });
+        if (response.ok) window.location.reload();
+        else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan alokasi IP baru.' });
+    } catch (error) { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' }); }
+});
+
+// 2. FUNGSI DELETE: Eksekusi penghapusan IP
+async function deleteIp(id) {
+    if (confirm("Yakin ingin menghapus alokasi IP ini?")) {
+        try {
+            const response = await fetch(`/ips/${id}`, {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken}
+            });
+            if (response.ok) window.location.reload();
+            else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menghapus data IP.' });
+        } catch (error) { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' }); }
+    }
+}
+
+// 3. FUNGSI UI: Menampilkan dan mengisi Modal Edit
+const editModal = new bootstrap.Modal(document.getElementById('editIpModal'));
+function openEditModal(id, ip_address, ip_type, assigned, status) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_ip_address').value = ip_address;
+    document.getElementById('edit_ip_type').value = ip_type;
+    document.getElementById('edit_assigned_to').value = assigned;
+    document.getElementById('edit_status').value = status;
+    editModal.show();
+}
+
+// 4. FUNGSI UPDATE: Event Listener untuk formEditIp
+document.getElementById('formEditIp').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit_id').value;
+    const data = {
+        ip_address: document.getElementById('edit_ip_address').value,
+        ip_type: document.getElementById('edit_ip_type').value,
+        assigned_to: document.getElementById('edit_assigned_to').value,
+        status: document.getElementById('edit_status').value
+    };
+    try {
+        const response = await fetch(`/ips/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
+            body: JSON.stringify(data)
+        });
+        if (response.ok) window.location.reload();
+        else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memperbarui data IP.' });
+    } catch (error) { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' }); }
+});
+</script>
+{% endblock %}

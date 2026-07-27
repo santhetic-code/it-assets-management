@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ITAM Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            /* --- Background Gradasi Premium --- */
+            background-color: #f8f9fa;
+            background-image: 
+                radial-gradient(at 0% 0%, #dbeafe 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #f3e8ff 0px, transparent 50%);
+            
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
+        .login-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(149, 157, 165, 0.15);
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            min-height: 500px;
+        }
+        .login-left {
+            background: linear-gradient(135deg, #3699ff, #6610f2);
+            padding: 50px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 45%;
+        }
+        .login-right {
+            padding: 50px;
+            width: 55%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .form-control {
+            padding: 12px 15px;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #3f4254;
+        }
+        .form-control:focus {
+            background-color: #fff;
+            border-color: #3699ff;
+            box-shadow: 0 0 0 0.25rem rgba(54, 153, 255, 0.25);
+        }
+        .btn-primary {
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            background-color: #3699ff;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2b7dde;
+            transform: translateY(-2px);
+        }
+        
+        /* Dukungan Dark Mode Otomatis dari Sistem OS jika diperlukan nanti */
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #151521; }
+            .login-card { background-color: #1e1e2d; box-shadow: none; border: 1px solid #2b2b40; }
+            .login-right h4 { color: #ffffff !important; }
+            .form-control { background-color: #151521; border-color: #2b2b40; color: #ffffff; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <!-- Sisi Kiri (Branding) -->
+        <div class="login-left d-none d-md-flex">
+            <h2 class="fw-bold mb-3"><i class="bi bi-grid-fill me-2"></i>ITAM Pro.</h2>
+            <p class="opacity-75" style="line-height: 1.6;">Sistem Manajemen Aset IT Terpadu. Kelola infrastruktur jaringan, inventaris, dan kredensial Anda dalam satu brankas digital yang aman.</p>
+        </div>
+        
+        <!-- Sisi Kanan (Form Login) -->
+        <div class="login-right">
+            <h4 class="fw-bold text-dark mb-1">Selamat Datang</h4>
+            <p class="text-muted small mb-4">Silakan masuk menggunakan akun Anda.</p>
+            
+            <form method="POST" action="/login" autocomplete="off">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="Masukkan username" required>
+                </div>
+                <!-- Kolom Password -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Password</label>
+                <div class="input-group">
+                    <input type="password" id="login_password" name="password" class="form-control" required>
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('login_password', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+                <button type="submit" class="btn btn-primary w-100 shadow-sm"><i class="bi bi-box-arrow-in-right me-2"></i> Masuk ke Sistem</button>
+            </form>
+
+            <!-- Menampilkan Pesan Error jika login gagal (Dilempar dari FastAPI) -->
+            {% if error_msg %}
+            <div class="alert alert-danger mt-4 small py-2 rounded-3 text-center fw-semibold">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error_msg }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+    </script>
+</body>
+</html>

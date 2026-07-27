@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Akun & Keamanan - ITAM Pro{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Pengaturan Akun & Sistem</h3>
+        <span class="text-muted small fw-semibold">Kelola profil pengguna, kata sandi, dan hak akses staf.</span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- KOLOM KIRI: Profil & Ganti Kata Sandi -->
+    <div class="col-md-5 col-lg-4">
+        <div class="card-custom h-100">
+            <!-- Info Profil Dinamis -->
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                <div class="d-flex align-items-center">
+                    
+                    <!-- Area Foto Profil -->
+                    <div class="position-relative me-3">
+                        {% if current_user.profile_picture %}
+                        <img src="{{ current_user.profile_picture }}" alt="Profile" style="width: 60px; height: 60px; border-radius: 15px; object-fit: cover; border: 2px solid #e9ecef;">
+                        {% else %}
+                        <div style="width: 60px; height: 60px; border-radius: 15px; background: linear-gradient(135deg, #3699ff, #6610f2); display: flex; justify-content: center; align-items: center; color: white; font-size: 1.8rem; font-weight: bold;">
+                            {{ current_user.username[0]|upper }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Tombol Ganti Foto (Icon Kamera) -->
+                        <button class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle shadow p-1" style="transform: translate(30%, 30%); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;" data-bs-toggle="modal" data-bs-target="#avatarModal" title="Ganti Foto">
+                            <i class="bi bi-camera-fill text-primary small"></i>
+                        </button>
+                    </div>
+
+                    <!-- Teks Nama & Role -->
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">{{ current_user.username }}</h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ current_user.role }}</span>
+                    </div>
+                </div>
+                
+                <!-- TOMBOL LOGOUT -->
+                <a href="/logout" class="btn btn-sm btn-outline-danger shadow-sm">
+                    <i class="bi bi-power"></i> Logout
+                </a>
+            </div>
+
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-shield-lock-fill text-primary me-2"></i>Ganti Kata Sandi</h6>
+            
+            <!-- Tempat Munculnya Notifikasi -->
+            {% if error_msg %}
+            <div class="alert alert-danger small py-2 fw-semibold rounded-3"><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error_msg }}</div>
+            {% endif %}
+            {% if success_msg %}
+            <div class="alert alert-success small py-2 fw-semibold rounded-3"><i class="bi bi-check-circle-fill me-1"></i> {{ success_msg }}</div>
+            {% endif %}
+
+            <!-- Form Ganti Sandi -->
+            <form action="/change-password" method="POST">
+    <div class="mb-3">
+        <label class="form-label small fw-bold text-muted">Kata Sandi Lama</label>
+        <div class="input-group">
+            <!-- Atribut placeholder dihapus -->
+            <input type="password" id="old_password" name="old_password" class="form-control bg-light" required>
+            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('old_password', this)">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label small fw-bold text-muted">Kata Sandi Baru</label>
+        <div class="input-group">
+            <!-- Atribut placeholder dihapus -->
+            <input type="password" id="new_password" name="new_password" class="form-control bg-light" required>
+            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('new_password', this)">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="mb-4">
+        <label class="form-label small fw-bold text-muted">Konfirmasi Kata Sandi Baru</label>
+        <div class="input-group">
+            <!-- Atribut placeholder dihapus -->
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control bg-light" required>
+            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('confirm_password', this)">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-arrow-repeat me-1"></i> Perbarui Sandi</button>
+</form>
+        </div>
+    </div>
+
+    <!-- KOLOM KANAN: Tabel Daftar Pengguna -->
+    <div class="col-md-7 col-lg-8">
+        <div class="card-custom h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Daftar Pengguna Sistem</h6>
+                  <!-- Tombol pemicu Modal (Hanya muncul jika bukan Viewer) -->
+                {% if current_user.role == "Super Admin" %}
+                <button class="btn btn-sm btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Tambah User
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                      <tr class="text-muted text-uppercase small"> <!-- Tambahkan text-muted agar teksnya tidak terlalu kontras -->
+                        <th>USERNAME</th>
+                        <th>HAK AKSES (ROLE)</th>
+                        <th>STATUS</th>
+                        <th>AKSI</th>
+                     </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <!-- Cek apakah user tersebut punya foto profil -->
+                                    {% if u.profile_picture %}
+                                        <img src="{{ u.profile_picture }}" alt="Avatar" class="rounded-circle me-2 border" style="width: 32px; height: 32px; object-fit: cover;">
+                                    {% else %}
+                                        <!-- Jika tidak punya foto, tampilkan ikon default -->
+                                        <i class="bi bi-person-circle fs-4 text-secondary me-2"></i>
+                                    {% endif %}
+                                    
+                                    <span class="fw-medium">{{ u.username }}</span>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ u.role }}</span></td>
+                            <td><span class="text-success fw-bold small"><i class="bi bi-check-circle-fill me-1"></i> Aktif</span></td>
+                            <td class="text-end">
+                                <!-- Hanya Super Admin yang boleh Edit & Hapus pengguna lain -->
+                                {% if current_user.role == "Super Admin" %}
+                                    
+                                    <!-- Tombol Edit (Sembunyikan jika itu akun developer) -->
+                                    {% if u.username != "developer" %}
+                                    <button class="btn btn-sm btn-light text-primary border me-1" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ u.id }}" title="Ubah Role"><i class="bi bi-pencil-square"></i></button>
+                                    {% else %}
+                                    <span class="badge bg-secondary border me-1" title="Akun Paten System"><i class="bi bi-shield-lock-fill"></i> Paten</span>
+                                    {% endif %}
+                                    
+                                    <!-- Tombol Hapus (Aman dari hapus diri sendiri & aman dari hapus developer) -->
+                                    {% if u.username != current_user.username and u.username != "developer" %}
+                                    <form action="/delete-user/{{ u.id }}" method="POST" class="d-inline" onsubmit="return confirm('PERINGATAN: Yakin ingin menghapus akun {{ u.username }} selamanya?');">
+                                        <button type="submit" class="btn btn-sm btn-light text-danger border" title="Hapus Akun"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                    {% endif %}
+                                    
+                                {% else %}
+                                    <!-- Jika login sebagai Viewer/Staff -->
+                                    <span class="badge bg-light text-muted border">Terkunci</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not users %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted small">Belum ada data pengguna.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TAMBAH USER -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark" id="addUserModalLabel"><i class="bi bi-person-plus-fill text-primary me-2"></i>Tambah Pengguna Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Form mengarah ke route /add-user yang baru Anda buat -->
+            <form action="/add-user" method="POST">
+                <div class="modal-body px-4 py-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Username</label>
+                        <input type="text" name="username" class="form-control bg-light" placeholder="Contoh: staf_it_01" required autocomplete="off">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Hak Akses (Role)</label>
+                        <select name="role" class="form-select bg-light" required>
+                            <option value="" disabled selected>Pilih hak akses...</option>
+                            <option value="Super Admin">Super Admin</option>
+                            <option value="Staff IT">Staff IT</option>
+                            <option value="Auditor">Auditor (Viewer)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-muted">Kata Sandi Awal</label>
+                        <!-- Bungkus dengan input-group agar tombol mata bisa menyatu di kanan -->
+                        <div class="input-group">
+                            <!-- ID harus unik, kita beri nama new_user_password -->
+                            <input type="password" id="new_user_password" name="password" class="form-control bg-light" required>
+                            
+                            <!-- Tombol pemicu Javascript -->
+                            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('new_user_password', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text small mt-2">
+                            <i class="bi bi-info-circle me-1"></i> Berikan kata sandi ini kepada pengguna terkait untuk login pertama kali.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top-0 pb-4 px-4 pt-0">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary fw-bold"><i class="bi bi-save me-1"></i> Simpan Pengguna</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePassword(inputId, buttonElement) {
+        const inputField = document.getElementById(inputId);
+        const icon = buttonElement.querySelector('i');
+        
+        if (inputField.type === "password") {
+            inputField.type = "text";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash"); // Mengubah ikon jadi mata dicoret
+        } else {
+            inputField.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye"); // Mengembalikan ikon mata normal
+        }
+    }
+</script>
+
+<!-- MODAL GANTI FOTO PROFIL -->
+<div class="modal fade" id="avatarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <!-- PENTING: enctype="multipart/form-data" wajib ada untuk kirim file -->
+            <form action="/update-avatar" method="POST" enctype="multipart/form-data">
+                <div class="modal-header border-bottom-0 pb-0 pt-3 px-3">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-image text-primary me-2"></i>Upload Foto</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-3 py-3">
+                    <input type="file" name="avatar_file" class="form-control form-control-sm bg-light" accept="image/png, image/jpeg, image/jpg" required>
+                    <div class="form-text small mt-2">Format: JPG/PNG.</div>
+                </div>
+                <div class="modal-footer border-top-0 pb-3 px-3 pt-0">
+                    <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Simpan Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDIT ROLE (Dihasilkan otomatis untuk tiap user) -->
+{% for u in users %}
+<div class="modal fade" id="editRoleModal{{ u.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <form action="/edit-user-role/{{ u.id }}" method="POST">
+                <div class="modal-header border-bottom-0 pb-0 pt-3 px-3">
+                    <h6 class="modal-title fw-bold text-dark">Ubah Akses: {{ u.username }}</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-3 py-3">
+                    <label class="form-label small fw-bold text-muted">Hak Akses Baru</label>
+                    <select name="new_role" class="form-select form-select-sm bg-light">
+                        <option value="Super Admin" {% if u.role == 'Super Admin' %}selected{% endif %}>Super Admin</option>
+                        <option value="Staff IT" {% if u.role == 'Staff IT' %}selected{% endif %}>Staff IT</option>
+                        <option value="Auditor" {% if u.role == 'Auditor' %}selected{% endif %}>Auditor (Viewer)</option>
+                    </select>
+                </div>
+                <div class="modal-footer border-top-0 pb-3 px-3 pt-0">
+                    <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Perbarui Akses</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

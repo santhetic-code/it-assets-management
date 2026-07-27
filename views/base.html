@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ITAM Pro{% endblock %}</title>
+    
+    <!-- CSS Utama -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+
+    <!-- CSRF Meta Tag untuk dibaca oleh Fetch API JS -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- Di sinilah nanti kita akan menaruh CSS Dark Mode -->
+    <style>
+        body { background-color: #f4f7fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; color: #3f4254; }
+        .sidebar .brand { padding: 15px 30px; font-size: 1.4rem; font-weight: 800; color: #181c32; margin-bottom: 20px; }
+        .sidebar .brand-dot { color: #3699ff; font-size: 1.8rem; line-height: 0; vertical-align: bottom; }
+        .sidebar-menu { padding: 0 15px; }
+        .sidebar-menu .menu-title { font-size: 0.75rem; text-transform: uppercase; color: #a1a5b7; font-weight: 700; margin: 20px 0 10px 15px; letter-spacing: 1px; }
+        .sidebar a { padding: 12px 20px; margin-bottom: 5px; text-decoration: none; font-size: 0.95rem; font-weight: 600; color: #7e8299; display: flex; align-items: center; border-radius: 12px; transition: all 0.3s ease; }
+        .sidebar a i { margin-right: 15px; font-size: 1.2rem; color: #b5b5c3; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.active { background-color: #eef6ff; color: #3699ff; }
+        .sidebar a:hover i, .sidebar a.active i { color: #3699ff; }
+        @media (min-width: 768px) {
+            .sidebar { height: 100vh; width: 260px; position: fixed; top: 0; left: 0; background-color: #ffffff; padding-top: 20px; box-shadow: 4px 0 24px rgba(149, 157, 165, 0.08); z-index: 1000; }
+            .main-content { margin-left: 260px; padding: 30px 40px; }
+        }
+        @media (max-width: 767.98px) {
+            .main-content { margin-left: 0; padding: 20px; padding-top: 70px; }
+        }
+        .card-custom { background: #ffffff; border-radius: 20px; padding: 25px; border: none; box-shadow: 0 10px 30px rgba(149, 157, 165, 0.05); margin-bottom: 25px; }
+        .table thead { background-color: #f9fbfd; color: #a1a5b7; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .table td { vertical-align: middle; color: #5e6278; font-weight: 500; font-size: 0.95rem; }
+
+        /* --- KODE CSS UNTUK DARK MODE (Menggunakan Native Bootstrap 5.3) --- */
+        [data-bs-theme="dark"] body { background-color: #151521; }
+        [data-bs-theme="dark"] .sidebar { background-color: #1e1e2d; box-shadow: none; border-right: 1px solid #2b2b40; }
+        [data-bs-theme="dark"] .sidebar .brand { color: #ffffff; }
+        [data-bs-theme="dark"] .sidebar a { color: #9e9ea7; }
+        [data-bs-theme="dark"] .sidebar a:hover, [data-bs-theme="dark"] .sidebar a.active { background-color: #2b2b40; color: #3699ff; }
+        [data-bs-theme="dark"] .card-custom { background: #1e1e2d; box-shadow: none; border: 1px solid #2b2b40; }
+        
+        /* Override untuk warna text bawaan HTML kita */
+        [data-bs-theme="dark"] .text-dark { color: #ffffff !important; }
+        [data-bs-theme="dark"] .text-muted { color: #9e9ea7 !important; }
+        [data-bs-theme="dark"] .bg-light { background-color: #2b2b40 !important; }
+        [data-bs-theme="dark"] .border-light { border-color: #2b2b40 !important; }
+
+        /* --- Animasi Transisi Halus (Fade In) Pindah Halaman --- */
+        .main-content {
+            animation: fadeIn 0.15s ease-out;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+
+    <!-- PENTING: Script ini harus di HEAD untuk mencegah kedipan (FOUC) saat pindah halaman -->
+    <script>
+        const savedTheme = localStorage.getItem('itam_theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    </script>
+
+</head>
+<body>
+    <!-- Tombol Hamburger Mobile -->
+    <button class="btn btn-primary d-md-none m-3 position-fixed top-0 start-0 z-3 shadow" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- SIDEBAR (Hanya ditulis satu kali di sini!) -->
+    <div class="sidebar offcanvas-md offcanvas-start" tabindex="-1" id="sidebarMenu">
+        <div class="brand d-flex align-items-center mt-2 mb-4" style="padding: 15px 30px;">
+            <!-- Ikon Logo -->
+            <div class="bg-primary text-white rounded p-1 me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                <i class="bi bi-grid-fill fs-5" style="margin-right: 0;"></i>
+            </div>
+            <!-- Teks Logo -->
+            <span class="fs-4 fw-bolder text-body d-flex align-items-baseline">
+                ITAM<span class="text-primary fw-light ms-1">Pro</span><span class="text-primary">.</span>
+            </span>
+        </div>
+        <div class="sidebar-menu">
+            <!-- Nanti script JavaScript akan menandai menu mana yang aktif secara otomatis -->
+            <div class="menu-title">Main Menu</div>
+            <a href="/" id="menu-dashboard"><i class="bi bi-pie-chart-fill me-3 fs-5"></i> Dashboard Utama</a>
+            <a href="/it-notes" id="menu-it-notes"><i class="bi bi-file-earmark-text-fill me-3 fs-5"></i> Catatan IT</a>
+            <a href="/network" id="menu-network"><i class="bi bi-hdd-network-fill me-3 fs-5"></i> IP Jaringan</a>
+            
+            <div class="menu-title">Inventory & Vault</div>
+            <a href="/vault" id="menu-vault"><i class="bi bi-shield-lock-fill me-3 fs-5"></i> Kredensial</a>
+            <a href="/purchase-records" id="menu-purchases"><i class="bi bi-cart-check-fill me-3 fs-5"></i> Pembelian</a>
+            <a href="/hardware-components" id="menu-components"><i class="bi bi-pc-display me-3 fs-5"></i> Komponen (Spek)</a>
+            
+            <div class="menu-title">System</div>
+            <a href="/maintenance-logs" id="menu-maintenance"><i class="bi bi-tools me-3 fs-5"></i> Maintenance</a>
+            <a href="/account" id="menu-account"><i class="bi bi-person-badge-fill me-3 fs-5"></i> Akun & Keamanan</a>
+
+            <!-- MENU AUDIT TRAIL HANYA UNTUK SUPER ADMIN -->
+            {% if current_user and current_user.role == 'Super Admin' %}
+            <a href="/system-logs" id="menu-logs"><i class="bi bi-journal-text me-3 fs-5"></i> Audit Trail</a>
+            {% endif %}
+            <div class="menu-title mt-4">Tampilan</div>
+            <a href="#" id="theme-toggle">
+                <i class="bi bi-moon-stars-fill"></i> <span id="theme-text">Dark Mode</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- Tempat file lain menyuntikkan konten halamannya -->
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- JS Utama -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+    <!-- Script agar menu sidebar otomatis aktif sesuai URL -->
+    <script>
+        const path = window.location.pathname;
+        if(path === '/') document.getElementById('menu-dashboard').classList.add('active');
+        else if(path.includes('/it-notes')) document.getElementById('menu-it-notes').classList.add('active');
+        else if(path.includes('/network')) document.getElementById('menu-network').classList.add('active');
+        else if(path.includes('/vault')) document.getElementById('menu-vault').classList.add('active');
+        else if(path.includes('/purchase-records')) document.getElementById('menu-purchases').classList.add('active');
+        else if(path.includes('/hardware-components')) document.getElementById('menu-components').classList.add('active');
+        else if(path.includes('/maintenance-logs')) document.getElementById('menu-maintenance').classList.add('active');
+        else if(path.includes('/account')) document.getElementById('menu-account').classList.add('active');
+        else if(path.includes('/system-logs')) document.getElementById('menu-logs').classList.add('active');
+    </script>
+
+    <!-- Tempat file lain menyuntikkan script khususnya -->
+    {% block scripts %}
+    {% endblock %}
+
+    <!-- Menyediakan token CSRF sebagai variabel global untuk semua halaman -->
+    <script>
+        // Menangkap token CSRF dari meta tag agar bisa digunakan oleh semua API (Edit, Hapus, Import)
+        const metaCsrf = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = metaCsrf ? metaCsrf.getAttribute('content') : '';
+    </script>
+
+    <!-- Script Toggle Dark/Light Mode (Hanya untuk tombol) -->
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('itam_theme') || 'light';
+
+        // Atur teks & icon tombol saat halaman selesai dimuat
+        if (currentTheme === 'dark') {
+            themeToggle.innerHTML = '<i class="bi bi-sun-fill text-warning"></i> <span>Light Mode</span>';
+        } else {
+            themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i> <span>Dark Mode</span>';
+        }
+
+        // Aksi ketika tombol diklik
+        themeToggle.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            
+            if (document.documentElement.getAttribute('data-bs-theme') === 'dark') {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+                localStorage.setItem('itam_theme', 'light');
+                themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i> <span>Dark Mode</span>';
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                localStorage.setItem('itam_theme', 'dark');
+                themeToggle.innerHTML = '<i class="bi bi-sun-fill text-warning"></i> <span>Light Mode</span>';
+            }
+        });
+
+    </script>
+</body>
+</html>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+
+</body>
+</html>
