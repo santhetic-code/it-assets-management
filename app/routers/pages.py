@@ -20,20 +20,31 @@ async def read_dashboard(request: Request, db: DbSession):
     active_ips = db.query(NetworkIP).filter(NetworkIP.status == "Aktif").count()
     pending_maintenance = db.query(MaintenanceLog).filter(MaintenanceLog.status != "Aman").count()
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "total_assets": total_assets,
-        "total_components": total_components,
-        "active_ips": active_ips,
-        "pending_maintenance": pending_maintenance
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "total_assets": total_assets,
+            "total_components": total_components,
+            "active_ips": active_ips,
+            "pending_maintenance": pending_maintenance
+        }
+    )
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={}
+    )
 
 # (Tambahkan rute halaman lainnya seperti /assets, /vault, dll yang merender HTML masing-masing)
 # Contoh:
 @router.get("/vault", response_class=HTMLResponse)
 async def vault_page(request: Request):
-    return templates.TemplateResponse("credentials.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request,
+        name="credentials.html",
+        context={}
+    )
