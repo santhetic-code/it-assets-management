@@ -13,3 +13,4 @@ openpyxl
 qrcode
 Pillow
 pydantic-settings
+aiofiles
