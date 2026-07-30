@@ -56,7 +56,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="fw-bolder fs-1 mb-1 text-dark">1</h2>
+                        <h2 class="fw-bolder fs-1 mb-1 text-dark">{{ total_assets }}</h2>
                         <span class="text-muted fw-semibold d-block mb-3">Total Aset IT</span>
                         <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill">
                             <i class="bi bi-arrow-up-short"></i> Update Terbaru
@@ -76,7 +76,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="fw-bolder fs-1 mb-1 text-dark">1</h2>
+                        <h2 class="fw-bolder fs-1 mb-1 text-dark">{{ total_components }}</h2>
                         <span class="text-muted fw-semibold d-block mb-3">Komponen & Spek</span>
                         <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill">
                             <i class="bi bi-cpu"></i> Tersedia
@@ -96,7 +96,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="fw-bolder fs-1 mb-1 text-dark">2</h2>
+                        <h2 class="fw-bolder fs-1 mb-1 text-dark">{{ active_ips }}</h2>
                         <span class="text-muted fw-semibold d-block mb-3">IP Jaringan Aktif</span>
                         <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-pill">
                             <i class="bi bi-router"></i> Terhubung
@@ -116,7 +116,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="fw-bolder fs-1 mb-1 text-danger">0</h2>
+                        <h2 class="fw-bolder fs-1 mb-1 text-danger">{{ pending_maintenance }}</h2>
                         <span class="text-muted fw-semibold d-block mb-3">Maintenance Kritis</span>
                         <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill">
                             <i class="bi bi-check-circle"></i> Aman
