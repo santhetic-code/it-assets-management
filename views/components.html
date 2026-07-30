@@ -4,45 +4,93 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-end mb-4">
-    <div><h3 class="fw-bold text-dark mb-1">Spesifikasi Hardware & PC</h3><span class="text-muted small fw-semibold">Database spesifikasi jeroan PC Operasional dan Server.</span></div>
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Spesifikasi Hardware & PC</h3><span
+            class="text-muted small fw-semibold">Database spesifikasi jeroan PC Operasional dan Server.</span>
+    </div>
 </div>
 
 <div class="card-custom border-top border-primary border-4">
     <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-cpu-fill text-primary me-2"></i>Registrasi Spesifikasi PC</h6>
     <form id="formSpek" autocomplete="off">
         <div class="row g-3 mb-3 pb-3 border-bottom border-light">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Tag Aset / Di Gunakan Oleh</label><input type="text" id="assigned_to" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kategori PC</label><select id="pc_category" class="form-select" required><option value="Operasional">PC Operasional</option><option value="Server">PC Server</option></select></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Sistem Operasi (OS)</label><input type="text" id="os_name" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Lokasi Perangkat</label><input type="text" id="location" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Tag Aset / Di Gunakan
+                    Oleh</label><input type="text" id="assigned_to" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kategori PC</label><select
+                    id="pc_category" class="form-select" required>
+                    <option value="Operasional">PC Operasional</option>
+                    <option value="Server">PC Server</option>
+                </select></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Sistem Operasi (OS)</label><input
+                    type="text" id="os_name" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Lokasi Perangkat</label><input
+                    type="text" id="location" class="form-control" required></div>
         </div>
         <div class="row g-3 mb-4">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor (CPU)</label><input type="text" id="processor_spec" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input type="text" id="mainboard_spec" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Kapasitas RAM</label><input type="text" id="ram_spec" class="form-control" required></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Kartu Grafis</label><input type="text" id="vga_spec" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Storage HDD/SSD</label><input type="text" id="storage_spec" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor (CPU)</label><input
+                    type="text" id="processor_spec" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input type="text"
+                    id="mainboard_spec" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Kapasitas RAM</label><input
+                    type="text" id="ram_spec" class="form-control" required></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Kartu Grafis</label><input
+                    type="text" id="vga_spec" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Storage HDD/SSD</label><input
+                    type="text" id="storage_spec" class="form-control" required></div>
         </div>
-        <div class="text-end"><button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm"><i class="bi bi-save2-fill me-2"></i>Simpan Spesifikasi</button></div>
+        <div class="text-end"><button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm"><i
+                    class="bi bi-save2-fill me-2"></i>Simpan Spesifikasi</button></div>
     </form>
 </div>
 
 <div class="card-custom">
     <div class="table-responsive">
         <table id="tabelKomponen" class="table table-hover align-middle">
-            <thead><tr><th>User / Aset</th><th>Kategori</th><th>Sistem Operasi</th><th>Spesifikasi Inti</th><th>Memori & Storage</th><th>VGA / Grafis</th><th>Lokasi</th><th>Aksi</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>User / Aset</th>
+                    <th>Kategori</th>
+                    <th>Sistem Operasi</th>
+                    <th>Spesifikasi Inti</th>
+                    <th>Memori & Storage</th>
+                    <th>VGA / Grafis</th>
+                    <th>Lokasi</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for comp in components %}
                 <tr>
-                    <td class="fw-bold text-dark"><i class="bi bi-person-badge text-primary me-1"></i> {{ comp.assigned_to }}</td>
-                    <td>{% if comp.pc_category == 'Server' %}<span class="badge bg-purple text-purple bg-opacity-10 border border-purple px-2 py-1"><i class="bi bi-server"></i> Server</span>{% else %}<span class="badge bg-info text-info bg-opacity-10 border border-info px-2 py-1"><i class="bi bi-laptop"></i> Operasional</span>{% endif %}</td>
+                    <td class="fw-bold text-dark"><i class="bi bi-person-badge text-primary me-1"></i> {{
+                        comp.assigned_to }}</td>
+                    <td>{% if comp.pc_category == 'Server' %}<span
+                            class="badge bg-purple text-purple bg-opacity-10 border border-purple px-2 py-1"><i
+                                class="bi bi-server"></i> Server</span>{% else %}<span
+                            class="badge bg-info text-info bg-opacity-10 border border-info px-2 py-1"><i
+                                class="bi bi-laptop"></i> Operasional</span>{% endif %}</td>
                     <td><i class="bi bi-windows text-primary me-1"></i> {{ comp.os_name }}</td>
-                    <td><div class="badge bg-light text-dark border border-light"><i class="bi bi-cpu"></i> {{ comp.processor_spec }}</div><br><div class="badge bg-light text-dark border border-light mt-1"><i class="bi bi-motherboard"></i> {{ comp.mainboard_spec }}</div></td>
-                    <td><div class="badge bg-light text-dark border border-light"><i class="bi bi-memory"></i> {{ comp.ram_spec }}</div><br><div class="badge bg-light text-dark border border-light mt-1"><i class="bi bi-device-hdd"></i> {{ comp.storage_spec }}</div></td>
-                    <td>{{ comp.vga_spec }}</td><td>{{ comp.location }}</td>
                     <td>
-                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ comp.id }}', '{{ comp.assigned_to }}', '{{ comp.pc_category }}', '{{ comp.os_name }}', '{{ comp.processor_spec }}', '{{ comp.mainboard_spec }}', '{{ comp.ram_spec }}', '{{ comp.vga_spec }}', '{{ comp.storage_spec }}', '{{ comp.location }}')"><i class="bi bi-pencil-square"></i></button>
-                        <button class="btn btn-sm btn-light text-danger" onclick="deleteComp({{ comp.id }})"><i class="bi bi-trash"></i></button>
+                        <div class="badge bg-light text-dark border border-light"><i class="bi bi-cpu"></i> {{
+                            comp.processor_spec }}</div><br>
+                        <div class="badge bg-light text-dark border border-light mt-1"><i class="bi bi-motherboard"></i>
+                            {{ comp.mainboard_spec }}</div>
+                    </td>
+                    <td>
+                        <div class="badge bg-light text-dark border border-light"><i class="bi bi-memory"></i> {{
+                            comp.ram_spec }}</div><br>
+                        <div class="badge bg-light text-dark border border-light mt-1"><i class="bi bi-device-hdd"></i>
+                            {{ comp.storage_spec }}</div>
+                    </td>
+                    <td>{{ comp.vga_spec }}</td>
+                    <td>{{ comp.location }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-primary"
+                            onclick="openEditModal('{{ comp.id }}', '{{ comp.assigned_to }}', '{{ comp.pc_category }}', '{{ comp.os_name }}', '{{ comp.processor_spec }}', '{{ comp.mainboard_spec }}', '{{ comp.ram_spec }}', '{{ comp.vga_spec }}', '{{ comp.storage_spec }}', '{{ comp.location }}')"><i
+                                class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-warning btn-edit-component" data-id="{{ c.id }}" data-name="{{ c.name }}"
+                            data-spec="{{ c.spesifikasi }}">
+                            Edit
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -56,23 +104,51 @@
 <div class="modal fade" id="editCompModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Spek PC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Spek PC</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
             <form id="formEditComp" autocomplete="off">
                 <div class="modal-body">
                     <input type="hidden" id="edit_id">
-                    <div class="row g-3 mb-3"><div class="col-md-3"><label class="form-label small fw-bold text-muted">User / Tag</label><input type="text" id="edit_assigned_to" class="form-control" required></div><div class="col-md-3"><label class="form-label small fw-bold text-muted">Kategori</label><select id="edit_pc_category" class="form-select"><option value="Operasional">Operasional</option><option value="Server">Server</option></select></div><div class="col-md-3"><label class="form-label small fw-bold text-muted">OS</label><input type="text" id="edit_os_name" class="form-control" required></div><div class="col-md-3"><label class="form-label small fw-bold text-muted">Lokasi</label><input type="text" id="edit_location" class="form-control" required></div></div>
-                    <div class="row g-3"><div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor</label><input type="text" id="edit_processor_spec" class="form-control" required></div><div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input type="text" id="edit_mainboard_spec" class="form-control"></div><div class="col-md-2"><label class="form-label small fw-bold text-muted">RAM</label><input type="text" id="edit_ram_spec" class="form-control" required></div><div class="col-md-2"><label class="form-label small fw-bold text-muted">VGA</label><input type="text" id="edit_vga_spec" class="form-control"></div><div class="col-md-2"><label class="form-label small fw-bold text-muted">Storage</label><input type="text" id="edit_storage_spec" class="form-control" required></div></div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">User /
+                                Tag</label><input type="text" id="edit_assigned_to" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kategori</label><select
+                                id="edit_pc_category" class="form-select">
+                                <option value="Operasional">Operasional</option>
+                                <option value="Server">Server</option>
+                            </select></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">OS</label><input
+                                type="text" id="edit_os_name" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Lokasi</label><input
+                                type="text" id="edit_location" class="form-control" required></div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor</label><input
+                                type="text" id="edit_processor_spec" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input
+                                type="text" id="edit_mainboard_spec" class="form-control"></div>
+                        <div class="col-md-2"><label class="form-label small fw-bold text-muted">RAM</label><input
+                                type="text" id="edit_ram_spec" class="form-control" required></div>
+                        <div class="col-md-2"><label class="form-label small fw-bold text-muted">VGA</label><input
+                                type="text" id="edit_vga_spec" class="form-control"></div>
+                        <div class="col-md-2"><label class="form-label small fw-bold text-muted">Storage</label><input
+                                type="text" id="edit_storage_spec" class="form-control" required></div>
+                    </div>
                 </div>
-                <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary fw-bold">Simpan</button></div>
+                <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Batal</button><button type="submit"
+                        class="btn btn-primary fw-bold">Simpan</button></div>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-    
 
-    $(document).ready(function() {
+
+    $(document).ready(function () {
         $('#tabelKomponen').DataTable({
             dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
             buttons: [
@@ -113,7 +189,7 @@
             }
         }
     }
-    
+
     const editModal = new bootstrap.Modal(document.getElementById('editCompModal'));
     function openEditModal(id, assigned, cat, os, proc, mobo, ram, vga, storage, loc) { document.getElementById('edit_id').value = id; document.getElementById('edit_assigned_to').value = assigned; document.getElementById('edit_pc_category').value = cat; document.getElementById('edit_os_name').value = os; document.getElementById('edit_processor_spec').value = proc; document.getElementById('edit_mainboard_spec').value = mobo; document.getElementById('edit_ram_spec').value = ram; document.getElementById('edit_vga_spec').value = vga; document.getElementById('edit_storage_spec').value = storage; document.getElementById('edit_location').value = loc; editModal.show(); }
 
@@ -132,6 +208,26 @@
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
         }
+    });
+
+    // Tunggu sampai semua elemen HTML selesai dimuat
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Cari semua tombol dengan class 'btn-edit-component'
+        const editButtons = document.querySelectorAll('.btn-edit-component');
+
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                // Ambil data dengan aman dari atribut data-*
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const spec = this.getAttribute('data-spec');
+
+                // Panggil fungsi modal yang sudah ada sebelumnya
+                openEditModal(id, name, spec);
+            });
+        });
+
     });
 </script>
 {% endblock %}
