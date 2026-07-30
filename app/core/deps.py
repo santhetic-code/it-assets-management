@@ -1,17 +1,13 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import verify_jwt_token
-
 from app.models.domain import User
 
-# -------------------------------------------------------------------
-# TYPE ALIASES (Solusi elegan untuk mengatasi Ruff B008)
-# Memindahkan Depends() ke dalam tipe data agar linter tidak protes.
-# -------------------------------------------------------------------
+# Type Alias untuk Session Database
 DbSession = Annotated[Session, Depends(get_db)]
 
 
@@ -26,7 +22,7 @@ def get_current_user(request: Request, db: DbSession):
             detail="Akses Ditolak: Silakan login terlebih dahulu.",
         )
 
-    # Verifikasi token dan ambil isinya (payload)
+    # Verifikasi token dan ambil isinya
     payload = verify_jwt_token(token)
     user_id = payload.get("sub")
 
@@ -35,6 +31,7 @@ def get_current_user(request: Request, db: DbSession):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token tidak valid."
         )
 
+    # Mengambil data asli dari database
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(
@@ -51,7 +48,6 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 def require_staff_or_admin(current_user: CurrentUser):
     """
     Penjaga Lapis 2: Memblokir pengguna dengan role 'Auditor/Viewer'.
-    Akan dipasang pada endpoint POST/PUT/DELETE (Ubah Data).
     """
     if current_user.role not in ["Super Admin", "Staff IT"]:
         raise HTTPException(
