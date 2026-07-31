@@ -2,19 +2,27 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from app.core.deps import DbSession
+from app.core.deps import DbSession, CurrentUser
 from app.models.domain import Asset, Component, NetworkIP, MaintenanceLog
 
-router = APIRouter(tags=["Web Pages"])
+router = APIRouter(tags=["Frontend Pages"])
 
 # Mengarahkan Jinja2 ke folder views
 templates = Jinja2Templates(directory="views")
 
+# =================================================================
+# PERHATIAN: Halaman /login TIDAK BOLEH menggunakan Depends(CurrentUser)
+# =================================================================
+@router.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="login.html"
+    )
+
+# Halaman Dashboard WAJIB menggunakan Depends(CurrentUser)
 @router.get("/", response_class=HTMLResponse)
-async def read_dashboard(request: Request, db: DbSession):
-    """
-    Render halaman Dashboard dan hitung statistik real-time (Solusi Bug #1).
-    """
+def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
     total_assets = db.query(Asset).count()
     total_components = db.query(Component).count()
     active_ips = db.query(NetworkIP).filter(NetworkIP.status == "Aktif").count()
@@ -24,6 +32,7 @@ async def read_dashboard(request: Request, db: DbSession):
         request=request,
         name="index.html",
         context={
+            "current_user": current_user,
             "total_assets": total_assets,
             "total_components": total_components,
             "active_ips": active_ips,
@@ -31,20 +40,10 @@ async def read_dashboard(request: Request, db: DbSession):
         }
     )
 
-@router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="login.html",
-        context={}
-    )
-
-# (Tambahkan rute halaman lainnya seperti /assets, /vault, dll yang merender HTML masing-masing)
-# Contoh:
 @router.get("/vault", response_class=HTMLResponse)
-async def vault_page(request: Request):
+def vault_page(request: Request, current_user: CurrentUser):
     return templates.TemplateResponse(
         request=request,
         name="credentials.html",
-        context={}
+        context={"current_user": current_user}
     )
