@@ -1,26 +1,13 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-
+from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
-# Membuat engine SQLAlchemy menggunakan DATABASE_URL dari file .env (via settings)
-engine = create_engine(settings.DATABASE_URL)
+# 1. Kita paksa (hardcode) koneksi langsung ke MySQL Laragon di sini
+# Ini akan mengabaikan fallback SQLite dan memastikan tabel masuk ke itam_db
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root@localhost:3306/itam_db"
 
-# Membuat class SessionLocal untuk instansiasi sesi database pada setiap request
+# 2. Pembuatan Mesin Database (Engine)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
+# 3. Pembuatan Sesi Database
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class yang akan diwarisi oleh semua model ORM kita nanti
-Base = declarative_base()
-
-
-def get_db():
-    """
-    Dependency generator untuk mengelola siklus hidup sesi database.
-    Akan membuka sesi saat request masuk, dan menutupnya secara otomatis
-    (atau melakukan rollback jika error) setelah request selesai.
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
