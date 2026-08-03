@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.database import engine, SessionLocal
 from app.models import domain
+from app.core.deps import get_current_user
 
 # Import seluruh router dari arsitektur MVC kita
 from app.routers import auth, vault, ips, assets, pages
@@ -28,11 +29,14 @@ async def custom_auth_exception_handler(request: Request, exc: StarletteHTTPExce
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
 # 4. Daftarkan semua endpoint
+# Router Pages & Auth dibiarkan bebas karena memiliki aturannya sendiri di dalam file
 app.include_router(auth.router)
-app.include_router(vault.router)
-app.include_router(ips.router)
-app.include_router(assets.router)
 app.include_router(pages.router)
+
+# SEGEL KEAMANAN: Semua API Module sekarang WAJIB LOGIN!
+app.include_router(vault.router, dependencies=[Depends(get_current_user)])
+app.include_router(ips.router, dependencies=[Depends(get_current_user)])
+app.include_router(assets.router, dependencies=[Depends(get_current_user)])
 
 # 5. Inisialisasi Data Pertama Kali Saat Server Menyala
 @app.on_event("startup")
