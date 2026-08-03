@@ -4,7 +4,8 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.deps import DbSession, CurrentUser
 from app.services import auth_service
-from app.core.security import create_access_token, SECURE_COOKIES
+from app.core.security import create_access_token, SECURE_COOKIES, get_password_hash
+from app.models.domain import User
 
 router = APIRouter(tags=["Frontend Pages"])
 templates = Jinja2Templates(directory="views")
@@ -110,3 +111,38 @@ def read_account(request: Request, current_user: CurrentUser):
 @router.get("/system-logs")
 def read_logs(request: Request, current_user: CurrentUser):
     return templates.TemplateResponse(request=request, name="logs.html", context={"current_user": current_user})
+
+
+# ==========================================
+# 4. ENDPOINT AKSI FORM
+# ==========================================
+@router.post("/add-user")
+def handle_add_user(
+    request: Request,
+    db: DbSession,
+    username: str = Form(...),
+    password: str = Form(...),
+    role: str = Form(...),
+    csrf_token: str = Form(...)
+):
+    # 1. Validasi CSRF Token untuk keamanan
+    cookie_csrf = request.cookies.get("csrf_token")
+    if not cookie_csrf or cookie_csrf != csrf_token:
+        return RedirectResponse(url="/account?error=csrf_invalid", status_code=status.HTTP_303_SEE_OTHER)
+
+    # 2. Cek apakah username sudah dipakai
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        return RedirectResponse(url="/account?error=duplicate_user", status_code=status.HTTP_303_SEE_OTHER)
+
+    # 3. Enkripsi password dan simpan ke database
+    new_user = User(
+        username=username,
+        password_hash=get_password_hash(password),
+        role=role
+    )
+    db.add(new_user)
+    db.commit()
+
+    # 4. Redirect kembali ke halaman akun dengan mulus
+    return RedirectResponse(url="/account?success=user_added", status_code=status.HTTP_303_SEE_OTHER)
