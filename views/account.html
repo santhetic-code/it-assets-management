@@ -302,4 +302,66 @@
     </div>
 </div>
 {% endfor %}
+
+<!-- SCRIPT INTERCEPTOR FORM (Wajib diletakkan DI DALAM blok Jinja2) -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const forms = document.querySelectorAll("form");
+    
+    forms.forEach(form => {
+        form.addEventListener("submit", async function(e) {
+            e.preventDefault(); // WAJIB: Hentikan browser pindah ke layar putih JSON
+            
+            let endpoint = this.getAttribute("action");
+            if (!endpoint) endpoint = "/add-user"; // Fallback jika action kosong
+            
+            const formData = new FormData(this);
+            // Ambil token CSRF rahasia yang sudah Anda tanamkan
+            const csrfToken = formData.get("csrf_token"); 
+            
+            const fetchOptions = {
+                method: this.getAttribute("method") || "POST",
+                headers: { "X-CSRF-Token": csrfToken },
+                body: formData
+            };
+
+            try {
+                // Percobaan 1: Tembak rute asli dari form
+                let response = await fetch(endpoint, fetchOptions);
+                
+                // Percobaan 2 (Self-Healing): Jika 404, coba tambah garis miring (aturan ketat FastAPI)
+                if (response.status === 404) {
+                    const slashEndpoint = endpoint.endsWith("/") ? endpoint : endpoint + "/";
+                    response = await fetch(slashEndpoint, fetchOptions);
+                }
+                
+                // Percobaan 3 (Self-Healing): Jika masih 404, cari di dalam brankas rute /api/auth/
+                if (response.status === 404 && !endpoint.includes("/api/")) {
+                    const apiEndpoint = "/api/auth" + (endpoint.startsWith("/") ? endpoint : "/" + endpoint);
+                    response = await fetch(apiEndpoint, fetchOptions);
+                }
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (typeof Swal !== "undefined") {
+                        Swal.fire("Berhasil!", "Tindakan berhasil dieksekusi.", "success").then(() => window.location.reload());
+                    } else {
+                        alert("Berhasil!");
+                        window.location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== "undefined") {
+                        Swal.fire("Gagal", result.detail || "Ditolak oleh sistem", "error");
+                    } else {
+                        alert("Gagal: " + (result.detail || "Ditolak oleh sistem"));
+                    }
+                }
+            } catch (error) {
+                alert("Koneksi API terputus. Pastikan server backend sedang berjalan.");
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

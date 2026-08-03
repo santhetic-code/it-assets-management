@@ -197,10 +197,72 @@
         });
 
     </script>
-</body>
-</html>
+
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+
+    <!-- SCRIPT GLOBAL INTERCEPTOR FORM (Pengaman Layar Putih) -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Hanya aktifkan pencegat ini jika kita sedang berada di halaman Akun
+        if (!window.location.pathname.includes("/account")) return;
+
+        const forms = document.querySelectorAll("form");
+        forms.forEach(form => {
+            form.addEventListener("submit", async function(e) {
+                // WAJIB: Hentikan form HTML standar agar tidak muncul layar putih JSON!
+                e.preventDefault(); 
+                
+                let originalAction = this.getAttribute("action");
+                if (!originalAction) return;
+
+                const formData = new FormData(this);
+                // Ambil token pelindung yang sudah Anda pasang sebelumnya
+                const csrfToken = formData.get("csrf_token") || "";
+
+                try {
+                    // SISTEM SELF-HEALING: Daftar kemungkinan alamat API di backend Anda
+                    const possibleUrls = [
+                        "/api/auth" + (originalAction.startsWith("/") ? originalAction : "/" + originalAction),
+                        "/auth" + (originalAction.startsWith("/") ? originalAction : "/" + originalAction),
+                        originalAction
+                    ];
+
+                    let response;
+                    // Skrip akan mencoba menembak satu per satu sampai tidak mendapat Error 404
+                    for (let url of possibleUrls) {
+                        response = await fetch(url, {
+                            method: this.getAttribute("method") || "POST",
+                            headers: { "X-CSRF-Token": csrfToken },
+                            body: formData
+                        });
+                        if (response.status !== 404) break; // Rute API asli ditemukan!
+                    }
+
+                    const result = await response.json().catch(() => ({}));
+                    
+                    // Menampilkan notifikasi visual yang rapi
+                    if (response.ok) {
+                        if (typeof Swal !== "undefined") {
+                            Swal.fire("Berhasil", "Aksi berhasil diproses!", "success")
+                            .then(() => window.location.reload());
+                        } else {
+                            alert("Berhasil!"); window.location.reload();
+                        }
+                    } else {
+                        if (typeof Swal !== "undefined") {
+                            Swal.fire("Gagal", result.detail || "Aksi ditolak oleh sistem", "error");
+                        } else {
+                            alert("Gagal: " + (result.detail || "Aksi ditolak oleh sistem"));
+                        }
+                    }
+                } catch (error) {
+                    alert("Koneksi ke API terputus. Pastikan terminal Uvicorn sedang berjalan.");
+                }
+            });
+        });
+    });
+    </script>
 
 </body>
 </html>
