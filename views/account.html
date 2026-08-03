@@ -59,6 +59,7 @@
 
             <!-- Form Ganti Sandi -->
             <form action="/change-password" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
     <div class="mb-3">
         <label class="form-label small fw-bold text-muted">Kata Sandi Lama</label>
         <div class="input-group">
@@ -152,6 +153,7 @@
                                     <!-- Tombol Hapus (Aman dari hapus diri sendiri & aman dari hapus developer) -->
                                     {% if u.username != current_user.username and u.username != "developer" %}
                                     <form action="/delete-user/{{ u.id }}" method="POST" class="d-inline" onsubmit="return confirm('PERINGATAN: Yakin ingin menghapus akun {{ u.username }} selamanya?');">
+                                        <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
                                         <button type="submit" class="btn btn-sm btn-light text-danger border" title="Hapus Akun"><i class="bi bi-trash"></i></button>
                                     </form>
                                     {% endif %}
@@ -186,6 +188,7 @@
             
             <!-- Form mengarah ke route /add-user yang baru Anda buat -->
             <form action="/add-user" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
                 <div class="modal-body px-4 py-4">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Username</label>
@@ -255,6 +258,7 @@
         <div class="modal-content border-0 shadow">
             <!-- PENTING: enctype="multipart/form-data" wajib ada untuk kirim file -->
             <form action="/update-avatar" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
                 <div class="modal-header border-bottom-0 pb-0 pt-3 px-3">
                     <h6 class="modal-title fw-bold"><i class="bi bi-image text-primary me-2"></i>Upload Foto</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -277,6 +281,7 @@
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow">
             <form action="/edit-user-role/{{ u.id }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
                 <div class="modal-header border-bottom-0 pb-0 pt-3 px-3">
                     <h6 class="modal-title fw-bold text-dark">Ubah Akses: {{ u.username }}</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
