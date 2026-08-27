@@ -1,35 +1,42 @@
-from app.core.database import engine, SessionLocal
-from app.models import domain
+from app.core.config import settings
+from app.core.database import SessionLocal, engine
 from app.core.security import get_password_hash
+from app.models import domain
 
-# 1. Generate semua tabel ke database
-domain.Base.metadata.create_all(bind=engine)
 
 def seed_admin():
+    # 1. Generate semua tabel ke database jika belum ada
+    domain.Base.metadata.create_all(bind=engine)
+
     db = SessionLocal()
     try:
-        # Cek apakah user admin sudah ada
-        existing_user = db.query(domain.User).filter(domain.User.username == "admin").first()
+        # Cek apakah user admin sesuai .env sudah ada
+        existing_user = (
+            db.query(domain.User)
+            .filter(domain.User.username == settings.SUPERADMIN_USERNAME)
+            .first()
+        )
         if not existing_user:
-            # Disesuaikan dengan kolom pada domain.User:
-            # - role: "Super Admin" (sesuai app/core/deps.py)
-            # - kolom 'is_active' dihilangkan karena tidak ada di domain.py
+            # Disesuaikan dengan kredensial dinamis dari app.core.config (.env)
             admin_user = domain.User(
-                username="admin",
-                password_hash=get_password_hash("admin123"),
-                role="Super Admin"
+                username=settings.SUPERADMIN_USERNAME,
+                password_hash=get_password_hash(settings.SUPERADMIN_PASSWORD),
+                role="Super Admin",
             )
             db.add(admin_user)
             db.commit()
-            print("Database berhasil dibuat dan User Admin berhasil disuntikkan!")
+            print(
+                f"✅ Database berhasil dibuat dan User Admin '{settings.SUPERADMIN_USERNAME}' berhasil disuntikkan dari .env!"
+            )
         else:
-            print("User admin sudah ada.")
+            print(f"ℹ️ User admin '{settings.SUPERADMIN_USERNAME}' sudah ada di database.")
     except Exception as e:
         db.rollback()
-        print(f"Terjadi kesalahan saat seeding: {e}")
+        print(f"❌ Terjadi kesalahan saat seeding: {e}")
         raise e
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_admin()

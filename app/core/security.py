@@ -19,7 +19,7 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 # Otomatis True jika ENVIRONMENT="production", False jika "development"
-SECURE_COOKIES = settings.ENVIRONMENT.lower() == "production"
+SECURE_COOKIES = settings.ENVIRONMENT.strip().lower() == "production"
 
 # Inisialisasi Fernet untuk Vault Kredensial
 cipher_suite = Fernet(VAULT_KEY.encode() if isinstance(VAULT_KEY, str) else VAULT_KEY)

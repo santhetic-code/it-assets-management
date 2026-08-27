@@ -1,3 +1,4 @@
+import secrets
 from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -9,6 +10,26 @@ from app.services import asset_service, auth_service
 
 router = APIRouter(tags=["Frontend Pages"])
 templates = Jinja2Templates(directory="views")
+
+
+def render_template(request: Request, name: str, context: dict = None):
+    """
+    Helper untuk merender template Jinja2 sekaligus memastikan
+    csrf_token diterbitkan, dimasukkan ke context template, dan disimpan di cookie browser.
+    """
+    if context is None:
+        context = {}
+    csrf_token = request.cookies.get("csrf_token") or secrets.token_hex(16)
+    context["csrf_token"] = csrf_token
+    response = templates.TemplateResponse(request=request, name=name, context=context)
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=False,
+        secure=SECURE_COOKIES,
+        samesite="lax",
+    )
+    return response
 
 
 # ==========================================
@@ -23,7 +44,7 @@ def login_page(request: Request):
             return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
         except Exception:
             pass
-    return templates.TemplateResponse(request=request, name="login.html")
+    return render_template(request=request, name="login.html")
 
 
 @router.post("/login")
@@ -38,7 +59,7 @@ def login_submit(
 
     # 2. Jika gagal: render ulang login.html dengan pesan error (200 OK)
     if not user:
-        return templates.TemplateResponse(
+        return render_template(
             request=request,
             name="login.html",
             context={
@@ -80,7 +101,7 @@ def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
     # Mengambil statistik & agregasi data secara dinamis dari Service Layer
     dashboard_stats = asset_service.get_dashboard_stats(db)
 
-    return templates.TemplateResponse(
+    return render_template(
         request=request,
         name="index.html",
         context={
@@ -95,42 +116,42 @@ def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
 # ==========================================
 @router.get("/it-notes")
 def read_it_notes(request: Request, current_user: CurrentUser):
-    return templates.TemplateResponse(
+    return render_template(
         request=request, name="it_notes.html", context={"current_user": current_user}
     )
 
 
 @router.get("/network")
 def read_network(request: Request, current_user: CurrentUser):
-    return templates.TemplateResponse(
+    return render_template(
         request=request, name="ips.html", context={"current_user": current_user}
     )
 
 
 @router.get("/vault")
 def read_vault(request: Request, current_user: CurrentUser):
-    return templates.TemplateResponse(
+    return render_template(
         request=request, name="credentials.html", context={"current_user": current_user}
     )
 
 
 @router.get("/purchase-records")
 def read_purchases(request: Request, current_user: CurrentUser):
-    return templates.TemplateResponse(
+    return render_template(
         request=request, name="purchases.html", context={"current_user": current_user}
     )
 
 
 @router.get("/hardware-components")
 def read_components(request: Request, current_user: CurrentUser):
-    return templates.TemplateResponse(
+    return render_template(
         request=request, name="components.html", context={"current_user": current_user}
     )
 
 
 @router.get("/maintenance-logs")
 def read_maintenance(request: Request, current_user: CurrentUser):
-    return templates.TemplateResponse(
+    return render_template(
         request=request, name="maintenance.html", context={"current_user": current_user}
     )
 
@@ -138,7 +159,7 @@ def read_maintenance(request: Request, current_user: CurrentUser):
 @router.get("/account")
 def read_account(request: Request, db: DbSession, current_user: CurrentUser):
     users = auth_service.get_all_users(db)
-    return templates.TemplateResponse(
+    return render_template(
         request=request,
         name="account.html",
         context={
@@ -152,7 +173,7 @@ def read_account(request: Request, db: DbSession, current_user: CurrentUser):
 
 @router.get("/system-logs")
 def read_logs(request: Request, current_user: CurrentUser):
-    return templates.TemplateResponse(
+    return render_template(
         request=request, name="logs.html", context={"current_user": current_user}
     )
 
