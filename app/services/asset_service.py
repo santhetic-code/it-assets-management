@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from fastapi import HTTPException, status
 from datetime import date
 
-from app.models.domain import Asset, Component, Purchase, MaintenanceLog
+from app.models.domain import Asset, Component, Purchase, MaintenanceLog, NetworkIP
 from app.models.schemas.asset import AssetCreate, AssetUpdate
 from app.models.schemas.component import ComponentCreate, ComponentUpdate
 from app.models.schemas.purchase import PurchaseCreate, PurchaseUpdate
@@ -105,3 +106,49 @@ def delete_maintenance(db: Session, item_id: int):
     item = db.query(MaintenanceLog).filter(MaintenanceLog.id == item_id).first()
     if item: db.delete(item); db.commit()
     return {"message": "Jadwal maintenance dihapus."}
+
+
+# ==========================================
+# 4. STATISTIK DASHBOARD DINAMIS
+# ==========================================
+def get_dashboard_stats(db: Session):
+    total_assets = db.query(Asset).count()
+    total_components = db.query(Component).count()
+    active_ips = db.query(NetworkIP).filter(NetworkIP.status == "Aktif").count()
+
+    # Periksa dan update status maintenance yang lewat jadwal secara otomatis
+    all_maintenance = get_all_maintenance(db)
+    pending_maintenance = sum(1 for m in all_maintenance if m.status == "Kritis")
+
+    # Distribusi Status Penggunaan Aset (Doughnut Chart)
+    status_query = (
+        db.query(Asset.status, func.count(Asset.id)).group_by(Asset.status).all()
+    )
+    if status_query:
+        status_labels = [row[0] for row in status_query]
+        status_data = [row[1] for row in status_query]
+    else:
+        status_labels = ["Digunakan", "Tersedia", "Rusak"]
+        status_data = [0, 0, 0]
+
+    # Distribusi Kategori Perangkat (Bar Chart)
+    category_query = (
+        db.query(Asset.category, func.count(Asset.id)).group_by(Asset.category).all()
+    )
+    if category_query:
+        bar_labels = [row[0] for row in category_query]
+        bar_data = [row[1] for row in category_query]
+    else:
+        bar_labels = ["Laptop", "PC Desktop", "Server", "Printer", "Switch"]
+        bar_data = [0, 0, 0, 0, 0]
+
+    return {
+        "total_assets": total_assets,
+        "total_components": total_components,
+        "active_ips": active_ips,
+        "pending_maintenance": pending_maintenance,
+        "status_labels": status_labels,
+        "status_data": status_data,
+        "bar_labels": bar_labels,
+        "bar_data": bar_data,
+    }

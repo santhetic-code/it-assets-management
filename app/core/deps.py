@@ -31,8 +31,12 @@ def get_current_user(request: Request, db: DbSession):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token tidak valid."
         )
 
-    # Mengambil data asli dari database
-    user = db.query(User).filter(User.id == user_id).first()
+    # Mengambil data asli dari database (mendukung user_id numerik maupun username)
+    if str(user_id).isdigit():
+        user = db.query(User).filter(User.id == int(user_id)).first()
+    else:
+        user = db.query(User).filter(User.username == user_id).first()
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

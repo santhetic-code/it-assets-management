@@ -24,6 +24,10 @@ class User(Base):
     # Relasi ke log aktivitas
     audit_logs = relationship("SystemLogs", back_populates="user")
 
+    @property
+    def profile_picture(self):
+        return self.avatar
+
 
 class Asset(Base):
     __tablename__ = "assets"
