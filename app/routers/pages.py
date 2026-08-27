@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Depends, Form, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from app.core.deps import DbSession, CurrentUser
+from app.core.deps import DbSession, CurrentUser, get_db
 from app.services import auth_service
 from app.core.security import create_access_token, SECURE_COOKIES, get_password_hash
 from app.models.domain import User
@@ -55,7 +55,11 @@ def logout_action():
 # 2. DASHBOARD UTAMA
 # ==========================================
 @router.get("/")
-def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
+def read_dashboard(
+    request: Request, 
+    current_user: CurrentUser,
+    db: DbSession
+):
     return templates.TemplateResponse(
         request=request,
         name="index.html",
