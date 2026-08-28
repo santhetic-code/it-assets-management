@@ -66,21 +66,26 @@ class Component(Base):
     __tablename__ = "components"
 
     id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(
-        Integer, ForeignKey("assets.id", ondelete="SET NULL"), nullable=True
-    )
-    name = Column(String(100), nullable=True)
-    assigned_to = Column(String(100), nullable=True)
-    pc_category = Column(String(50), nullable=True)
-    os_name = Column(String(100), nullable=True)
-    processor_spec = Column(String(150), nullable=True)
-    mainboard_spec = Column(String(150), nullable=True)
-    ram_spec = Column(String(100), nullable=True)
-    vga_spec = Column(String(100), nullable=True)
-    storage_spec = Column(String(150), nullable=True)
-    location = Column(String(100), nullable=True)
-    spesifikasi = Column(Text, nullable=True)
+    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)  # Wajib ada untuk relasi
+    name = Column(String(100), nullable=False)  # Misalnya: "PC - DIREKTUR"
 
+    # Kolom baru hasil adaptasi dari Spreadsheet
+    os_name = Column(String(255), nullable=True)
+    ram_spec = Column(String(255), nullable=True)
+    vga_spec = Column(String(255), nullable=True)  # Mewakili VGA / GPU Card
+    processor_spec = Column(String(255), nullable=True)  # Mewakili CPU / Processor
+    mainboard_spec = Column(String(255), nullable=True)
+    storage_spec = Column(String(500), nullable=True)  # Mewakili HDD/SSD
+    monitor = Column(String(255), nullable=True)
+    keyboard = Column(String(255), nullable=True)
+    mouse = Column(String(255), nullable=True)
+    psu = Column(String(255), nullable=True)
+    casing = Column(String(255), nullable=True)
+
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+
+    # Relationship back to Asset
     asset = relationship("Asset", back_populates="components")
 
 

@@ -3,7 +3,7 @@ from datetime import date
 from typing import List, Optional
 
 import pandas as pd
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -183,6 +183,109 @@ def delete_component(db: Session, item_id: int):
     return {"message": "Komponen berhasil dihapus."}
 
 
+async def import_components_from_file(db: Session, file: UploadFile):
+    import uuid
+
+    if not file.filename.endswith((".csv", ".xlsx", ".xls")):
+        raise HTTPException(
+            status_code=400, detail="Format file tidak didukung. Gunakan .csv atau .xlsx"
+        )
+
+    try:
+        contents = await file.read()
+        if file.filename.endswith(".csv"):
+            # Jika CSV, jadikan satu dictionary agar seragam dengan Excel
+            df_dict = {"Sheet1": pd.read_csv(io.BytesIO(contents))}
+        else:
+            # sheet_name=None akan membaca SELURUH sheet yang ada di file Excel
+            df_dict = pd.read_excel(io.BytesIO(contents), sheet_name=None)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Gagal membaca file: {str(e)}")
+
+    imported_count = 0
+    errors = []
+
+    # Looping untuk setiap sheet di dalam file Excel
+    for sheet_name, df in df_dict.items():
+        # Standarisasi nama kolom (huruf besar & hilangkan spasi)
+        df.columns = df.columns.astype(str).str.strip().str.upper()
+
+        # Deteksi otomatis: Lewati sheet yang tidak memiliki kolom 'USER' (misal: sheet IP List atau Report AC)
+        if "USER" not in df.columns:
+            continue
+
+        for index, row in df.iterrows():
+            pc_name = str(row.get("USER", "")).strip()
+
+            if (
+                not pc_name
+                or pd.isna(pc_name)
+                or pc_name.lower() == "nan"
+                or pc_name.lower() == "user"
+            ):
+                continue
+
+            # Cek apakah Aset Induk sudah ada di database
+            asset = (
+                db.query(Asset)
+                .filter(
+                    (Asset.name.ilike(f"%{pc_name}%"))
+                    | (Asset.assigned_to.ilike(f"%{pc_name}%"))
+                )
+                .first()
+            )
+
+            # FITUR BARU: Auto-Create Aset Induk jika belum ada
+            if not asset:
+                auto_tag = f"PC-{uuid.uuid4().hex[:6].upper()}"
+                new_asset = Asset(
+                    asset_tag=auto_tag,
+                    name=pc_name,
+                    category="Hardware/PC",
+                    status="Digunakan",
+                    condition="Baru",
+                    assigned_to=pc_name,
+                )
+                db.add(new_asset)
+                db.flush()  # Dapatkan ID aset yang baru dibuat sebelum di-commit
+                asset = new_asset
+
+            # Ekstraksi Data Spesifikasi PC
+            new_component = Component(
+                asset_id=asset.id,
+                name=f"Spesifikasi {pc_name}",
+                os_name=str(row.get("OS", "")),
+                ram_spec=str(row.get("RAM", "")),
+                vga_spec=str(row.get("VGA", row.get("GPU CARD", ""))),
+                processor_spec=str(row.get("CPU", row.get("PROCESSOR", ""))),
+                mainboard_spec=str(row.get("MAINBOARD", "")),
+                storage_spec=str(row.get("HDD/SSD", "")),
+                monitor=str(row.get("MONITOR", "")),
+                keyboard=str(row.get("KEYBOARD", "")),
+                mouse=str(row.get("MOUSE", "")),
+                psu=str(row.get("PSU", "")),
+                casing=str(row.get("CASSING", row.get("CASING", ""))),
+            )
+
+            # Bersihkan nilai 'nan' dari pandas
+            for key, value in list(new_component.__dict__.items()):
+                if isinstance(value, str) and value.lower() == "nan":
+                    setattr(new_component, key, None)
+
+            db.add(new_component)
+            imported_count += 1
+
+    # Simpan semua data (Aset baru & Komponen) ke database
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": f"Berhasil mengimpor {imported_count} data komponen PC.",
+        "errors": errors,
+        "count": imported_count,
+    }
+
+
 # ==========================================
 # 3. LOGIKA PEMBELIAN
 # ==========================================
@@ -192,7 +295,6 @@ def get_purchases(db: Session):
 
 def create_purchase(db: Session, data: PurchaseCreate):
     purchase_data = data.model_dump(exclude_unset=True)
-    # Kalkulasi total price jika cost / price_per_item & quantity tersedia
     qty = purchase_data.get("quantity", 1) or 1
     unit_price = purchase_data.get("price_per_item", purchase_data.get("cost", 0.0)) or 0.0
     purchase_data["cost"] = unit_price
@@ -303,11 +405,9 @@ def get_dashboard_stats(db: Session):
     total_components = db.query(Component).count()
     active_ips = db.query(NetworkIP).filter(NetworkIP.status == "Aktif").count()
 
-    # Periksa dan update status maintenance yang lewat jadwal secara otomatis
     all_maintenance = get_all_maintenance(db)
     pending_maintenance = sum(1 for m in all_maintenance if m.status == "Kritis")
 
-    # Distribusi Status Penggunaan Aset (Doughnut Chart)
     status_query = (
         db.query(Asset.status, func.count(Asset.id)).group_by(Asset.status).all()
     )
@@ -318,7 +418,6 @@ def get_dashboard_stats(db: Session):
         status_labels = ["Digunakan", "Tersedia", "Rusak"]
         status_data = [0, 0, 0]
 
-    # Distribusi Kategori Perangkat (Bar Chart)
     category_query = (
         db.query(Asset.category, func.count(Asset.id)).group_by(Asset.category).all()
     )

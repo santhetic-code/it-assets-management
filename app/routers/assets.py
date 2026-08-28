@@ -114,6 +114,18 @@ def delete_component(component_id: int, db: DbSession):
     return asset_service.delete_component(db, component_id)
 
 
+@router.post(
+    "/api/components/import",
+    dependencies=[Depends(require_staff_or_admin), Depends(get_audit_logger)],
+)
+async def import_components_endpoint(
+    file: UploadFile = File(...),
+    db: DbSession = None,
+):
+    result = await asset_service.import_components_from_file(db, file)
+    return result
+
+
 # ==========================================
 # 3. ENDPOINT PEMBELIAN (Form-Data & File Upload)
 # ==========================================
