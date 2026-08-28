@@ -41,6 +41,9 @@ class Asset(Base):
     status = Column(String(50), nullable=False, default="Digunakan")
     assigned_to = Column(String(100), nullable=True)
     location = Column(String(100), nullable=True)
+    serial_number = Column(String(100), nullable=True)
+    condition = Column(String(50), default="Baru")
+    usage_status = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
@@ -55,7 +58,7 @@ class Asset(Base):
         "HealthMonitoring", back_populates="asset", cascade="all, delete-orphan"
     )
     purchase_info = relationship(
-        "Purchase", back_populates="asset", uselist=False, cascade="all, delete-orphan"
+        "Purchase", back_populates="asset", cascade="all, delete-orphan"
     )
 
 
@@ -63,8 +66,19 @@ class Component(Base):
     __tablename__ = "components"
 
     id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
-    name = Column(String(100), nullable=False)
+    asset_id = Column(
+        Integer, ForeignKey("assets.id", ondelete="SET NULL"), nullable=True
+    )
+    name = Column(String(100), nullable=True)
+    assigned_to = Column(String(100), nullable=True)
+    pc_category = Column(String(50), nullable=True)
+    os_name = Column(String(100), nullable=True)
+    processor_spec = Column(String(150), nullable=True)
+    mainboard_spec = Column(String(150), nullable=True)
+    ram_spec = Column(String(100), nullable=True)
+    vga_spec = Column(String(100), nullable=True)
+    storage_spec = Column(String(150), nullable=True)
+    location = Column(String(100), nullable=True)
     spesifikasi = Column(Text, nullable=True)
 
     asset = relationship("Asset", back_populates="components")
@@ -77,6 +91,8 @@ class NetworkIP(Base):
     ip_address = Column(
         String(50), unique=True, index=True, nullable=False
     )  # Harus unik
+    ip_type = Column(String(50), default="Operasional")
+    assigned_to = Column(String(100), nullable=True)
     mac_address = Column(String(50), nullable=True)
     description = Column(String(255), nullable=True)
     status = Column(String(50), default="Aktif")
@@ -101,13 +117,19 @@ class Purchase(Base):
     __tablename__ = "purchases"
 
     id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False, unique=True)
+    asset_id = Column(
+        Integer, ForeignKey("assets.id", ondelete="SET NULL"), nullable=True
+    )
+    item_name = Column(String(150), nullable=True)
     vendor = Column(String(100), nullable=True)
     purchase_date = Column(Date, nullable=True)
+    price_per_item = Column(Float, default=0.0)
+    quantity = Column(Integer, default=1)
     cost = Column(Float, default=0.0)
-    total_price = Column(
-        Float, default=0.0
-    )  # Nanti akan dihitung otomatis di Service layer
+    total_price = Column(Float, default=0.0)
+    buyer_name = Column(String(100), nullable=True)
+    invoice_link = Column(String(255), nullable=True)
+    nota_file = Column(String(255), nullable=True)
 
     asset = relationship("Asset", back_populates="purchase_info")
 
@@ -116,9 +138,15 @@ class MaintenanceLog(Base):
     __tablename__ = "maintenance_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
-    status = Column(String(50), default="Aman")  # Aman, Perlu Dicek, Kritis
+    asset_id = Column(
+        Integer, ForeignKey("assets.id", ondelete="CASCADE"), nullable=False
+    )
+    task_type = Column(String(100), nullable=True)
+    location_target = Column(String(100), nullable=True)
+    last_maintenance_date = Column(Date, nullable=True)
     next_schedule_date = Column(Date, nullable=True)
+    interval_months = Column(Integer, default=3)
+    status = Column(String(50), default="Aman")  # Aman, Perlu Dicek, Kritis
     notes = Column(Text, nullable=True)
 
     asset = relationship("Asset", back_populates="maintenance_logs")

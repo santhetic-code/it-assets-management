@@ -5,8 +5,9 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.deps import CurrentUser, DbSession
 from app.core.security import SECURE_COOKIES, create_access_token, verify_jwt_token
+from app.models import domain
 from app.models.schemas.user import UserCreate
-from app.services import asset_service, auth_service
+from app.services import asset_service, auth_service, ip_service, vault_service
 
 router = APIRouter(tags=["Frontend Pages"])
 templates = Jinja2Templates(directory="views")
@@ -115,44 +116,77 @@ def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
 # 3. HALAMAN MENU LAINNYA
 # ==========================================
 @router.get("/it-notes")
-def read_it_notes(request: Request, current_user: CurrentUser):
+def read_it_notes(request: Request, db: DbSession, current_user: CurrentUser):
+    assets = asset_service.get_all_assets(db)
     return render_template(
-        request=request, name="it_notes.html", context={"current_user": current_user}
+        request=request,
+        name="it_notes.html",
+        context={"current_user": current_user, "assets": assets},
     )
 
 
 @router.get("/network")
-def read_network(request: Request, current_user: CurrentUser):
+def read_network(request: Request, db: DbSession, current_user: CurrentUser):
+    ips = ip_service.get_all_ips(db)
     return render_template(
-        request=request, name="ips.html", context={"current_user": current_user}
+        request=request,
+        name="ips.html",
+        context={"current_user": current_user, "ips": ips},
     )
 
 
 @router.get("/vault")
-def read_vault(request: Request, current_user: CurrentUser):
+def read_vault(request: Request, db: DbSession, current_user: CurrentUser):
+    credentials = vault_service.get_all_credentials(db)
     return render_template(
-        request=request, name="credentials.html", context={"current_user": current_user}
+        request=request,
+        name="credentials.html",
+        context={"current_user": current_user, "credentials": credentials},
     )
 
 
 @router.get("/purchase-records")
-def read_purchases(request: Request, current_user: CurrentUser):
+def read_purchases(request: Request, db: DbSession, current_user: CurrentUser):
+    purchases = asset_service.get_purchases(db)
+    assets = asset_service.get_all_assets(db)
     return render_template(
-        request=request, name="purchases.html", context={"current_user": current_user}
+        request=request,
+        name="purchases.html",
+        context={
+            "current_user": current_user,
+            "purchases": purchases,
+            "assets": assets,
+        },
     )
 
 
 @router.get("/hardware-components")
-def read_components(request: Request, current_user: CurrentUser):
+def read_components(request: Request, db: DbSession, current_user: CurrentUser):
+    components = asset_service.get_components(db)
+    assets = asset_service.get_all_assets(db)
     return render_template(
-        request=request, name="components.html", context={"current_user": current_user}
+        request=request,
+        name="components.html",
+        context={
+            "current_user": current_user,
+            "components": components,
+            "assets": assets,
+        },
     )
 
 
 @router.get("/maintenance-logs")
-def read_maintenance(request: Request, current_user: CurrentUser):
+def read_maintenance(request: Request, db: DbSession, current_user: CurrentUser):
+    maintenance_logs = asset_service.get_all_maintenance(db)
+    assets = asset_service.get_all_assets(db)
     return render_template(
-        request=request, name="maintenance.html", context={"current_user": current_user}
+        request=request,
+        name="maintenance.html",
+        context={
+            "current_user": current_user,
+            "maintenance_logs": maintenance_logs,
+            "assets": assets,
+        },
     )
 
 
@@ -172,9 +206,17 @@ def read_account(request: Request, db: DbSession, current_user: CurrentUser):
 
 
 @router.get("/system-logs")
-def read_logs(request: Request, current_user: CurrentUser):
+def read_logs(request: Request, db: DbSession, current_user: CurrentUser):
+    logs = (
+        db.query(domain.SystemLogs)
+        .order_by(domain.SystemLogs.timestamp.desc())
+        .limit(100)
+        .all()
+    )
     return render_template(
-        request=request, name="logs.html", context={"current_user": current_user}
+        request=request,
+        name="logs.html",
+        context={"current_user": current_user, "logs": logs},
     )
 
 

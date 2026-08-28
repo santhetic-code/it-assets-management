@@ -1,20 +1,30 @@
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
-from fastapi import HTTPException, status
+import io
 from datetime import date
+from typing import List, Optional
 
-from app.models.domain import Asset, Component, Purchase, MaintenanceLog, NetworkIP
+import pandas as pd
+from fastapi import HTTPException, status
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from app.models.domain import Asset, Component, MaintenanceLog, NetworkIP, Purchase
 from app.models.schemas.asset import AssetCreate, AssetUpdate
 from app.models.schemas.component import ComponentCreate, ComponentUpdate
-from app.models.schemas.purchase import PurchaseCreate, PurchaseUpdate
 from app.models.schemas.maintenance import MaintenanceCreate, MaintenanceUpdate
+from app.models.schemas.purchase import PurchaseCreate, PurchaseUpdate
+
 
 # ==========================================
-# 1. LOGIKA ASET (Memperbaiki Bug #8)
+# 1. LOGIKA ASET
 # ==========================================
 def get_all_assets(db: Session):
     return db.query(Asset).all()
+
+
+def get_asset_by_tag(db: Session, tag: str):
+    return db.query(Asset).filter(Asset.asset_tag == tag).first()
+
 
 def create_asset(db: Session, asset_data: AssetCreate):
     new_asset = Asset(**asset_data.model_dump())
@@ -25,25 +35,31 @@ def create_asset(db: Session, asset_data: AssetCreate):
         return new_asset
     except IntegrityError:
         db.rollback()
-        # Menangkap error duplikat Tag Aset dengan elegan
-        raise HTTPException(status_code=400, detail=f"Tag Aset '{asset_data.asset_tag}' sudah terdaftar.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tag Aset '{asset_data.asset_tag}' sudah terdaftar.",
+        )
+
 
 def update_asset(db: Session, asset_id: int, asset_data: AssetUpdate):
     db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
     if not db_asset:
         raise HTTPException(status_code=404, detail="Aset tidak ditemukan.")
-    
+
     update_data = asset_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_asset, key, value)
-        
+
     try:
         db.commit()
         db.refresh(db_asset)
         return db_asset
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Tag Aset bertabrakan dengan data lain.")
+        raise HTTPException(
+            status_code=400, detail="Tag Aset bertabrakan dengan data lain."
+        )
+
 
 def delete_asset(db: Session, asset_id: int):
     db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
@@ -53,63 +69,234 @@ def delete_asset(db: Session, asset_id: int):
     db.commit()
     return {"message": "Aset berhasil dihapus."}
 
+
+def import_assets_from_file(db: Session, file_bytes: bytes, filename: str) -> int:
+    try:
+        if filename.endswith(".csv"):
+            df = pd.read_csv(io.BytesIO(file_bytes))
+        else:
+            df = pd.read_excel(io.BytesIO(file_bytes))
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Gagal membaca file impor: {str(e)}"
+        )
+
+    col_map = {
+        "Tag Aset": "asset_tag",
+        "tag": "asset_tag",
+        "asset_tag": "asset_tag",
+        "Nama Perangkat": "name",
+        "nama": "name",
+        "name": "name",
+        "Nama Aset": "name",
+        "Kategori": "category",
+        "category": "category",
+        "SN": "serial_number",
+        "sn": "serial_number",
+        "serial_number": "serial_number",
+        "SN / PID": "serial_number",
+        "Pengguna": "assigned_to",
+        "assigned_to": "assigned_to",
+        "Di Gunakan Oleh": "assigned_to",
+        "Lokasi": "location",
+        "location": "location",
+        "Kondisi": "condition",
+        "condition": "condition",
+        "Status": "status",
+        "status": "status",
+        "usage_status": "status",
+    }
+    df.rename(
+        columns=lambda c: col_map.get(str(c).strip(), str(c).strip()), inplace=True
+    )
+
+    imported_count = 0
+    for _, row in df.iterrows():
+        tag = str(row.get("asset_tag", "")).strip()
+        if not tag or tag.lower() == "nan":
+            continue
+
+        existing = db.query(Asset).filter(Asset.asset_tag == tag).first()
+        asset_values = {
+            "asset_tag": tag,
+            "name": str(row.get("name", "Unnamed Asset")),
+            "category": str(row.get("category", "Fasilitas")),
+            "serial_number": str(row.get("serial_number", "-")),
+            "assigned_to": str(row.get("assigned_to", "-")),
+            "location": str(row.get("location", "-")),
+            "condition": str(row.get("condition", "Baru")),
+            "status": str(row.get("status", "Digunakan")),
+        }
+        if existing:
+            for k, v in asset_values.items():
+                setattr(existing, k, v)
+        else:
+            new_a = Asset(**asset_values)
+            db.add(new_a)
+        imported_count += 1
+
+    try:
+        db.commit()
+        return imported_count
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400, detail=f"Gagal menyimpan data impor: {str(e)}"
+        )
+
+
 # ==========================================
-# 2. LOGIKA KOMPONEN & PEMBELIAN
+# 2. LOGIKA KOMPONEN
 # ==========================================
-# (Fungsi CRUD dasar untuk Komponen)
-def get_components(db: Session): return db.query(Component).all()
+def get_components(db: Session):
+    return db.query(Component).all()
+
+
 def create_component(db: Session, data: ComponentCreate):
-    new_item = Component(**data.model_dump())
-    db.add(new_item); db.commit(); db.refresh(new_item)
+    new_item = Component(**data.model_dump(exclude_unset=True))
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
     return new_item
+
+
+def update_component(db: Session, item_id: int, data: ComponentUpdate):
+    db_item = db.query(Component).filter(Component.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Data Komponen tidak ditemukan.")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_item, key, value)
+
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
 def delete_component(db: Session, item_id: int):
     item = db.query(Component).filter(Component.id == item_id).first()
-    if item: db.delete(item); db.commit()
-    return {"message": "Komponen dihapus."}
+    if not item:
+        raise HTTPException(status_code=404, detail="Data Komponen tidak ditemukan.")
+    db.delete(item)
+    db.commit()
+    return {"message": "Komponen berhasil dihapus."}
 
-# (Fungsi CRUD dasar untuk Pembelian)
-def get_purchases(db: Session): return db.query(Purchase).all()
-def create_purchase(db: Session, data: PurchaseCreate):
-    new_item = Purchase(**data.model_dump())
-    db.add(new_item); db.commit(); db.refresh(new_item)
-    return new_item
-def delete_purchase(db: Session, item_id: int):
-    item = db.query(Purchase).filter(Purchase.id == item_id).first()
-    if item: db.delete(item); db.commit()
-    return {"message": "Riwayat pembelian dihapus."}
 
 # ==========================================
-# 3. LOGIKA MAINTENANCE (Memperbaiki Bug #7)
+# 3. LOGIKA PEMBELIAN
+# ==========================================
+def get_purchases(db: Session):
+    return db.query(Purchase).all()
+
+
+def create_purchase(db: Session, data: PurchaseCreate):
+    purchase_data = data.model_dump(exclude_unset=True)
+    # Kalkulasi total price jika cost / price_per_item & quantity tersedia
+    qty = purchase_data.get("quantity", 1) or 1
+    unit_price = purchase_data.get("price_per_item", purchase_data.get("cost", 0.0)) or 0.0
+    purchase_data["cost"] = unit_price
+    purchase_data["price_per_item"] = unit_price
+    purchase_data["quantity"] = qty
+    purchase_data["total_price"] = unit_price * qty
+
+    new_item = Purchase(**purchase_data)
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+    return new_item
+
+
+def update_purchase(db: Session, item_id: int, data: PurchaseUpdate):
+    db_item = db.query(Purchase).filter(Purchase.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Data Pembelian tidak ditemukan.")
+
+    update_data = data.model_dump(exclude_unset=True)
+    if "price_per_item" in update_data or "quantity" in update_data or "cost" in update_data:
+        unit_price = update_data.get(
+            "price_per_item", update_data.get("cost", db_item.price_per_item or db_item.cost or 0.0)
+        )
+        qty = update_data.get("quantity", db_item.quantity or 1)
+        update_data["cost"] = unit_price
+        update_data["price_per_item"] = unit_price
+        update_data["quantity"] = qty
+        update_data["total_price"] = float(unit_price) * int(qty)
+
+    for key, value in update_data.items():
+        setattr(db_item, key, value)
+
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def delete_purchase(db: Session, item_id: int):
+    item = db.query(Purchase).filter(Purchase.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Data Pembelian tidak ditemukan.")
+    db.delete(item)
+    db.commit()
+    return {"message": "Riwayat pembelian berhasil dihapus."}
+
+
+# ==========================================
+# 4. LOGIKA MAINTENANCE
 # ==========================================
 def get_all_maintenance(db: Session):
     logs = db.query(MaintenanceLog).all()
     today = date.today()
     is_changed = False
-    
+
     # Auto-flagging: Mengubah status otomatis jika tanggal lewat
     for log in logs:
-        if log.next_schedule_date and log.next_schedule_date <= today and log.status == "Aman":
+        if (
+            log.next_schedule_date
+            and log.next_schedule_date <= today
+            and log.status == "Aman"
+        ):
             log.status = "Kritis"
             is_changed = True
-            
+
     if is_changed:
-        db.commit() # Simpan perubahan status ke database
-        
+        db.commit()
+
     return logs
 
+
 def create_maintenance(db: Session, data: MaintenanceCreate):
-    new_item = MaintenanceLog(**data.model_dump())
-    db.add(new_item); db.commit(); db.refresh(new_item)
+    new_item = MaintenanceLog(**data.model_dump(exclude_unset=True))
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
     return new_item
+
+
+def update_maintenance(db: Session, item_id: int, data: MaintenanceUpdate):
+    db_item = db.query(MaintenanceLog).filter(MaintenanceLog.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Data Maintenance tidak ditemukan.")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_item, key, value)
+
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
 
 def delete_maintenance(db: Session, item_id: int):
     item = db.query(MaintenanceLog).filter(MaintenanceLog.id == item_id).first()
-    if item: db.delete(item); db.commit()
-    return {"message": "Jadwal maintenance dihapus."}
+    if not item:
+        raise HTTPException(status_code=404, detail="Data Maintenance tidak ditemukan.")
+    db.delete(item)
+    db.commit()
+    return {"message": "Jadwal maintenance berhasil dihapus."}
 
 
 # ==========================================
-# 4. STATISTIK DASHBOARD DINAMIS
+# 5. STATISTIK DASHBOARD DINAMIS
 # ==========================================
 def get_dashboard_stats(db: Session):
     total_assets = db.query(Asset).count()

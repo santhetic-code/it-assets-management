@@ -4,24 +4,38 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-end mb-4">
-    <div><h3 class="fw-bold text-dark mb-1">Riwayat Pembelian Aset</h3><span class="text-muted small fw-semibold">Rekam jejak pengadaan aset dan bukti nota digital.</span></div>
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Riwayat Pembelian Aset</h3>
+        <span class="text-muted small fw-semibold">Rekam jejak pengadaan aset dan bukti nota digital.</span>
+    </div>
 </div>
 
 <div class="card-custom border-top border-success border-4">
     <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-file-earmark-plus-fill text-success me-2"></i>Input Data Pembelian Baru</h6>
     <form id="formPurchase" autocomplete="off" enctype="multipart/form-data">
         <div class="row g-3 mb-3">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Nama Barang</label><input type="text" id="item_name" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Vendor</label><input type="text" id="vendor" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Harga Satuan (Rp)</label><input type="number" id="price" class="form-control" required></div>
-            <div class="col-md-1"><label class="form-label small fw-bold text-muted">Jml</label><input type="number" id="quantity" class="form-control" value="1" required></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Tanggal Beli</label><input type="date" id="purchase_date" class="form-control" required></div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Aset Terkait (Opsional)</label>
+                <select id="asset_id" class="form-select">
+                    <option value="">-- Hubungkan ke Aset --</option>
+                    {% for a in assets %}
+                    <option value="{{ a.id }}">{{ a.asset_tag }} - {{ a.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Nama Barang / Aset</label><input type="text" id="item_name" class="form-control" placeholder="Cth: MacBook Pro M2" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Vendor / Toko</label><input type="text" id="vendor" class="form-control" placeholder="Cth: Tokopedia / Ibox" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Harga Satuan (Rp)</label><input type="number" id="price" class="form-control" placeholder="Cth: 15000000" required></div>
         </div>
         <div class="row g-3">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Dibeli Oleh</label><input type="text" id="buyer_name" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Link Marketplace</label><input type="url" id="invoice_link" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Upload Nota Fisik</label><input type="file" id="nota_file" class="form-control" accept="image/*,.pdf"></div>
-            <div class="col-md-3 d-flex align-items-end"><button type="submit" class="btn btn-success w-100 fw-bold"><i class="bi bi-save-fill me-2"></i>Simpan</button></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Jumlah (Qty)</label><input type="number" id="quantity" class="form-control" value="1" min="1" required></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Tanggal Beli</label><input type="date" id="purchase_date" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Dibeli Oleh</label><input type="text" id="buyer_name" class="form-control" placeholder="Nama Pembeli / Tim" required></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Link Nota Online</label><input type="url" id="invoice_link" class="form-control" placeholder="https://..."></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Upload File Nota</label><input type="file" id="nota_file" class="form-control" accept="image/*,.pdf"></div>
+        </div>
+        <div class="text-end mt-4">
+            <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm"><i class="bi bi-save-fill me-2"></i>Simpan Data Pembelian</button>
         </div>
     </form>
 </div>
@@ -29,21 +43,44 @@
 <div class="card-custom">
     <div class="table-responsive">
         <table id="tabelPembelian" class="table table-hover align-middle">
-            <thead><tr><th>Nama Aset</th><th>Tanggal</th><th>Harga Satuan</th><th>Bukti Nota</th><th>Aksi</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Nama Barang / Aset</th>
+                    <th>Vendor</th>
+                    <th>Tanggal</th>
+                    <th>Harga Satuan</th>
+                    <th>Qty</th>
+                    <th>Total Biaya</th>
+                    <th>Pembeli</th>
+                    <th>Bukti Nota</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for p in purchases %}
                 <tr>
-                    <td class="fw-bold text-dark">{{ p.item_name }}</td>
-                    <td>{{ p.purchase_date }}</td>
-                    <td class="text-success fw-bold">Rp {{ p.price_per_item }}</td>
+                    <td class="fw-bold text-dark">
+                        {{ p.item_name or (p.asset.name if p.asset else 'Aset Tanpa Nama') }}
+                        {% if p.asset %}
+                        <br><span class="badge bg-light text-muted border border-light small">{{ p.asset.asset_tag }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.vendor or '-' }}</td>
+                    <td>{{ p.purchase_date or '-' }}</td>
+                    <td class="text-secondary fw-bold">Rp {{ "{:,.0f}".format(p.price_per_item or p.cost or 0) }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ p.quantity or 1 }}</span></td>
+                    <td class="text-success fw-bold">Rp {{ "{:,.0f}".format(p.total_price or ((p.price_per_item or p.cost or 0) * (p.quantity or 1))) }}</td>
+                    <td><i class="bi bi-person-fill text-muted me-1"></i> {{ p.buyer_name or '-' }}</td>
                     <td>
-                        {% if p.invoice_link %}
-                            <a href="{{ p.invoice_link }}" target="_blank" class="btn btn-sm btn-light text-success border border-light"><i class="bi bi-file-earmark-check-fill me-1"></i>Lihat Nota</a>
+                        {% if p.invoice_link or p.nota_file %}
+                            <a href="{{ p.invoice_link or p.nota_file }}" target="_blank" class="btn btn-sm btn-light text-success border border-light"><i class="bi bi-file-earmark-check-fill me-1"></i>Lihat Nota</a>
                         {% else %}
                             <span class="text-muted small">Tidak ada nota</span>
                         {% endif %}
                     </td>
-                    <td><button class="btn btn-sm btn-light text-danger" onclick="deletePurchase({{ p.id}})"><i class="bi bi-trash"></i></button></td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-danger" onclick="deletePurchase({{ p.id }})"><i class="bi bi-trash"></i></button>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -54,15 +91,13 @@
 
 {% block scripts %}
 <script>
-    
-
     $(document).ready(function() {
         $('#tabelPembelian').DataTable({
             dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
             buttons: [
-                { extend: 'excelHtml5', className: 'btn btn-sm btn-success', text: '<i class="bi bi-file-earmark-excel"></i> Excel', exportOptions: { columns: [0, 1, 2] } },
-                { extend: 'pdfHtml5', className: 'btn btn-sm btn-danger ms-2', text: '<i class="bi bi-file-earmark-pdf"></i> PDF', exportOptions: { columns: [0, 1, 2] } },
-                { extend: 'print', className: 'btn btn-sm btn-secondary ms-2', text: '<i class="bi bi-printer"></i> Print', exportOptions: { columns: [0, 1, 2] } }
+                { extend: 'excelHtml5', className: 'btn btn-sm btn-success', text: '<i class="bi bi-file-earmark-excel"></i> Excel', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
+                { extend: 'pdfHtml5', className: 'btn btn-sm btn-danger ms-2', text: '<i class="bi bi-file-earmark-pdf"></i> PDF', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
+                { extend: 'print', className: 'btn btn-sm btn-secondary ms-2', text: '<i class="bi bi-printer"></i> Print', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } }
             ], language: { search: "_INPUT_", searchPlaceholder: "Cari riwayat beli..." }
         });
     });
@@ -70,32 +105,50 @@
     document.getElementById('formPurchase').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData();
-        formData.append('item_name', document.getElementById('item_name').value); formData.append('vendor', document.getElementById('vendor').value); formData.append('price_per_item', document.getElementById('price').value); formData.append('quantity', document.getElementById('quantity').value); formData.append('purchase_date', document.getElementById('purchase_date').value); formData.append('buyer_name', document.getElementById('buyer_name').value); formData.append('invoice_link', document.getElementById('invoice_link').value);
-        const fileInput = document.getElementById('nota_file'); if (fileInput.files.length > 0) formData.append('nota_file', fileInput.files[0]);
-        // Sertakan token CSRF ke FormData agar backend yang membaca multipart dapat memverifikasinya
-        formData.append('csrf_token', csrfToken);
+        const assetIdVal = document.getElementById('asset_id').value;
+        if (assetIdVal) formData.append('asset_id', assetIdVal);
+
+        formData.append('item_name', document.getElementById('item_name').value);
+        formData.append('vendor', document.getElementById('vendor').value);
+        formData.append('price_per_item', document.getElementById('price').value);
+        formData.append('quantity', document.getElementById('quantity').value);
+        formData.append('purchase_date', document.getElementById('purchase_date').value);
+        formData.append('buyer_name', document.getElementById('buyer_name').value);
+        formData.append('invoice_link', document.getElementById('invoice_link').value);
+
+        const fileInput = document.getElementById('nota_file');
+        if (fileInput.files.length > 0) {
+            formData.append('nota_file', fileInput.files[0]);
+        }
+
         try {
-            const res = await fetch('/purchases/', {
+            const res = await fetch('/api/purchases', {
                 method: 'POST',
                 headers: { 'X-CSRF-Token': csrfToken },
                 body: formData
             });
             if (res.ok) window.location.reload();
-            else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan data pembelian.' });
+            else {
+                const errData = await res.json();
+                Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menyimpan data pembelian.' });
+            }
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
         }
     });
 
     async function deletePurchase(id) {
-        if (confirm("Hapus?")) {
+        if (confirm("Yakin ingin menghapus riwayat pembelian ini?")) {
             try {
-                const res = await fetch(`/purchases/${id}`, {
+                const res = await fetch(`/api/purchases/${id}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
                 });
                 if (res.ok) window.location.reload();
-                else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menghapus data.' });
+                else {
+                    const errData = await res.json();
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data.' });
+                }
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
             }

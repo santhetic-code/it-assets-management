@@ -4,21 +4,32 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-end mb-4">
-    <div><h3 class="fw-bold text-dark mb-1">Maintenance Log</h3><span class="text-muted small fw-semibold">Jadwal perawatan rutin dan log perbaikan perangkat.</span></div>
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Maintenance Log</h3>
+        <span class="text-muted small fw-semibold">Jadwal perawatan rutin dan log perbaikan perangkat.</span>
+    </div>
 </div>
 
 <div class="card-custom border-top border-danger border-4">
     <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-calendar-event-fill text-danger me-2"></i>Jadwal Maintenance Baru</h6>
     <form id="formMaintenance" autocomplete="off">
         <div class="row g-3 mb-3">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Aset</label><select id="asset_id" class="form-select" required><option value="">-- Ketik/Pilih Aset --</option>{% for a in assets %}<option value="{{ a.id }}">{{ a.asset_tag }}</option>{% endfor %}</select></div>
-            <div class="col-md-4"><label class="form-label small fw-bold text-muted">Task Type</label><input type="text" id="task_type" class="form-control" required></div>
-            <div class="col-md-5"><label class="form-label small fw-bold text-muted">Lokasi Target</label><input type="text" id="location_target" class="form-control" required></div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Aset</label>
+                <select id="asset_id" class="form-select" required>
+                    <option value="">-- Pilih Aset --</option>
+                    {% for a in assets %}
+                    <option value="{{ a.id }}">{{ a.asset_tag }} - {{ a.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4"><label class="form-label small fw-bold text-muted">Task Type / Tugas</label><input type="text" id="task_type" class="form-control" placeholder="Cth: Pembersihan Debu & Thermal Paste" required></div>
+            <div class="col-md-5"><label class="form-label small fw-bold text-muted">Lokasi Target</label><input type="text" id="location_target" class="form-control" placeholder="Cth: Ruang Server Lt. 2" required></div>
         </div>
         <div class="row g-3">
             <div class="col-md-3"><label class="form-label small fw-bold text-muted">Tgl Terakhir</label><input type="date" id="last_maintenance_date" class="form-control" required></div>
             <div class="col-md-3"><label class="form-label small fw-bold text-muted">Jadwal Berikutnya</label><input type="date" id="next_schedule_date" class="form-control" required></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Interval</label><input type="number" id="interval_months" class="form-control" value="3" required></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Interval (Bulan)</label><input type="number" id="interval_months" class="form-control" value="3" required></div>
             <div class="col-md-2"><label class="form-label small fw-bold text-muted">Status</label><select id="status" class="form-select"><option value="Aman">Aman</option><option value="Perlu Dicek">Perlu Dicek</option><option value="Kritis">Kritis</option></select></div>
             <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-danger w-100 fw-bold shadow-sm">Simpan</button></div>
         </div>
@@ -28,15 +39,41 @@
 <div class="card-custom">
     <div class="table-responsive">
         <table id="tabelMaintenance" class="table table-hover align-middle">
-            <thead><tr><th>ID Aset</th><th>Lokasi</th><th>Tugas Perbaikan</th><th>Tgl Terakhir</th><th>Jadwal Berikutnya</th><th>Status</th><th>Aksi</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Tag / Nama Aset</th>
+                    <th>Lokasi</th>
+                    <th>Tugas Perbaikan</th>
+                    <th>Tgl Terakhir</th>
+                    <th>Jadwal Berikutnya</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for m in maintenance_logs %}
                 <tr>
-                    <td><span class="badge bg-light text-dark border border-light">{{ m.asset.asset_tag }}</span></td>
-                    <td>{{ m.location_target }}</td><td>{{ m.task_type }}</td><td>{{ m.last_maintenance_date }}</td><td class="fw-bold text-danger">{{ m.next_schedule_date }}</td>
-                    <td>{% if m.status == 'Aman' %}<span class="badge bg-success rounded-pill px-3">Aman</span>{% else %}<span class="badge bg-warning text-dark rounded-pill px-3">{{ m.status }}</span>{% endif %}</td>
                     <td>
-                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ m.id }}', '{{ m.asset_id }}', '{{ m.location_target }}', '{{ m.task_type }}', '{{ m.last_maintenance_date }}', '{{ m.next_schedule_date }}', '{{ m.interval_months }}', '{{ m.status }}')"><i class="bi bi-pencil-square"></i></button>
+                        <span class="badge bg-light text-dark border border-light">{{ m.asset.asset_tag if m.asset else '-' }}</span>
+                        {% if m.asset %}
+                        <br><span class="small text-muted">{{ m.asset.name }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ m.location_target or '-' }}</td>
+                    <td>{{ m.task_type or '-' }}</td>
+                    <td>{{ m.last_maintenance_date or '-' }}</td>
+                    <td class="fw-bold {% if m.status == 'Kritis' %}text-danger{% else %}text-dark{% endif %}">{{ m.next_schedule_date or '-' }}</td>
+                    <td>
+                        {% if m.status == 'Aman' %}
+                        <span class="badge bg-success rounded-pill px-3">Aman</span>
+                        {% elif m.status == 'Perlu Dicek' %}
+                        <span class="badge bg-warning text-dark rounded-pill px-3">Perlu Dicek</span>
+                        {% else %}
+                        <span class="badge bg-danger rounded-pill px-3">Kritis</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ m.id }}', '{{ m.asset_id }}', '{{ m.location_target or '' }}', '{{ m.task_type or '' }}', '{{ m.last_maintenance_date or '' }}', '{{ m.next_schedule_date or '' }}', '{{ m.interval_months or 3 }}', '{{ m.status }}')"><i class="bi bi-pencil-square"></i></button>
                         <button class="btn btn-sm btn-light text-danger" onclick="deleteMaintenance({{ m.id }})"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
@@ -54,19 +91,33 @@
             <div class="modal-header"><h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-danger me-2"></i>Edit Maintenance</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <form id="formEditMaint" autocomplete="off">
                 <div class="modal-body">
-                    <input type="hidden" id="edit_id"><input type="hidden" id="edit_asset_id">
-                    <div class="row g-3 mb-3"><div class="col-md-6"><label class="form-label small fw-bold text-muted">Task Type</label><input type="text" id="edit_task_type" class="form-control" required></div><div class="col-md-6"><label class="form-label small fw-bold text-muted">Lokasi</label><input type="text" id="edit_location_target" class="form-control" required></div></div>
-                    <div class="row g-3"><div class="col-md-4"><label class="form-label small fw-bold text-muted">Tgl Terakhir</label><input type="date" id="edit_last_maint" class="form-control" required></div><div class="col-md-4"><label class="form-label small fw-bold text-muted">Jadwal Berikutnya</label><input type="date" id="edit_next_sched" class="form-control" required></div><div class="col-md-2"><label class="form-label small fw-bold text-muted">Interval</label><input type="number" id="edit_interval" class="form-control" required></div><div class="col-md-2"><label class="form-label small fw-bold text-muted">Status</label><select id="edit_status" class="form-select"><option value="Aman">Aman</option><option value="Perlu Dicek">Perlu Dicek</option><option value="Kritis">Kritis</option></select></div></div>
+                    <input type="hidden" id="edit_id">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Aset</label>
+                            <select id="edit_asset_id" class="form-select" required>
+                                {% for a in assets %}
+                                <option value="{{ a.id }}">{{ a.asset_tag }} - {{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Task Type</label><input type="text" id="edit_task_type" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Lokasi</label><input type="text" id="edit_location_target" class="form-control" required></div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Tgl Terakhir</label><input type="date" id="edit_last_maint" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Jadwal Berikutnya</label><input type="date" id="edit_next_sched" class="form-control" required></div>
+                        <div class="col-md-2"><label class="form-label small fw-bold text-muted">Interval</label><input type="number" id="edit_interval" class="form-control" required></div>
+                        <div class="col-md-2"><label class="form-label small fw-bold text-muted">Status</label><select id="edit_status" class="form-select"><option value="Aman">Aman</option><option value="Perlu Dicek">Perlu Dicek</option><option value="Kritis">Kritis</option></select></div>
+                    </div>
                 </div>
-                <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger fw-bold">Simpan</button></div>
+                <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger fw-bold">Simpan Perubahan</button></div>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-    
-
     $(document).ready(function() {
         $('#tabelMaintenance').DataTable({
             dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
@@ -80,29 +131,43 @@
 
     document.getElementById('formMaintenance').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const data = { asset_id: document.getElementById('asset_id').value, location_target: document.getElementById('location_target').value, task_type: document.getElementById('task_type').value, last_maintenance_date: document.getElementById('last_maintenance_date').value, next_schedule_date: document.getElementById('next_schedule_date').value, interval_months: document.getElementById('interval_months').value, status: document.getElementById('status').value };
+        const data = {
+            asset_id: parseInt(document.getElementById('asset_id').value),
+            location_target: document.getElementById('location_target').value,
+            task_type: document.getElementById('task_type').value,
+            last_maintenance_date: document.getElementById('last_maintenance_date').value,
+            next_schedule_date: document.getElementById('next_schedule_date').value,
+            interval_months: parseInt(document.getElementById('interval_months').value),
+            status: document.getElementById('status').value
+        };
         try {
-            const res = await fetch('/maintenance/', {
+            const res = await fetch('/api/maintenance', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 body: JSON.stringify(data)
             });
             if (res.ok) window.location.reload();
-            else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan data maintenance.' });
+            else {
+                const errData = await res.json();
+                Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menyimpan data maintenance.' });
+            }
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
         }
     });
 
     async function deleteMaintenance(id) {
-        if (confirm("Hapus?")) {
+        if (confirm("Yakin ingin menghapus jadwal maintenance ini?")) {
             try {
-                const res = await fetch(`/maintenance/${id}`, {
+                const res = await fetch(`/api/maintenance/${id}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
                 });
                 if (res.ok) window.location.reload();
-                else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menghapus data.' });
+                else {
+                    const errData = await res.json();
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data.' });
+                }
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
             }
@@ -110,20 +175,41 @@
     }
     
     const editModal = new bootstrap.Modal(document.getElementById('editMaintModal'));
-    function openEditModal(id, asset_id, loc, task, last_m, next_s, interval, status) { document.getElementById('edit_id').value = id; document.getElementById('edit_asset_id').value = asset_id; document.getElementById('edit_location_target').value = loc; document.getElementById('edit_task_type').value = task; document.getElementById('edit_last_maint').value = last_m; document.getElementById('edit_next_sched').value = next_s; document.getElementById('edit_interval').value = interval; document.getElementById('edit_status').value = status; editModal.show(); }
+    function openEditModal(id, asset_id, loc, task, last_m, next_s, interval, status) {
+        document.getElementById('edit_id').value = id;
+        document.getElementById('edit_asset_id').value = asset_id;
+        document.getElementById('edit_location_target').value = loc;
+        document.getElementById('edit_task_type').value = task;
+        document.getElementById('edit_last_maint').value = last_m;
+        document.getElementById('edit_next_sched').value = next_s;
+        document.getElementById('edit_interval').value = interval;
+        document.getElementById('edit_status').value = status;
+        editModal.show();
+    }
 
     document.getElementById('formEditMaint').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit_id').value;
-        const data = { asset_id: document.getElementById('edit_asset_id').value, location_target: document.getElementById('edit_location_target').value, task_type: document.getElementById('edit_task_type').value, last_maintenance_date: document.getElementById('edit_last_maint').value, next_schedule_date: document.getElementById('edit_next_sched').value, interval_months: document.getElementById('edit_interval').value, status: document.getElementById('edit_status').value };
+        const data = {
+            asset_id: parseInt(document.getElementById('edit_asset_id').value),
+            location_target: document.getElementById('edit_location_target').value,
+            task_type: document.getElementById('edit_task_type').value,
+            last_maintenance_date: document.getElementById('edit_last_maint').value,
+            next_schedule_date: document.getElementById('edit_next_sched').value,
+            interval_months: parseInt(document.getElementById('edit_interval').value),
+            status: document.getElementById('edit_status').value
+        };
         try {
-            const res = await fetch(`/maintenance/${id}`, {
+            const res = await fetch(`/api/maintenance/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 body: JSON.stringify(data)
             });
             if (res.ok) window.location.reload();
-            else Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memperbarui data.' });
+            else {
+                const errData = await res.json();
+                Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal memperbarui data.' });
+            }
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
         }
