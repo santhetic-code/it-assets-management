@@ -210,8 +210,11 @@ async def import_components_from_file(db: Session, file: UploadFile):
         # Standarisasi nama kolom (huruf besar & hilangkan spasi)
         df.columns = df.columns.astype(str).str.strip().str.upper()
 
-        # Deteksi otomatis: Lewati sheet yang tidak memiliki kolom 'USER' (misal: sheet IP List atau Report AC)
-        if "USER" not in df.columns:
+        # PERBAIKAN: Deteksi Lebih Ketat
+        # Pastikan sheet memiliki kolom 'USER', 'OS', dan 'RAM' sebelum diproses.
+        # Ini otomatis mengabaikan sheet 'IP LIST XML', 'DATA LOGIN', 'REPORT AC', dll.
+        required_columns = {"USER", "OS", "RAM"}
+        if not required_columns.issubset(set(df.columns)):
             continue
 
         for index, row in df.iterrows():
@@ -220,8 +223,7 @@ async def import_components_from_file(db: Session, file: UploadFile):
             if (
                 not pc_name
                 or pd.isna(pc_name)
-                or pc_name.lower() == "nan"
-                or pc_name.lower() == "user"
+                or pc_name.lower() in ["nan", "user", "none", "pengguna", "-", ""]
             ):
                 continue
 
