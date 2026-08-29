@@ -19,6 +19,30 @@
         position: relative;
         z-index: 1;
     }
+
+    /* Styling Tab Navigasi */
+    .nav-tabs-pc .nav-link {
+        font-weight: 600;
+        color: #6c757d;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.6rem 1.4rem;
+        transition: all 0.2s ease;
+    }
+    .nav-tabs-pc .nav-link:hover {
+        color: #0d6efd;
+        border-bottom-color: #cfe2ff;
+        background: transparent;
+    }
+    .nav-tabs-pc .nav-link.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd;
+        background: transparent;
+    }
+    .nav-tabs-pc {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
 </style>
 
 
@@ -27,7 +51,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-end mb-4">
     <div>
-        <h3 class="fw-bold text-dark mb-1">Spesifikasi Hardware & PC</h3>
+        <h3 class="fw-bold text-dark mb-1">Spesifikasi Hardware &amp; PC</h3>
         <span class="text-muted small fw-semibold">Database spesifikasi jeroan PC Operasional dan Server.</span>
     </div>
 </div>
@@ -41,7 +65,7 @@
     </div>
     <form id="formSpek" autocomplete="off">
         <div class="row g-3 mb-3 pb-3 border-bottom border-light">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label small fw-bold text-muted">Aset Terkait (Wajib)</label>
                 <select id="asset_id" class="form-select" required>
                     <option value="">-- Pilih Aset Induk --</option>
@@ -50,13 +74,20 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label small fw-bold text-muted">Nama / Identitas PC</label>
                 <input type="text" id="pc_name" class="form-control" placeholder="Cth: PC - DIREKTUR" required>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label small fw-bold text-muted">Sistem Operasi (OS)</label>
                 <input type="text" id="os_name" class="form-control" placeholder="Cth: Windows 11 Pro">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Jenis PC</label>
+                <select id="pc_type" class="form-select">
+                    <option value="Operasional">PC Operasional</option>
+                    <option value="Server">PC Server</option>
+                </select>
             </div>
         </div>
         <div class="row g-3 mb-3">
@@ -66,33 +97,46 @@
             <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kartu Grafis (VGA/GPU)</label><input type="text" id="vga_spec" class="form-control" placeholder="Cth: RTX 3060 12GB"></div>
         </div>
         <div class="row g-3 mb-4">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Storage HDD/SSD</label><input type="text" id="storage_spec" class="form-control" placeholder="Cth: SSD NVMe 512GB + HDD 1TB"></div>
+            <div class="col-md-4"><label class="form-label small fw-bold text-muted">Storage HDD/SSD</label><input type="text" id="storage_spec" class="form-control" placeholder="Cth: SSD NVMe 512GB + HDD 1TB"></div>
             <div class="col-md-2"><label class="form-label small fw-bold text-muted">Monitor</label><input type="text" id="monitor" class="form-control" placeholder="Cth: LG 24 Inch"></div>
             <div class="col-md-2"><label class="form-label small fw-bold text-muted">Keyboard</label><input type="text" id="keyboard" class="form-control" placeholder="Cth: Logitech K120"></div>
             <div class="col-md-2"><label class="form-label small fw-bold text-muted">Mouse</label><input type="text" id="mouse" class="form-control" placeholder="Cth: Logitech B100"></div>
-            <div class="col-md-3">
-                <div class="row g-2">
-                    <div class="col-6"><label class="form-label small fw-bold text-muted">PSU</label><input type="text" id="psu" class="form-control" placeholder="Cth: 550W"></div>
-                    <div class="col-6"><label class="form-label small fw-bold text-muted">Casing</label><input type="text" id="casing" class="form-control" placeholder="Cth: Armaggeddon"></div>
-                </div>
-            </div>
         </div>
         <div class="text-end"><button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm"><i class="bi bi-save2-fill me-2"></i>Simpan Spesifikasi</button></div>
     </form>
 </div>
 
 <div class="card-custom">
+    <!-- Tab Navigasi: PC Operasional | PC Server | Semua -->
+    <ul class="nav nav-tabs-pc nav-tabs d-flex" id="pcTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {{ 'active' if jenis_aktif == 'operasional' else '' }}" href="/hardware-components?jenis=operasional">
+                <i class="bi bi-pc-display me-1"></i> PC Operasional
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {{ 'active' if jenis_aktif == 'server' else '' }}" href="/hardware-components?jenis=server">
+                <i class="bi bi-server me-1"></i> PC Server
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {{ 'active' if jenis_aktif == 'semua' else '' }}" href="/hardware-components?jenis=semua">
+                <i class="bi bi-list-ul me-1"></i> Semua
+            </a>
+        </li>
+    </ul>
+
     <div class="table-responsive">
         <table id="tabelKomponen" class="table table-hover align-middle">
             <thead>
                 <tr>
-                    <th>Identitas PC & Aset</th>
+                    <th>Identitas PC &amp; Aset</th>
                     <th>Sistem Operasi</th>
-                    <th>Processor & Mainboard</th>
-                    <th>RAM & VGA</th>
+                    <th>Processor &amp; Mainboard</th>
+                    <th>RAM &amp; VGA</th>
                     <th>Storage</th>
                     <th>Periferal (Monitor/KB/Mouse)</th>
-                    <th>PSU & Case</th>
+                    <th>Jenis PC</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -119,12 +163,15 @@
                         <div><strong>Mon:</strong> {{ comp.monitor or '-' }}</div>
                         <div><strong>KB/M:</strong> {{ comp.keyboard or '-' }} / {{ comp.mouse or '-' }}</div>
                     </td>
-                    <td class="small">
-                        <div><strong>PSU:</strong> {{ comp.psu or '-' }}</div>
-                        <div><strong>Case:</strong> {{ comp.casing or '-' }}</div>
+                    <td>
+                        {% if comp.pc_type == 'Server' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-server me-1"></i>Server</span>
+                        {% else %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-pc-display me-1"></i>Operasional</span>
+                        {% endif %}
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ comp.id }}', '{{ comp.asset_id }}', '{{ comp.name }}', '{{ comp.os_name or '' }}', '{{ comp.processor_spec or '' }}', '{{ comp.mainboard_spec or '' }}', '{{ comp.ram_spec or '' }}', '{{ comp.vga_spec or '' }}', '{{ comp.storage_spec or '' }}', '{{ comp.monitor or '' }}', '{{ comp.keyboard or '' }}', '{{ comp.mouse or '' }}', '{{ comp.psu or '' }}', '{{ comp.casing or '' }}')"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ comp.id }}', '{{ comp.asset_id }}', '{{ comp.name }}', '{{ comp.os_name or '' }}', '{{ comp.processor_spec or '' }}', '{{ comp.mainboard_spec or '' }}', '{{ comp.ram_spec or '' }}', '{{ comp.vga_spec or '' }}', '{{ comp.storage_spec or '' }}', '{{ comp.monitor or '' }}', '{{ comp.keyboard or '' }}', '{{ comp.mouse or '' }}', '{{ comp.pc_type or 'Operasional' }}')"><i class="bi bi-pencil-square"></i></button>
                         <button class="btn btn-sm btn-light text-danger" onclick="deleteComp({{ comp.id }})"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
@@ -147,7 +194,7 @@
                 <div class="modal-body">
                     <input type="hidden" id="edit_id">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-bold text-muted">Aset Terkait</label>
                             <select id="edit_asset_id" class="form-select" required>
                                 {% for a in assets %}
@@ -155,8 +202,15 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Nama PC</label><input type="text" id="edit_pc_name" class="form-control" required></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">OS</label><input type="text" id="edit_os_name" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Nama PC</label><input type="text" id="edit_pc_name" class="form-control" required></div>
+                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">OS</label><input type="text" id="edit_os_name" class="form-control"></div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted">Jenis PC</label>
+                            <select id="edit_pc_type" class="form-select">
+                                <option value="Operasional">PC Operasional</option>
+                                <option value="Server">PC Server</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor</label><input type="text" id="edit_processor_spec" class="form-control"></div>
@@ -171,8 +225,6 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-md-4"><label class="form-label small fw-bold text-muted">Mouse</label><input type="text" id="edit_mouse" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">PSU</label><input type="text" id="edit_psu" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Casing</label><input type="text" id="edit_casing" class="form-control"></div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary fw-bold">Simpan Perubahan</button></div>
@@ -195,7 +247,7 @@
                         <input class="form-control" type="file" id="import_comp_file" accept=".csv,.xlsx,.xls" required>
                     </div>
                     <div class="alert alert-info small mb-0">
-                        Sistem otomatis mengenali kolom: <code>USER, OS, RAM, VGA / GPU CARD, CPU / PROCESSOR, MAINBOARD, HDD/SSD, MONITOR, KEYBOARD, MOUSE, PSU, CASSING</code>. Relasi aset dicocokkan otomatis berdasarkan nama aset / pengguna.
+                        Sistem otomatis mengenali kolom: <code>USER, OS, RAM, VGA / GPU CARD, CPU / PROCESSOR, MAINBOARD, HDD/SSD, MONITOR, KEYBOARD, MOUSE, JENIS_PC</code>. Relasi aset dicocokkan otomatis berdasarkan nama aset / pengguna.
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -233,8 +285,7 @@
             monitor: document.getElementById('monitor').value,
             keyboard: document.getElementById('keyboard').value,
             mouse: document.getElementById('mouse').value,
-            psu: document.getElementById('psu').value,
-            casing: document.getElementById('casing').value
+            pc_type: document.getElementById('pc_type').value
         };
         try {
             const res = await fetch('/api/components', {
@@ -271,7 +322,7 @@
     }
 
     const editModal = new bootstrap.Modal(document.getElementById('editCompModal'));
-    function openEditModal(id, asset_id, name, os, proc, mobo, ram, vga, storage, mon, kb, mouse, psu, casing) {
+    function openEditModal(id, asset_id, name, os, proc, mobo, ram, vga, storage, mon, kb, mouse, pc_type) {
         document.getElementById('edit_id').value = id;
         document.getElementById('edit_asset_id').value = asset_id;
         document.getElementById('edit_pc_name').value = name;
@@ -284,8 +335,7 @@
         document.getElementById('edit_monitor').value = mon;
         document.getElementById('edit_keyboard').value = kb;
         document.getElementById('edit_mouse').value = mouse;
-        document.getElementById('edit_psu').value = psu;
-        document.getElementById('edit_casing').value = casing;
+        document.getElementById('edit_pc_type').value = pc_type || 'Operasional';
         editModal.show();
     }
 
@@ -304,8 +354,7 @@
             monitor: document.getElementById('edit_monitor').value,
             keyboard: document.getElementById('edit_keyboard').value,
             mouse: document.getElementById('edit_mouse').value,
-            psu: document.getElementById('edit_psu').value,
-            casing: document.getElementById('edit_casing').value
+            pc_type: document.getElementById('edit_pc_type').value
         };
         try {
             const res = await fetch(`/api/components/${id}`, {

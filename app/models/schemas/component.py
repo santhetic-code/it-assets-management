@@ -15,8 +15,7 @@ class ComponentBase(BaseModel):
     monitor: Optional[str] = None
     keyboard: Optional[str] = None
     mouse: Optional[str] = None
-    psu: Optional[str] = None
-    casing: Optional[str] = None
+    pc_type: Optional[str] = "Operasional"
 
 
 class ComponentCreate(ComponentBase):
@@ -35,8 +34,7 @@ class ComponentUpdate(BaseModel):
     monitor: Optional[str] = None
     keyboard: Optional[str] = None
     mouse: Optional[str] = None
-    psu: Optional[str] = None
-    casing: Optional[str] = None
+    pc_type: Optional[str] = None
 
 
 class ComponentResponse(ComponentBase):

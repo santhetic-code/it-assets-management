@@ -44,9 +44,9 @@ def startup_event():
     try:
         # Bangun fondasi tabel database secara otomatis jika belum ada
         domain.Base.metadata.create_all(bind=engine)
-        print("✅ Fondasi tabel database berhasil diverifikasi/dibuat.")
+        print("[OK] Fondasi tabel database berhasil diverifikasi/dibuat.")
     except Exception as e:
-        print(f"⚠️ Peringatan: Gagal menghubungkan atau menginisialisasi tabel database saat startup: {e}")
+        print(f"[WARN] Peringatan: Gagal menghubungkan atau menginisialisasi tabel database saat startup: {e}")
         return
 
     from app.services.auth_service import init_superadmin
@@ -55,8 +55,8 @@ def startup_event():
     try:
         # Menembakkan pembuatan akun dari .env ke dalam database
         init_superadmin(db)
-        print("✅ Inisialisasi akun Super Admin selesai.")
+        print("[OK] Inisialisasi akun Super Admin selesai.")
     except Exception as e:
-        print(f"⚠️ Peringatan: Gagal menginisialisasi akun Super Admin: {e}")
+        print(f"[WARN] Peringatan: Gagal menginisialisasi akun Super Admin: {e}")
     finally:
         db.close()

@@ -79,6 +79,7 @@ class Component(Base):
     monitor = Column(String(255), nullable=True)
     keyboard = Column(String(255), nullable=True)
     mouse = Column(String(255), nullable=True)
+    pc_type = Column(String(50), nullable=True, default="Operasional")  # Operasional / Server
     psu = Column(String(255), nullable=True)
     casing = Column(String(255), nullable=True)
 

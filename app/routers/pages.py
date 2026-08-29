@@ -162,7 +162,18 @@ def read_purchases(request: Request, db: DbSession, current_user: CurrentUser):
 
 @router.get("/hardware-components")
 def read_components(request: Request, db: DbSession, current_user: CurrentUser):
-    components = asset_service.get_components(db)
+    # Ambil parameter ?jenis dari URL, default ke 'Operasional'
+    jenis_param = request.query_params.get("jenis", "operasional")
+
+    # Map parameter URL ke nilai database
+    pc_type_map = {
+        "operasional": "Operasional",
+        "server": "Server",
+        "semua": "semua",
+    }
+    pc_type_filter = pc_type_map.get(jenis_param.lower(), "Operasional")
+
+    components = asset_service.get_components(db, pc_type=pc_type_filter)
     assets = asset_service.get_all_assets(db)
     return render_template(
         request=request,
@@ -171,6 +182,7 @@ def read_components(request: Request, db: DbSession, current_user: CurrentUser):
             "current_user": current_user,
             "components": components,
             "assets": assets,
+            "jenis_aktif": jenis_param.lower(),
         },
     )
 

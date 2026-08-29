@@ -148,8 +148,11 @@ def import_assets_from_file(db: Session, file_bytes: bytes, filename: str) -> in
 # ==========================================
 # 2. LOGIKA KOMPONEN
 # ==========================================
-def get_components(db: Session):
-    return db.query(Component).all()
+def get_components(db: Session, pc_type: Optional[str] = None):
+    query = db.query(Component)
+    if pc_type and pc_type != "semua":
+        query = query.filter(Component.pc_type == pc_type)
+    return query.all()
 
 
 def create_component(db: Session, data: ComponentCreate):
@@ -265,8 +268,7 @@ async def import_components_from_file(db: Session, file: UploadFile):
                 monitor=str(row.get("MONITOR", "")),
                 keyboard=str(row.get("KEYBOARD", "")),
                 mouse=str(row.get("MOUSE", "")),
-                psu=str(row.get("PSU", "")),
-                casing=str(row.get("CASSING", row.get("CASING", ""))),
+                pc_type=str(row.get("JENIS_PC", row.get("JENIS PC", "Operasional"))),
             )
 
             # Bersihkan nilai 'nan' dari pandas

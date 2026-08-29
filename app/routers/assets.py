@@ -74,7 +74,7 @@ def generate_qr(asset_tag: str):
     img = qr.make_image(fill_color="black", back_color="white")
     
     img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format="PNG")
+    img.save(img_byte_arr)
     img_byte_arr.seek(0)
     return StreamingResponse(img_byte_arr, media_type="image/png")
 
@@ -83,8 +83,8 @@ def generate_qr(asset_tag: str):
 # 2. ENDPOINT KOMPONEN
 # ==========================================
 @router.get("/api/components", response_model=List[ComponentResponse])
-def read_components(db: DbSession, current_user: CurrentUser):
-    return asset_service.get_components(db)
+def read_components(db: DbSession, current_user: CurrentUser, pc_type: Optional[str] = None):
+    return asset_service.get_components(db, pc_type=pc_type)
 
 
 @router.post(
