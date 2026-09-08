@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel
 
 
@@ -8,7 +8,7 @@ class NetworkIPBase(BaseModel):
     assigned_to: Optional[str] = None
     mac_address: Optional[str] = None
     description: Optional[str] = None
-    status: str = "Aktif"
+    status: Literal["Aktif", "Offline"] = "Aktif"
 
 
 class NetworkIPCreate(NetworkIPBase):
@@ -21,7 +21,7 @@ class NetworkIPUpdate(BaseModel):
     assigned_to: Optional[str] = None
     mac_address: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[Literal["Aktif", "Offline"]] = None
 
 
 class NetworkIPResponse(NetworkIPBase):

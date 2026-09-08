@@ -15,10 +15,10 @@
     <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-node-plus-fill text-info me-2"></i>Alokasi IP Baru</h6>
     <form id="formNetwork" autocomplete="off">
         <div class="row g-3 mb-3">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">IP Address</label><input type="text" id="ip_address" class="form-control text-primary fw-bold" required></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">IP Address</label><input type="text" id="ip_address" class="form-control" required></div>
             <div class="col-md-2"><label class="form-label small fw-bold text-muted">Tipe IP</label><select id="ip_type" class="form-select" required><option value="Operasional">Operasional</option><option value="Server">Server</option><option value="Lainnya">Lainnya</option></select></div>
             <div class="col-md-3"><label class="form-label small fw-bold text-muted">Di Gunakan Oleh</label><input type="text" id="assigned_to" class="form-control" required></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Status</label><select id="status" class="form-select"><option value="Aktif">Aktif</option><option value="Reserved">Reserved (Dipesan)</option><option value="Offline">Offline</option></select></div>
+            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Status</label><select id="status" class="form-select"><option value="Aktif">Aktif</option><option value="Offline">Offline</option></select></div>
             <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-info text-white w-100 fw-bold shadow-sm">Simpan IP</button></div>
         </div>
     </form>
@@ -39,18 +39,26 @@
 
 <div class="card-custom">
     <div class="table-responsive">
-        <table id="tabelIp" class="table table-hover align-middle">
-            <thead><tr><th>Alamat IP</th><th>Tipe Jaringan</th><th>Di Gunakan Oleh</th><th>Status Koneksi</th><th>Aksi</th></tr></thead>
+        <table id="tabelIp" class="table table-hover table-borderless align-middle">
+            <thead class="table-light text-muted">
+                <tr>
+                    <th class="fw-semibold">ALAMAT IP</th>
+                    <th class="fw-semibold">TIPE JARINGAN</th>
+                    <th class="fw-semibold">DIGUNAKAN OLEH</th>
+                    <th class="fw-semibold">STATUS KONEKSI</th>
+                    <th class="fw-semibold text-end">AKSI</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for ip in ips %}
                 <tr>
-                    <td><code class="fs-6 text-primary bg-primary bg-opacity-10 px-2 py-1 rounded fw-bold">{{ ip.ip_address }}</code></td>
-                    <td>{% if ip.ip_type == 'Server' %}<span class="badge bg-purple text-purple bg-opacity-10 border border-purple px-2 py-1" style="color: #8e24aa; border-color: #8e24aa;"><i class="bi bi-server"></i> Server</span>{% else %}<span class="badge bg-info text-info bg-opacity-10 border border-info px-2 py-1"><i class="bi bi-pc-display"></i> {{ ip.ip_type or 'Operasional' }}</span>{% endif %}</td>
-                    <td class="fw-bold text-dark"><i class="bi bi-person-fill text-success me-1"></i> {{ ip.assigned_to or '-' }}</td>
-                    <td>{% if ip.status == 'Aktif' %}<span class="badge bg-success rounded-pill px-3">Aktif</span>{% elif ip.status == 'Reserved' %}<span class="badge bg-warning text-dark rounded-pill px-3">Reserved</span>{% else %}<span class="badge bg-danger rounded-pill px-3">Offline</span>{% endif %}</td>
-                    <td>
-                        <button class="btn btn-sm btn-light text-primary" onclick="openEditModal('{{ ip.id }}', '{{ ip.ip_address }}', '{{ ip.ip_type }}', '{{ ip.assigned_to or '' }}', '{{ ip.status }}')"><i class="bi bi-pencil-square"></i></button>
-                        <button class="btn btn-sm btn-light text-danger" onclick="deleteIp('{{ ip.id }}')"><i class="bi bi-trash"></i></button>
+                    <td><span class="font-monospace fw-medium text-dark">{{ ip.ip_address }}</span></td>
+                    <td>{% if ip.ip_type == 'Server' %}<span class="badge bg-purple-subtle border px-2 py-1" style="color: #8e24aa; border-color: #8e24aa !important;"><i class="bi bi-server"></i> Server</span>{% else %}<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-hdd-network"></i> {{ ip.ip_type or 'Operasional' }}</span>{% endif %}</td>
+                    <td><span class="text-secondary fw-medium"><i class="bi bi-person-fill me-1"></i>{{ ip.assigned_to or '-' }}</span></td>
+                    <td>{% if ip.status == 'Aktif' %}<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Aktif</span>{% else %}<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Offline</span>{% endif %}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditModal('{{ ip.id }}', '{{ ip.ip_address }}', '{{ ip.ip_type }}', '{{ ip.assigned_to or '' }}', '{{ ip.status }}')"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteIp('{{ ip.id }}')"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -68,10 +76,10 @@
             <form id="formEditIp" autocomplete="off">
                 <div class="modal-body">
                     <input type="hidden" id="edit_id">
-                    <div class="mb-3"><label class="form-label small fw-bold text-muted">IP Address</label><input type="text" id="edit_ip_address" class="form-control text-primary fw-bold" required></div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-muted">IP Address</label><input type="text" id="edit_ip_address" class="form-control" required></div>
                     <div class="mb-3"><label class="form-label small fw-bold text-muted">Tipe IP</label><select id="edit_ip_type" class="form-select" required><option value="Operasional">Operasional</option><option value="Server">Server</option><option value="Lainnya">Lainnya</option></select></div>
                     <div class="mb-3"><label class="form-label small fw-bold text-muted">Di Gunakan Oleh</label><input type="text" id="edit_assigned_to" class="form-control" required></div>
-                    <div class="mb-3"><label class="form-label small fw-bold text-muted">Status</label><select id="edit_status" class="form-select"><option value="Aktif">Aktif</option><option value="Reserved">Reserved</option><option value="Offline">Offline</option></select></div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-muted">Status</label><select id="edit_status" class="form-select"><option value="Aktif">Aktif</option><option value="Offline">Offline</option></select></div>
                 </div>
                 <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-info text-white fw-bold">Simpan</button></div>
             </form>
