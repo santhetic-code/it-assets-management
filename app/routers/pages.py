@@ -128,10 +128,19 @@ def read_it_notes(request: Request, db: DbSession, current_user: CurrentUser):
 @router.get("/network")
 def read_network(request: Request, db: DbSession, current_user: CurrentUser):
     ips = ip_service.get_all_ips(db)
+    count_aktif = db.query(domain.NetworkIP).filter(domain.NetworkIP.status == "Aktif").count()
+    count_offline = db.query(domain.NetworkIP).filter(domain.NetworkIP.status == "Offline").count()
+    count_tersedia = max(0, 254 - (count_aktif + count_offline))
     return render_template(
         request=request,
         name="ips.html",
-        context={"current_user": current_user, "ips": ips},
+        context={
+            "current_user": current_user,
+            "ips": ips,
+            "count_aktif": count_aktif,
+            "count_offline": count_offline,
+            "count_tersedia": count_tersedia,
+        },
     )
 
 

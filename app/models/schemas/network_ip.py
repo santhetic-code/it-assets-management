@@ -9,6 +9,7 @@ class NetworkIPBase(BaseModel):
     mac_address: Optional[str] = None
     description: Optional[str] = None
     status: Literal["Aktif", "Offline"] = "Aktif"
+    keterangan: Optional[str] = None
 
 
 class NetworkIPCreate(NetworkIPBase):
@@ -22,6 +23,7 @@ class NetworkIPUpdate(BaseModel):
     mac_address: Optional[str] = None
     description: Optional[str] = None
     status: Optional[Literal["Aktif", "Offline"]] = None
+    keterangan: Optional[str] = None
 
 
 class NetworkIPResponse(NetworkIPBase):

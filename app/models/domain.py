@@ -102,6 +102,7 @@ class NetworkIP(Base):
     mac_address = Column(String(50), nullable=True)
     description = Column(String(255), nullable=True)
     status = Column(String(50), default="Aktif")
+    keterangan = Column(String(255), nullable=True)
 
 
 class Credential(Base):
