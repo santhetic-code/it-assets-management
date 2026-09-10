@@ -39,49 +39,47 @@
     <div id="ipGridMap" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px;"></div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card border-success border-start border-4 shadow-sm">
-            <div class="card-body py-2">
-                <div class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.8rem;">Aktif</div>
-                <div class="h4 mb-0 fw-bold text-success">{{ count_aktif }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-danger border-start border-4 shadow-sm">
-            <div class="card-body py-2">
-                <div class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.8rem;">Offline</div>
-                <div class="h4 mb-0 fw-bold text-danger">{{ count_offline }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-secondary border-start border-4 shadow-sm">
-            <div class="card-body py-2">
-                <div class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.8rem;">Tersedia</div>
-                <div class="h4 mb-0 fw-bold text-secondary">{{ count_tersedia }}</div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="card-custom">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <!-- KIRI: Filter Tipe -->
-        <div class="w-25">
-            <select class="form-select form-select-sm" id="filterTipeIP">
-                <option value="">Semua Tipe Jaringan</option>
-                <option value="Operasional">Operasional</option>
-                <option value="Server">Server</option>
-                <option value="Infrastruktur">Infrastruktur</option>
-                <option value="Virtual Machine (VM)">Virtual Machine (VM)</option>
-                <option value="Lainnya">Lainnya</option>
-            </select>
+    <!-- Toolbar Tabel Terpadu: Filter, Ringkasan, Export, & Pencarian -->
+    <div class="d-flex justify-content-between align-items-center mb-3 bg-light rounded-3 px-3 py-2 border shadow-sm">
+
+        <!-- BAGIAN KIRI: Filter Dropdown & Angka Ringkasan -->
+        <div class="d-flex align-items-center gap-3">
+
+            <!-- Filter Tipe IP -->
+            <div style="width: 220px;">
+                <select class="form-select form-select-sm" id="filterTipeIP">
+                    <option value="">Semua Tipe Jaringan</option>
+                    <option value="Operasional">Operasional</option>
+                    <option value="Server">Server</option>
+                    <option value="Infrastruktur">Infrastruktur</option>
+                    <option value="Virtual Machine">Virtual Machine (VM)</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+
+            <!-- Garis Pemisah Vertikal -->
+            <div class="vr text-secondary" style="height: 24px;"></div>
+
+            <!-- Ringkasan Angka -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Aktif:</span>
+                <span class="badge bg-success rounded-pill px-2">{{ count_aktif }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 ms-2">
+                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Offline:</span>
+                <span class="badge bg-danger rounded-pill px-2">{{ count_offline }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 ms-2">
+                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Tersedia:</span>
+                <span class="badge bg-secondary rounded-pill px-2">{{ count_tersedia }}</span>
+            </div>
         </div>
-        <!-- KANAN: Tombol Export & Search (diisi oleh DataTables) -->
+
+        <!-- BAGIAN KANAN: Tempat DataTables menyuntikkan Tombol Export & Pencarian -->
         <div id="tableControls" class="d-flex gap-2 align-items-center"></div>
+
     </div>
 
     <div class="table-responsive">
@@ -195,9 +193,10 @@ $(document).ready(function() {
     table.buttons().container().prependTo('#tableControls');
     $('#tabelIp_filter').appendTo('#tableControls');
 
-    // Filter kolom Tipe Jaringan (index 1) dari dropdown
+    // Filter kolom Tipe Jaringan (index 1) dari dropdown — exact match
     $('#filterTipeIP').on('change', function () {
-        table.column(1).search(this.value).draw();
+        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+        table.column(1).search(val ? '^' + val + '$' : '', true, false).draw();
     });
 });
 
