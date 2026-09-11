@@ -1,6 +1,16 @@
 from datetime import datetime
-from typing import Optional
+from enum import Enum
+from typing import Optional, Union
 from pydantic import BaseModel
+
+
+class JenisPC(str, Enum):
+    OPERASIONAL = "PC Operasional"
+    SERVER = "PC Server"
+    BACKUP = "PC Backup"
+    OPERASIONAL_LEGACY = "Operasional"
+    SERVER_LEGACY = "Server"
+    BACKUP_LEGACY = "Backup"
 
 
 class ComponentBase(BaseModel):
@@ -15,7 +25,7 @@ class ComponentBase(BaseModel):
     monitor: Optional[str] = None
     keyboard: Optional[str] = None
     mouse: Optional[str] = None
-    pc_type: Optional[str] = "Operasional"
+    pc_type: Optional[Union[JenisPC, str]] = "Operasional"
 
 
 class ComponentCreate(ComponentBase):
@@ -34,7 +44,7 @@ class ComponentUpdate(BaseModel):
     monitor: Optional[str] = None
     keyboard: Optional[str] = None
     mouse: Optional[str] = None
-    pc_type: Optional[str] = None
+    pc_type: Optional[Union[JenisPC, str]] = None
 
 
 class ComponentResponse(ComponentBase):
