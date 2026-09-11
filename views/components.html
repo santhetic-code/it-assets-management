@@ -32,10 +32,11 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-semibold">Jenis PC</label>
-                <select id="pc_type" class="form-select" required>
-                    <option value="Operasional">PC Operasional</option>
-                    <option value="Server">PC Server</option>
-                    <option value="Backup">PC Backup</option>
+                <!-- Ubah name menjadi pc_type -->
+                <select class="form-select" id="pc_type" name="pc_type" required>
+                    <option value="PC Operasional">PC Operasional</option>
+                    <option value="PC Server">PC Server</option>
+                    <option value="PC Backup">PC Backup</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -218,10 +219,11 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Jenis PC</label>
-                            <select class="form-select" id="edit_pc_type" name="jenis_pc" required>
-                                <option value="Operasional">PC Operasional</option>
-                                <option value="Server">PC Server</option>
-                                <option value="Backup">PC Backup</option>
+                            <!-- id tetap edit_jenis_pc untuk JS, tapi name wajib pc_type -->
+                            <select class="form-select" id="edit_jenis_pc" name="pc_type" required>
+                                <option value="PC Operasional">PC Operasional</option>
+                                <option value="PC Server">PC Server</option>
+                                <option value="PC Backup">PC Backup</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -436,7 +438,7 @@
             monitor: document.getElementById('monitor').value,
             keyboard: document.getElementById('keyboard').value,
             mouse: document.getElementById('mouse').value,
-            pc_type: document.getElementById('pc_type').value
+            pc_type: (document.getElementById('pc_type') || document.querySelector('#formSpek [name="pc_type"]'))?.value || 'PC Operasional'
         };
         try {
             const res = await fetch('/api/components', {
@@ -489,11 +491,15 @@
         document.getElementById('edit_keyboard').value = kb || '';
         document.getElementById('edit_mouse').value = mouse || '';
         
-        const typeElem = document.getElementById('edit_pc_type');
+        const typeElem = document.getElementById('edit_jenis_pc') || document.getElementById('edit_pc_type');
         if (typeElem) {
-            let cleanType = pc_type ? pc_type.replace('PC ', '') : 'Operasional';
-            typeElem.value = cleanType;
-            if (!typeElem.value) typeElem.value = pc_type || 'Operasional';
+            typeElem.value = pc_type || 'PC Operasional';
+            if (!typeElem.value) {
+                typeElem.value = 'PC ' + pc_type;
+            }
+            if (!typeElem.value) {
+                typeElem.value = 'PC Operasional';
+            }
         }
         editModal.show();
     }
@@ -502,6 +508,7 @@
         e.preventDefault();
         const id = document.getElementById('edit_id').value;
         const rawAssetId = document.getElementById('edit_asset_id') ? document.getElementById('edit_asset_id').value : null;
+        const pcTypeElem = document.getElementById('edit_jenis_pc') || document.getElementById('edit_pc_type');
         const data = {
             asset_id: rawAssetId && !isNaN(parseInt(rawAssetId)) ? parseInt(rawAssetId) : null,
             name: document.getElementById('edit_pc_name').value,
@@ -514,7 +521,7 @@
             monitor: document.getElementById('edit_monitor').value,
             keyboard: document.getElementById('edit_keyboard').value,
             mouse: document.getElementById('edit_mouse').value,
-            pc_type: document.getElementById('edit_pc_type').value
+            pc_type: pcTypeElem ? pcTypeElem.value : 'PC Operasional'
         };
         try {
             const res = await fetch(`/api/components/${id}`, {
