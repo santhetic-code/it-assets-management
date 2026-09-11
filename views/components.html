@@ -23,17 +23,17 @@
             <i class="bi bi-file-earmark-excel-fill me-1"></i> Import Spreadsheet
         </button>
     </div>
-    <form id="formSpek" autocomplete="off">
+    <form id="formSpekPC">
         <!-- Baris 1: Identitas & OS -->
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label fw-semibold">USER (Nama PC)</label>
-                <input type="text" id="pc_name" class="form-control" placeholder="Nama User / PC" required>
+                <!-- Diubah menjadi name="name" -->
+                <input type="text" class="form-control" name="name" placeholder="Nama User / PC" required>
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-semibold">Jenis PC</label>
-                <!-- Ubah name menjadi pc_type -->
-                <select class="form-select" id="pc_type" name="pc_type" required>
+                <select class="form-select" name="pc_type" required>
                     <option value="PC Operasional">PC Operasional</option>
                     <option value="PC Server">PC Server</option>
                     <option value="PC Backup">PC Backup</option>
@@ -41,27 +41,59 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-semibold">Sistem Operasi (OS)</label>
-                <input type="text" id="os_name" class="form-control" placeholder="Versi OS" required>
+                <!-- Diubah menjadi name="os_name" -->
+                <input type="text" class="form-control" name="os_name" placeholder="Versi OS" required>
             </div>
         </div>
 
         <!-- Baris 2: Inti Pemrosesan -->
-        <div class="row g-3 mb-3">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor (CPU)</label><input type="text" id="processor_spec" class="form-control" placeholder="Tipe Prosesor"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input type="text" id="mainboard_spec" class="form-control" placeholder="Tipe Mainboard"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kapasitas RAM</label><input type="text" id="ram_spec" class="form-control" placeholder="Kapasitas RAM"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kartu Grafis (VGA)</label><input type="text" id="vga_spec" class="form-control" placeholder="Tipe VGA"></div>
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Processor (CPU)</label>
+                <!-- Diubah menjadi name="processor_spec" -->
+                <input type="text" class="form-control" name="processor_spec" placeholder="Tipe Prosesor">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Mainboard</label>
+                <!-- Diubah menjadi name="mainboard_spec" -->
+                <input type="text" class="form-control" name="mainboard_spec" placeholder="Tipe Mainboard">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Kapasitas RAM</label>
+                <!-- Diubah menjadi name="ram_spec" -->
+                <input type="text" class="form-control" name="ram_spec" placeholder="Kapasitas RAM">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Kartu Grafis (VGA)</label>
+                <!-- Diubah menjadi name="vga_spec" -->
+                <input type="text" class="form-control" name="vga_spec" placeholder="Tipe VGA">
+            </div>
         </div>
 
         <!-- Baris 3: Penyimpanan & Periferal -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Storage HDD/SSD</label><input type="text" id="storage_spec" class="form-control" placeholder="Kapasitas Storage"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Monitor</label><input type="text" id="monitor" class="form-control" placeholder="Tipe Monitor"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Keyboard</label><input type="text" id="keyboard" class="form-control" placeholder="Merk Keyboard"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mouse</label><input type="text" id="mouse" class="form-control" placeholder="Merk Mouse"></div>
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Storage HDD/SSD</label>
+                <!-- Diubah menjadi name="storage_spec" -->
+                <input type="text" class="form-control" name="storage_spec" placeholder="Kapasitas Storage">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Monitor</label>
+                <input type="text" class="form-control" name="monitor" placeholder="Tipe Monitor">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Keyboard</label>
+                <input type="text" class="form-control" name="keyboard" placeholder="Merk Keyboard">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Mouse</label>
+                <input type="text" class="form-control" name="mouse" placeholder="Merk Mouse">
+            </div>
         </div>
 
-        <div class="text-end"><button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm"><i class="bi bi-save2-fill me-2"></i>Simpan Spesifikasi</button></div>
+        <div class="text-end">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Spesifikasi</button>
+        </div>
     </form>
 </div>
 
@@ -206,20 +238,19 @@
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Spek PC</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="formEditComp" autocomplete="off">
+            <form id="formEditSpek" autocomplete="off">
                 <div class="modal-body">
-                    <input type="hidden" id="edit_id">
-                    <input type="hidden" id="edit_asset_id">
-                    <!-- Baris 1: Identitas & OS (Pada Modal Edit) -->
+                    <input type="hidden" id="edit_id" name="id">
+                    <input type="hidden" id="edit_asset_id" name="asset_id">
+                    
+                    <!-- Baris 1 -->
                     <div class="row mb-3">
-                        <!-- Aset Terkait sudah dihapus sepenuhnya -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Nama PC</label>
-                            <input type="text" class="form-control" id="edit_pc_name" name="nama_pc" required>
+                            <input type="text" class="form-control" id="edit_nama_pc" name="name" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Jenis PC</label>
-                            <!-- id tetap edit_jenis_pc untuk JS, tapi name wajib pc_type -->
                             <select class="form-select" id="edit_jenis_pc" name="pc_type" required>
                                 <option value="PC Operasional">PC Operasional</option>
                                 <option value="PC Server">PC Server</option>
@@ -228,25 +259,59 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">OS</label>
-                            <input type="text" class="form-control" id="edit_os_name" name="os" required>
+                            <input type="text" class="form-control" id="edit_os" name="os_name" required>
                         </div>
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor</label><input type="text" id="edit_processor_spec" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input type="text" id="edit_mainboard_spec" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">RAM</label><input type="text" id="edit_ram_spec" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">VGA</label><input type="text" id="edit_vga_spec" class="form-control"></div>
+
+                    <!-- Baris 2 -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Processor</label>
+                            <input type="text" class="form-control" id="edit_cpu" name="processor_spec">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Mainboard</label>
+                            <input type="text" class="form-control" id="edit_mainboard" name="mainboard_spec">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">RAM</label>
+                            <input type="text" class="form-control" id="edit_ram" name="ram_spec">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">VGA</label>
+                            <input type="text" class="form-control" id="edit_vga" name="vga_spec">
+                        </div>
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Storage</label><input type="text" id="edit_storage_spec" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Monitor</label><input type="text" id="edit_monitor" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Keyboard</label><input type="text" id="edit_keyboard" class="form-control"></div>
+
+                    <!-- Baris 3 -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Storage</label>
+                            <input type="text" class="form-control" id="edit_storage" name="storage_spec">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Monitor</label>
+                            <input type="text" class="form-control" id="edit_monitor" name="monitor">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Keyboard</label>
+                            <input type="text" class="form-control" id="edit_keyboard" name="keyboard">
+                        </div>
                     </div>
-                    <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label small fw-bold text-muted">Mouse</label><input type="text" id="edit_mouse" class="form-control"></div>
+
+                    <!-- Baris 4 -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Mouse</label>
+                            <input type="text" class="form-control" id="edit_mouse" name="mouse">
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary fw-bold">Simpan Perubahan</button></div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Simpan Perubahan</button>
+                </div>
             </form>
         </div>
     </div>
@@ -425,36 +490,40 @@
         });
     });
 
-    document.getElementById('formSpek').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const data = {
-            name: document.getElementById('pc_name').value,
-            os_name: document.getElementById('os_name').value,
-            processor_spec: document.getElementById('processor_spec').value,
-            mainboard_spec: document.getElementById('mainboard_spec').value,
-            ram_spec: document.getElementById('ram_spec').value,
-            vga_spec: document.getElementById('vga_spec').value,
-            storage_spec: document.getElementById('storage_spec').value,
-            monitor: document.getElementById('monitor').value,
-            keyboard: document.getElementById('keyboard').value,
-            mouse: document.getElementById('mouse').value,
-            pc_type: (document.getElementById('pc_type') || document.querySelector('#formSpek [name="pc_type"]'))?.value || 'PC Operasional'
-        };
-        try {
-            const res = await fetch('/api/components', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                body: JSON.stringify(data)
-            });
-            if (res.ok) window.location.reload();
-            else {
-                const errData = await res.json();
-                Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menyimpan data komponen.' });
+    const formSpekPC = document.getElementById('formSpekPC') || document.getElementById('formSpek');
+    if (formSpekPC) {
+        formSpekPC.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(formSpekPC);
+            const data = {
+                name: formData.get('name') || document.getElementById('pc_name')?.value || '',
+                pc_type: formData.get('pc_type') || document.getElementById('pc_type')?.value || 'PC Operasional',
+                os_name: formData.get('os_name') || document.getElementById('os_name')?.value || '',
+                processor_spec: formData.get('processor_spec') || document.getElementById('processor_spec')?.value || '',
+                mainboard_spec: formData.get('mainboard_spec') || document.getElementById('mainboard_spec')?.value || '',
+                ram_spec: formData.get('ram_spec') || document.getElementById('ram_spec')?.value || '',
+                vga_spec: formData.get('vga_spec') || document.getElementById('vga_spec')?.value || '',
+                storage_spec: formData.get('storage_spec') || document.getElementById('storage_spec')?.value || '',
+                monitor: formData.get('monitor') || document.getElementById('monitor')?.value || '',
+                keyboard: formData.get('keyboard') || document.getElementById('keyboard')?.value || '',
+                mouse: formData.get('mouse') || document.getElementById('mouse')?.value || ''
+            };
+            try {
+                const res = await fetch('/api/components', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) window.location.reload();
+                else {
+                    const errData = await res.json();
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menyimpan data komponen.' });
+                }
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
             }
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
-        }
-    });
+        });
+    }
 
     async function deleteComp(id) {
         if (confirm("Yakin ingin menghapus data komponen ini?")) {
@@ -476,20 +545,28 @@
 
     const editModal = new bootstrap.Modal(document.getElementById('editCompModal'));
     function openEditModal(id, asset_id, name, os, proc, mobo, ram, vga, storage, mon, kb, mouse, pc_type) {
-        document.getElementById('edit_id').value = id;
-        if (document.getElementById('edit_asset_id')) {
-            document.getElementById('edit_asset_id').value = (asset_id && asset_id !== 'None' && asset_id !== 'null') ? asset_id : '';
-        }
-        document.getElementById('edit_pc_name').value = name || '';
-        document.getElementById('edit_os_name').value = os || '';
-        document.getElementById('edit_processor_spec').value = proc || '';
-        document.getElementById('edit_mainboard_spec').value = mobo || '';
-        document.getElementById('edit_ram_spec').value = ram || '';
-        document.getElementById('edit_vga_spec').value = vga || '';
-        document.getElementById('edit_storage_spec').value = storage || '';
-        document.getElementById('edit_monitor').value = mon || '';
-        document.getElementById('edit_keyboard').value = kb || '';
-        document.getElementById('edit_mouse').value = mouse || '';
+        const setField = (ids, val) => {
+            for (const fieldId of ids) {
+                const el = document.getElementById(fieldId);
+                if (el) {
+                    el.value = val || '';
+                    return;
+                }
+            }
+        };
+
+        setField(['edit_id'], id);
+        setField(['edit_asset_id'], (asset_id && asset_id !== 'None' && asset_id !== 'null') ? asset_id : '');
+        setField(['edit_nama_pc', 'edit_pc_name'], name);
+        setField(['edit_os', 'edit_os_name'], os);
+        setField(['edit_cpu', 'edit_processor_spec'], proc);
+        setField(['edit_mainboard', 'edit_mainboard_spec'], mobo);
+        setField(['edit_ram', 'edit_ram_spec'], ram);
+        setField(['edit_vga', 'edit_vga_spec'], vga);
+        setField(['edit_storage', 'edit_storage_spec'], storage);
+        setField(['edit_monitor'], mon);
+        setField(['edit_keyboard'], kb);
+        setField(['edit_mouse'], mouse);
         
         const typeElem = document.getElementById('edit_jenis_pc') || document.getElementById('edit_pc_type');
         if (typeElem) {
@@ -504,40 +581,44 @@
         editModal.show();
     }
 
-    document.getElementById('formEditComp').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('edit_id').value;
-        const rawAssetId = document.getElementById('edit_asset_id') ? document.getElementById('edit_asset_id').value : null;
-        const pcTypeElem = document.getElementById('edit_jenis_pc') || document.getElementById('edit_pc_type');
-        const data = {
-            asset_id: rawAssetId && !isNaN(parseInt(rawAssetId)) ? parseInt(rawAssetId) : null,
-            name: document.getElementById('edit_pc_name').value,
-            os_name: document.getElementById('edit_os_name').value,
-            processor_spec: document.getElementById('edit_processor_spec').value,
-            mainboard_spec: document.getElementById('edit_mainboard_spec').value,
-            ram_spec: document.getElementById('edit_ram_spec').value,
-            vga_spec: document.getElementById('edit_vga_spec').value,
-            storage_spec: document.getElementById('edit_storage_spec').value,
-            monitor: document.getElementById('edit_monitor').value,
-            keyboard: document.getElementById('edit_keyboard').value,
-            mouse: document.getElementById('edit_mouse').value,
-            pc_type: pcTypeElem ? pcTypeElem.value : 'PC Operasional'
-        };
-        try {
-            const res = await fetch(`/api/components/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                body: JSON.stringify(data)
-            });
-            if (res.ok) window.location.reload();
-            else {
-                const errData = await res.json();
-                Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal memperbarui data.' });
+    const formEditSpek = document.getElementById('formEditSpek') || document.getElementById('formEditComp');
+    if (formEditSpek) {
+        formEditSpek.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(formEditSpek);
+            const id = formData.get('id') || document.getElementById('edit_id')?.value;
+            const rawAssetId = formData.get('asset_id') || document.getElementById('edit_asset_id')?.value;
+            const pcTypeElem = document.getElementById('edit_jenis_pc') || document.getElementById('edit_pc_type');
+            const data = {
+                asset_id: rawAssetId && !isNaN(parseInt(rawAssetId)) ? parseInt(rawAssetId) : null,
+                name: formData.get('name') || document.getElementById('edit_nama_pc')?.value || document.getElementById('edit_pc_name')?.value || '',
+                os_name: formData.get('os_name') || document.getElementById('edit_os')?.value || document.getElementById('edit_os_name')?.value || '',
+                processor_spec: formData.get('processor_spec') || document.getElementById('edit_cpu')?.value || document.getElementById('edit_processor_spec')?.value || '',
+                mainboard_spec: formData.get('mainboard_spec') || document.getElementById('edit_mainboard')?.value || document.getElementById('edit_mainboard_spec')?.value || '',
+                ram_spec: formData.get('ram_spec') || document.getElementById('edit_ram')?.value || document.getElementById('edit_ram_spec')?.value || '',
+                vga_spec: formData.get('vga_spec') || document.getElementById('edit_vga')?.value || document.getElementById('edit_vga_spec')?.value || '',
+                storage_spec: formData.get('storage_spec') || document.getElementById('edit_storage')?.value || document.getElementById('edit_storage_spec')?.value || '',
+                monitor: formData.get('monitor') || document.getElementById('edit_monitor')?.value || '',
+                keyboard: formData.get('keyboard') || document.getElementById('edit_keyboard')?.value || '',
+                mouse: formData.get('mouse') || document.getElementById('edit_mouse')?.value || '',
+                pc_type: formData.get('pc_type') || (pcTypeElem ? pcTypeElem.value : 'PC Operasional')
+            };
+            try {
+                const res = await fetch(`/api/components/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) window.location.reload();
+                else {
+                    const errData = await res.json();
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal memperbarui data.' });
+                }
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
             }
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
-        }
-    });
+        });
+    }
 
     document.getElementById('formImportComponents').addEventListener('submit', async (e) => {
         e.preventDefault();
