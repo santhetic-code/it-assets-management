@@ -83,7 +83,7 @@
     </div>
 
     <div class="table-responsive">
-        <table id="tabelIp" class="table table-hover table-borderless align-middle">
+        <table id="dataTableIP" class="table table-hover table-borderless align-middle">
             <thead class="table-light text-muted">
                 <tr>
                     <th class="fw-semibold">ALAMAT IP</th>
@@ -174,11 +174,28 @@ function renderIpMap() {
 $(document).ready(function() {
     renderIpMap();
 
-    var table = $('#tabelIp').DataTable({
+    var table = $('#dataTableIP').DataTable({
+        // Kustomisasi tombol secara individual
         buttons: [
-            { extend: 'excel', className: 'btn btn-sm btn-success fw-bold shadow-sm' },
-            { extend: 'pdf', className: 'btn btn-sm btn-danger fw-bold shadow-sm' },
-            { extend: 'print', className: 'btn btn-sm btn-secondary fw-bold shadow-sm' }
+            {
+                extend: 'excel',
+                // Menyuntikkan ikon Excel bawaan Bootstrap Icons
+                text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel',
+                // Menambahkan class rounded agar ujungnya tidak kaku
+                className: 'btn btn-success btn-sm shadow-sm rounded' 
+            },
+            {
+                extend: 'pdf',
+                // Menyuntikkan ikon PDF
+                text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF',
+                className: 'btn btn-danger btn-sm shadow-sm rounded'
+            },
+            {
+                extend: 'print',
+                // Menyuntikkan ikon Print
+                text: '<i class="bi bi-printer-fill"></i> Print',
+                className: 'btn btn-secondary btn-sm shadow-sm rounded'
+            }
         ],
         dom: "<'row'<'col-sm-12'tr>>" +
              "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
@@ -189,14 +206,20 @@ $(document).ready(function() {
         language: { search: "_INPUT_", searchPlaceholder: "Cari IP atau Pengguna..." }
     });
 
-    // Pindahkan tombol export & search bar ke dalam #tableControls
+    // Pindahkan tombol export ke dalam div #tableControls (Kanan Atas)
     table.buttons().container().prependTo('#tableControls');
-    $('#tabelIp_filter').appendTo('#tableControls');
+    
+    // TRICK PENTING: Hapus class 'btn-group' bawaan DataTables agar tombol tidak menempel, 
+    // lalu tambahkan 'd-flex gap-2' agar ada jarak (space) yang rapi antar tombol.
+    table.buttons().container().removeClass('btn-group flex-wrap').addClass('d-flex gap-2');
+    
+    // Pindahkan search bar bawaan DataTables
+    $('#dataTableIP_filter').appendTo('#tableControls');
 
-    // Filter kolom Tipe Jaringan (index 1) dari dropdown — exact match
+    // Fungsi Filter untuk Dropdown Tipe Jaringan
     $('#filterTipeIP').on('change', function () {
-        var val = $.fn.dataTable.util.escapeRegex($(this).val());
-        table.column(1).search(val ? '^' + val + '$' : '', true, false).draw();
+        var val = $(this).val();
+        table.column(1).search(val).draw();
     });
 });
 

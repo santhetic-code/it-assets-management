@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class ComponentBase(BaseModel):
-    asset_id: int
+    asset_id: Optional[int] = None
     name: str
     os_name: Optional[str] = None
     ram_spec: Optional[str] = None

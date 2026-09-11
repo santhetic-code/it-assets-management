@@ -2,7 +2,7 @@
 
 <style>
     /* Membatasi lebar teks dalam sel tabel agar rapi dan tidak merusak tinggi baris */
-    #tabelKomponen td {
+    #dataTableSpek td {
         max-width: 180px;
         white-space: nowrap;
         overflow: hidden;
@@ -11,7 +11,7 @@
     }
 
     /* Menampilkan teks penuh secara melayang saat disorot kursor (hover) */
-    #tabelKomponen td:hover {
+    #dataTableSpek td:hover {
         white-space: normal;
         overflow: visible;
         word-wrap: break-word;
@@ -20,29 +20,8 @@
         z-index: 1;
     }
 
-    /* Styling Tab Navigasi */
-    .nav-tabs-pc .nav-link {
-        font-weight: 600;
-        color: #6c757d;
-        border: none;
-        border-bottom: 3px solid transparent;
-        padding: 0.6rem 1.4rem;
-        transition: all 0.2s ease;
-    }
-    .nav-tabs-pc .nav-link:hover {
-        color: #0d6efd;
-        border-bottom-color: #cfe2ff;
-        background: transparent;
-    }
-    .nav-tabs-pc .nav-link.active {
-        color: #0d6efd;
-        border-bottom-color: #0d6efd;
-        background: transparent;
-    }
-    .nav-tabs-pc {
-        border-bottom: 2px solid #dee2e6;
-        margin-bottom: 1rem;
-    }
+    /* Styling kursor pointer untuk tab */
+    .cursor-pointer { cursor: pointer; }
 </style>
 
 
@@ -64,70 +43,79 @@
         </button>
     </div>
     <form id="formSpek" autocomplete="off">
-        <div class="row g-3 mb-3 pb-3 border-bottom border-light">
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">Aset Terkait (Wajib)</label>
-                <select id="asset_id" class="form-select" required>
-                    <option value="">-- Pilih Aset Induk --</option>
-                    {% for a in assets %}
-                    <option value="{{ a.id }}">{{ a.asset_tag }} - {{ a.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">Nama / Identitas PC</label>
+        <!-- Baris 1: Identitas & OS -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">USER (Nama PC)</label>
                 <input type="text" id="pc_name" class="form-control" placeholder="Cth: PC - DIREKTUR" required>
             </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">Sistem Operasi (OS)</label>
-                <input type="text" id="os_name" class="form-control" placeholder="Cth: Windows 11 Pro">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">Jenis PC</label>
-                <select id="pc_type" class="form-select">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Jenis PC</label>
+                <select id="pc_type" class="form-select" required>
                     <option value="Operasional">PC Operasional</option>
                     <option value="Server">PC Server</option>
+                    <option value="Backup">PC Backup</option>
                 </select>
             </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Sistem Operasi (OS)</label>
+                <input type="text" id="os_name" class="form-control" placeholder="Cth: Windows 10 Pro (x64)..." required>
+            </div>
         </div>
+
+        <!-- Baris 2: Inti Pemrosesan -->
         <div class="row g-3 mb-3">
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor (CPU)</label><input type="text" id="processor_spec" class="form-control" placeholder="Cth: Core i7-12700"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input type="text" id="mainboard_spec" class="form-control" placeholder="Cth: ASUS B660M"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kapasitas RAM</label><input type="text" id="ram_spec" class="form-control" placeholder="Cth: 16GB DDR4"></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kartu Grafis (VGA/GPU)</label><input type="text" id="vga_spec" class="form-control" placeholder="Cth: RTX 3060 12GB"></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Processor (CPU)</label><input type="text" id="processor_spec" class="form-control" placeholder="Cth: Intel Core i7-9700..."></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mainboard</label><input type="text" id="mainboard_spec" class="form-control" placeholder="Cth: Gigabyte B360 AORUS..."></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kapasitas RAM</label><input type="text" id="ram_spec" class="form-control" placeholder="Cth: 32 GB DDR4..."></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Kartu Grafis (VGA)</label><input type="text" id="vga_spec" class="form-control" placeholder="Cth: NVIDIA GTX 1630..."></div>
         </div>
+
+        <!-- Baris 3: Penyimpanan & Periferal -->
         <div class="row g-3 mb-4">
-            <div class="col-md-4"><label class="form-label small fw-bold text-muted">Storage HDD/SSD</label><input type="text" id="storage_spec" class="form-control" placeholder="Cth: SSD NVMe 512GB + HDD 1TB"></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Monitor</label><input type="text" id="monitor" class="form-control" placeholder="Cth: LG 24 Inch"></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Keyboard</label><input type="text" id="keyboard" class="form-control" placeholder="Cth: Logitech K120"></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Mouse</label><input type="text" id="mouse" class="form-control" placeholder="Cth: Logitech B100"></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Storage HDD/SSD</label><input type="text" id="storage_spec" class="form-control" placeholder="Cth: 2x Samsung SSD 870..."></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Monitor</label><input type="text" id="monitor" class="form-control" placeholder="Cth: ASUS VX238 23.1..."></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Keyboard</label><input type="text" id="keyboard" class="form-control" placeholder="Cth: Logitech"></div>
+            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Mouse</label><input type="text" id="mouse" class="form-control" placeholder="Cth: Logitech"></div>
         </div>
+
         <div class="text-end"><button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm"><i class="bi bi-save2-fill me-2"></i>Simpan Spesifikasi</button></div>
     </form>
 </div>
 
 <div class="card-custom">
-    <!-- Tab Navigasi: PC Operasional | PC Server | Semua -->
-    <ul class="nav nav-tabs-pc nav-tabs d-flex" id="pcTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <a class="nav-link {{ 'active' if jenis_aktif == 'operasional' else '' }}" href="/hardware-components?jenis=operasional">
-                <i class="bi bi-pc-display me-1"></i> PC Operasional
-            </a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link {{ 'active' if jenis_aktif == 'server' else '' }}" href="/hardware-components?jenis=server">
-                <i class="bi bi-server me-1"></i> PC Server
-            </a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link {{ 'active' if jenis_aktif == 'semua' else '' }}" href="/hardware-components?jenis=semua">
-                <i class="bi bi-list-ul me-1"></i> Semua
-            </a>
-        </li>
-    </ul>
+    <!-- Toolbar Terpadu -->
+    <div class="d-flex justify-content-between align-items-end mb-3 border-bottom pb-2">
+
+        <!-- KIRI: Tabs Kategori PC (Bootstrap Nav Pills) -->
+        <ul class="nav nav-pills" id="tabFilterPC" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active fw-semibold" data-filter="" style="cursor: pointer;">Semua Data</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-semibold" data-filter="PC Operasional" style="cursor: pointer;">
+                    <i class="bi bi-pc-display me-1"></i> PC Operasional
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-semibold" data-filter="PC Server" style="cursor: pointer;">
+                    <i class="bi bi-server me-1"></i> PC Server
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-semibold" data-filter="PC Backup" style="cursor: pointer;">
+                    <i class="bi bi-hdd-network me-1"></i> PC Backup
+                </a>
+            </li>
+        </ul>
+
+        <!-- KANAN: Wadah untuk Tombol Export & Search -->
+        <div id="tableControlsSpek" class="d-flex gap-3 align-items-center"></div>
+
+    </div>
 
     <div class="table-responsive">
-        <table id="tabelKomponen" class="table table-hover align-middle">
+        <table id="dataTableSpek" class="table table-hover align-middle">
             <thead>
                 <tr>
                     <th>Identitas PC &amp; Aset</th>
@@ -165,9 +153,11 @@
                     </td>
                     <td>
                         {% if comp.pc_type == 'Server' %}
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-server me-1"></i>Server</span>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-server me-1"></i>PC Server</span>
+                        {% elif comp.pc_type == 'Backup' %}
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-hdd-network me-1"></i>PC Backup</span>
                         {% else %}
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-pc-display me-1"></i>Operasional</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-pc-display me-1"></i>PC Operasional</span>
                         {% endif %}
                     </td>
                     <td>
@@ -209,6 +199,7 @@
                             <select id="edit_pc_type" class="form-select">
                                 <option value="Operasional">PC Operasional</option>
                                 <option value="Server">PC Server</option>
+                                <option value="Backup">PC Backup</option>
                             </select>
                         </div>
                     </div>
@@ -261,20 +252,43 @@
 
 <script>
     $(document).ready(function () {
-        $('#tabelKomponen').DataTable({
-            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+        var table = $('#dataTableSpek').DataTable({
+            dom: "<'row'<'col-sm-12'tr>>" +
+                 "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
             buttons: [
-                { extend: 'excelHtml5', className: 'btn btn-sm btn-success', text: '<i class="bi bi-file-earmark-excel"></i> Excel', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
-                { extend: 'pdfHtml5', className: 'btn btn-sm btn-danger ms-2', text: '<i class="bi bi-file-earmark-pdf"></i> PDF', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }, orientation: 'landscape' },
-                { extend: 'print', className: 'btn btn-sm btn-secondary ms-2', text: '<i class="bi bi-printer"></i> Print', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } }
-            ], language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
+                { extend: 'excel', text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', className: 'btn btn-success btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
+                { extend: 'pdf', text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', className: 'btn btn-danger btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }, orientation: 'landscape' },
+                { extend: 'print', text: '<i class="bi bi-printer-fill"></i> Print', className: 'btn btn-secondary btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } }
+            ],
+            language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
+        });
+
+        // 1. Pindahkan dan Rapikan Tombol Export ke Kanan
+        table.buttons().container()
+            .removeClass('btn-group flex-wrap')
+            .addClass('d-flex gap-2')
+            .appendTo('#tableControlsSpek');
+
+        // 2. Pindahkan Search Bar ke Kanan
+        $('#dataTableSpek_filter').appendTo('#tableControlsSpek');
+
+        // 3. Logika Klik Tab Filter
+        $('#tabFilterPC .nav-link').on('click', function(e) {
+            e.preventDefault();
+
+            // Ubah warna tab yang aktif
+            $('#tabFilterPC .nav-link').removeClass('active');
+            $(this).addClass('active');
+
+            // Kolom "Jenis PC" berada di index kolom ke-6
+            var filterValue = $(this).attr('data-filter');
+            table.column(6).search(filterValue).draw();
         });
     });
 
     document.getElementById('formSpek').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = {
-            asset_id: parseInt(document.getElementById('asset_id').value),
             name: document.getElementById('pc_name').value,
             os_name: document.getElementById('os_name').value,
             processor_spec: document.getElementById('processor_spec').value,
