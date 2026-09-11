@@ -90,8 +90,18 @@
             </li>
         </ul>
 
-        <!-- KANAN: Wadah untuk Tombol Export & Search -->
-        <div id="tableControlsSpek" class="d-flex gap-3 align-items-center"></div>
+        <!-- KANAN: Tombol Export & Custom Search -->
+        <div class="d-flex align-items-center gap-3">
+            <div id="tableControlsSpek" class="d-flex gap-2 align-items-center"></div>
+            
+            <!-- Kotak Pencarian Custom -->
+            <div class="input-group input-group-sm" style="width: 250px;">
+                <span class="input-group-text bg-white text-muted border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="customSearchSpek" class="form-control border-start-0 ps-0" placeholder="Cari Spesifikasi...">
+            </div>
+        </div>
 
     </div>
 
@@ -103,6 +113,15 @@
                     <th class="fw-semibold text-muted text-uppercase" style="font-size: 0.8rem;">SISTEM OPERASI</th>
                     <th class="fw-semibold text-muted text-uppercase" style="font-size: 0.8rem;">PROCESSOR (CPU)</th>
                     <th class="fw-semibold text-muted text-uppercase" style="font-size: 0.8rem;">MAINBOARD</th>
+                    
+                    <!-- Tambahkan 6 Kolom Ini (Untuk Export) -->
+                    <th>KAPASITAS RAM</th>
+                    <th>KARTU GRAFIS (VGA)</th>
+                    <th>STORAGE HDD/SSD</th>
+                    <th>MONITOR</th>
+                    <th>KEYBOARD</th>
+                    <th>MOUSE</th>
+                    
                     <th class="fw-semibold text-muted text-uppercase text-center" style="font-size: 0.8rem;">JENIS PC</th>
                     <th class="fw-semibold text-muted text-uppercase text-end" style="font-size: 0.8rem;">AKSI</th>
                 </tr>
@@ -117,19 +136,33 @@
                     </td>
                     
                     <!-- OS -->
-                    <td class="text-truncate" style="max-width: 180px;" title="{{ comp.os }}">
-                        <div class="text-secondary fw-medium" style="font-size: 0.85rem;">{{ comp.os }}</div>
+                    <td title="{{ comp.os }}">
+                        <div class="text-secondary fw-medium text-truncate" style="max-width: 220px; font-size: 0.85rem;">
+                            {{ comp.os }}
+                        </div>
                     </td>
 
                     <!-- PROCESSOR -->
-                    <td class="text-truncate" style="max-width: 180px;" title="{{ comp.cpu }}">
-                        <div class="text-secondary fw-medium" style="font-size: 0.85rem;">{{ comp.cpu }}</div>
+                    <td title="{{ comp.cpu }}">
+                        <div class="text-secondary fw-medium text-truncate" style="max-width: 220px; font-size: 0.85rem;">
+                            {{ comp.cpu }}
+                        </div>
                     </td>
 
                     <!-- MAINBOARD -->
-                    <td class="text-truncate" style="max-width: 180px;" title="{{ comp.mainboard }}">
-                        <div class="text-secondary fw-medium" style="font-size: 0.85rem;">{{ comp.mainboard }}</div>
+                    <td title="{{ comp.mainboard }}">
+                        <div class="text-secondary fw-medium text-truncate" style="max-width: 200px; font-size: 0.85rem;">
+                            {{ comp.mainboard }}
+                        </div>
                     </td>
+                    
+                    <!-- Tambahkan 6 Data Ini (Akan disembunyikan UI, tapi ditarik Export) -->
+                    <td>{{ comp.ram }}</td>
+                    <td>{{ comp.vga }}</td>
+                    <td>{{ comp.storage }}</td>
+                    <td>{{ comp.monitor }}</td>
+                    <td>{{ comp.keyboard }}</td>
+                    <td>{{ comp.mouse }}</td>
                     
                     <!-- JENIS PC -->
                     <td class="text-center">
@@ -175,24 +208,25 @@
             <form id="formEditComp" autocomplete="off">
                 <div class="modal-body">
                     <input type="hidden" id="edit_id">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">Aset Terkait</label>
-                            <select id="edit_asset_id" class="form-select" required>
-                                {% for a in assets %}
-                                <option value="{{ a.id }}">{{ a.asset_tag }} - {{ a.name }}</option>
-                                {% endfor %}
-                            </select>
+                    <input type="hidden" id="edit_asset_id">
+                    <!-- Baris 1: Identitas & OS (Pada Modal Edit) -->
+                    <div class="row mb-3">
+                        <!-- Aset Terkait sudah dihapus sepenuhnya -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Nama PC</label>
+                            <input type="text" class="form-control" id="edit_pc_name" name="nama_pc" required>
                         </div>
-                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">Nama PC</label><input type="text" id="edit_pc_name" class="form-control" required></div>
-                        <div class="col-md-3"><label class="form-label small fw-bold text-muted">OS</label><input type="text" id="edit_os_name" class="form-control"></div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">Jenis PC</label>
-                            <select id="edit_pc_type" class="form-select">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Jenis PC</label>
+                            <select class="form-select" id="edit_pc_type" name="jenis_pc" required>
                                 <option value="Operasional">PC Operasional</option>
                                 <option value="Server">PC Server</option>
                                 <option value="Backup">PC Backup</option>
                             </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">OS</label>
+                            <input type="text" class="form-control" id="edit_os_name" name="os" required>
                         </div>
                     </div>
                     <div class="row g-3 mb-3">
@@ -331,38 +365,61 @@
         modalSpek.show();
     });
 
-    $(document).ready(function () {
+    $(document).ready(function() {
         var table = $('#dataTableSpek').DataTable({
             dom: "<'row'<'col-sm-12'tr>>" +
                  "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
+            // 1. Sembunyikan 6 Kolom Hardware dari UI (Indeks 4 sampai 9)
+            columnDefs: [
+                { targets: [4, 5, 6, 7, 8, 9], visible: false }
+            ],
+            // 2. Kustomisasi Export agar menarik kolom tersembunyi
             buttons: [
-                { extend: 'excel', text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', className: 'btn btn-success btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4] } },
-                { extend: 'pdf', text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', className: 'btn btn-danger btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4] }, orientation: 'landscape' },
-                { extend: 'print', text: '<i class="bi bi-printer-fill"></i> Print', className: 'btn btn-secondary btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4] } }
+                { 
+                    extend: 'excel', 
+                    text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', 
+                    className: 'btn btn-success btn-sm shadow-sm rounded',
+                    // Export kolom 0 s/d 10 (Jangan export kolom Aksi/11)
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } 
+                },
+                { 
+                    extend: 'pdf', 
+                    text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', 
+                    className: 'btn btn-danger btn-sm shadow-sm rounded',
+                    orientation: 'landscape', // Ubah ke Landscape agar muat banyak kolom!
+                    pageSize: 'A4',
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+                },
+                { 
+                    extend: 'print', 
+                    text: '<i class="bi bi-printer-fill"></i> Print', 
+                    className: 'btn btn-secondary btn-sm shadow-sm rounded',
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+                }
             ],
             language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
         });
 
-        // 1. Pindahkan dan Rapikan Tombol Export ke Kanan
+        // Pindahkan Tombol Export
         table.buttons().container()
             .removeClass('btn-group flex-wrap')
             .addClass('d-flex gap-2')
             .appendTo('#tableControlsSpek');
+            
+        // Matikan search bawaan & Hidupkan Custom Search
+        $('#dataTableSpek_filter').hide();
+        $('#customSearchSpek').on('keyup', function() {
+            table.search(this.value).draw();
+        });
 
-        // 2. Pindahkan Search Bar ke Kanan
-        $('#dataTableSpek_filter').appendTo('#tableControlsSpek');
-
-        // 3. Logika Klik Tab Filter
+        // Tab Filter (PERHATIAN: Indeks Jenis PC sekarang bergeser ke 10)
         $('#tabFilterPC .nav-link').on('click', function(e) {
             e.preventDefault();
-
-            // Ubah warna tab yang aktif
             $('#tabFilterPC .nav-link').removeClass('active');
             $(this).addClass('active');
-
-            // Kolom "Jenis PC" berada di index kolom ke-4
+            
             var filterValue = $(this).attr('data-filter');
-            table.column(4).search(filterValue).draw();
+            table.column(10).search(filterValue).draw(); // <-- Angka diubah ke 10
         });
     });
 
@@ -418,26 +475,35 @@
     const editModal = new bootstrap.Modal(document.getElementById('editCompModal'));
     function openEditModal(id, asset_id, name, os, proc, mobo, ram, vga, storage, mon, kb, mouse, pc_type) {
         document.getElementById('edit_id').value = id;
-        document.getElementById('edit_asset_id').value = asset_id;
-        document.getElementById('edit_pc_name').value = name;
-        document.getElementById('edit_os_name').value = os;
-        document.getElementById('edit_processor_spec').value = proc;
-        document.getElementById('edit_mainboard_spec').value = mobo;
-        document.getElementById('edit_ram_spec').value = ram;
-        document.getElementById('edit_vga_spec').value = vga;
-        document.getElementById('edit_storage_spec').value = storage;
-        document.getElementById('edit_monitor').value = mon;
-        document.getElementById('edit_keyboard').value = kb;
-        document.getElementById('edit_mouse').value = mouse;
-        document.getElementById('edit_pc_type').value = pc_type || 'Operasional';
+        if (document.getElementById('edit_asset_id')) {
+            document.getElementById('edit_asset_id').value = (asset_id && asset_id !== 'None' && asset_id !== 'null') ? asset_id : '';
+        }
+        document.getElementById('edit_pc_name').value = name || '';
+        document.getElementById('edit_os_name').value = os || '';
+        document.getElementById('edit_processor_spec').value = proc || '';
+        document.getElementById('edit_mainboard_spec').value = mobo || '';
+        document.getElementById('edit_ram_spec').value = ram || '';
+        document.getElementById('edit_vga_spec').value = vga || '';
+        document.getElementById('edit_storage_spec').value = storage || '';
+        document.getElementById('edit_monitor').value = mon || '';
+        document.getElementById('edit_keyboard').value = kb || '';
+        document.getElementById('edit_mouse').value = mouse || '';
+        
+        const typeElem = document.getElementById('edit_pc_type');
+        if (typeElem) {
+            let cleanType = pc_type ? pc_type.replace('PC ', '') : 'Operasional';
+            typeElem.value = cleanType;
+            if (!typeElem.value) typeElem.value = pc_type || 'Operasional';
+        }
         editModal.show();
     }
 
     document.getElementById('formEditComp').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit_id').value;
+        const rawAssetId = document.getElementById('edit_asset_id') ? document.getElementById('edit_asset_id').value : null;
         const data = {
-            asset_id: parseInt(document.getElementById('edit_asset_id').value),
+            asset_id: rawAssetId && !isNaN(parseInt(rawAssetId)) ? parseInt(rawAssetId) : null,
             name: document.getElementById('edit_pc_name').value,
             os_name: document.getElementById('edit_os_name').value,
             processor_spec: document.getElementById('edit_processor_spec').value,

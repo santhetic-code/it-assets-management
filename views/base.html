@@ -66,6 +66,13 @@
         [data-bs-theme="dark"] .bg-light { background-color: #2b2b40 !important; }
         [data-bs-theme="dark"] .border-light { border-color: #2b2b40 !important; }
 
+        /* Custom CSS untuk Tooltip Keterangan */
+        .tooltip-inner {
+            white-space: pre-wrap !important; /* Memaksa HTML membaca tombol Enter/Vertical */
+            text-align: left !important;      /* Rata kiri agar susunan addon lebih rapi dibaca */
+            max-width: 350px !important;      /* Memperlebar kotak hitam agar tidak terlalu sempit */
+        }
+
         /* --- Animasi Transisi Halus (Fade In) Pindah Halaman --- */
         .main-content {
             animation: fadeIn 0.15s ease-out;

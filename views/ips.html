@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 
+<style>
+    /* Custom CSS untuk Tooltip Keterangan */
+    .tooltip-inner {
+        white-space: pre-wrap !important; /* Memaksa HTML membaca tombol Enter/Vertical */
+        text-align: left !important;      /* Rata kiri agar susunan addon lebih rapi dibaca */
+        max-width: 350px !important;      /* Memperlebar kotak hitam agar tidak terlalu sempit */
+    }
+</style>
+
 {% block title %}IP Jaringan - ITAM Pro{% endblock %}
 
 {% block content %}
@@ -77,8 +86,21 @@
             </div>
         </div>
 
-        <!-- BAGIAN KANAN: Tempat DataTables menyuntikkan Tombol Export & Pencarian -->
-        <div id="tableControls" class="d-flex gap-2 align-items-center"></div>
+        <!-- BAGIAN KANAN: Wadah Tombol Export & Custom Search -->
+        <div class="d-flex align-items-center gap-3">
+            
+            <!-- Tempat JS meletakkan tombol Excel, PDF, Print -->
+            <div id="tableControls" class="d-flex gap-2"></div>
+            
+            <!-- Kotak Pencarian Custom (Modern UI) -->
+            <div class="input-group input-group-sm" style="width: 250px;">
+                <span class="input-group-text bg-white text-muted border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="customSearchIP" class="form-control border-start-0 ps-0" placeholder="Cari IP atau Pengguna...">
+            </div>
+
+        </div>
 
     </div>
 
@@ -105,9 +127,18 @@
                         {% endif %}
                     </td>
                     <td>{% if ip.status == 'Aktif' %}<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Aktif</span>{% else %}<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Offline</span>{% endif %}</td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditModal('{{ ip.id }}', '{{ ip.ip_address }}', '{{ ip.ip_type }}', '{{ ip.assigned_to or '' }}', '{{ ip.status }}', '{{ ip.keterangan or '' }}')"><i class="bi bi-pencil-square"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteIp('{{ ip.id }}')"><i class="bi bi-trash"></i></button>
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-sm btn-outline-secondary me-1 btn-edit"
+                            data-id="{{ ip.id }}"
+                            data-ip="{{ ip.ip_address }}"
+                            data-type="{{ ip.ip_type }}"
+                            data-assigned="{{ ip.assigned_to or '' }}"
+                            data-status="{{ ip.status }}"
+                            data-keterangan="{{ ip.keterangan or '' }}"
+                            title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteIp('{{ ip.id }}')" title="Hapus"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -203,22 +234,47 @@ $(document).ready(function() {
         scrollCollapse: true,
         pageLength: 50,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
-        language: { search: "_INPUT_", searchPlaceholder: "Cari IP atau Pengguna..." }
+        drawCallback: function () {
+            var tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltips.forEach(function (el) {
+                if (!bootstrap.Tooltip.getInstance(el)) {
+                    new bootstrap.Tooltip(el);
+                }
+            });
+        }
     });
 
-    // Pindahkan tombol export ke dalam div #tableControls (Kanan Atas)
-    table.buttons().container().prependTo('#tableControls');
-    
-    // TRICK PENTING: Hapus class 'btn-group' bawaan DataTables agar tombol tidak menempel, 
-    // lalu tambahkan 'd-flex gap-2' agar ada jarak (space) yang rapi antar tombol.
-    table.buttons().container().removeClass('btn-group flex-wrap').addClass('d-flex gap-2');
-    
-    // Pindahkan search bar bawaan DataTables
-    $('#dataTableIP_filter').appendTo('#tableControls');
+    // Pindahkan tombol export ke dalam #tableControls
+    table.buttons().container()
+        .removeClass('btn-group flex-wrap')
+        .addClass('d-flex gap-2')
+        .appendTo('#tableControls');
 
-    // Fungsi Filter untuk Dropdown Tipe Jaringan
+    // ==========================================
+    // KODE BARU UNTUK PENCARIAN
+    // ==========================================
+    
+    // 1. Sembunyikan secara paksa search bar bawaan DataTables yang berantakan
+    $('#dataTableIP_filter').hide();
+
+    // 2. Hubungkan Custom Search kita dengan logika pencarian DataTables
+    $('#customSearchIP').on('keyup', function() {
+        table.search(this.value).draw();
+    });
+
+    // ==========================================
+
+    // 1. KODE BARU: Cek memori browser saat halaman dimuat (Filter Persistence)
+    var savedFilter = sessionStorage.getItem('ipFilterType');
+    if (savedFilter) {
+        $('#filterTipeIP').val(savedFilter); // Set nilai dropdown
+        table.column(1).search(savedFilter).draw(); // Filter tabel (Tipe Jaringan di kolom indeks 1)
+    }
+
+    // 2. KODE YANG DIUBAH: Simpan ke memori saat dropdown diganti
     $('#filterTipeIP').on('change', function () {
         var val = $(this).val();
+        sessionStorage.setItem('ipFilterType', val); // Simpan nilai ke memori
         table.column(1).search(val).draw();
     });
 });
@@ -275,6 +331,19 @@ function openEditModal(id, ip_address, ip_type, assigned, status, keterangan) {
     document.getElementById('edit_keterangan').value = keterangan || '';
     editModal.show();
 }
+
+// Event Delegation untuk tombol Edit agar tetap aktif setelah reload/save
+$(document).on('click', '.btn-edit', function() {
+    var btn = $(this);
+    openEditModal(
+        btn.attr('data-id'),
+        btn.attr('data-ip'),
+        btn.attr('data-type'),
+        btn.attr('data-assigned'),
+        btn.attr('data-status'),
+        btn.attr('data-keterangan')
+    );
+});
 
 // 4. FUNGSI UPDATE: Event Listener untuk formEditIp
 document.getElementById('formEditIp').addEventListener('submit', async (e) => {
