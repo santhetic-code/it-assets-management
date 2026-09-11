@@ -66,7 +66,7 @@ class Component(Base):
     __tablename__ = "components"
 
     id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)  # Wajib ada untuk relasi
+    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=True)  # Opsional, bisa tanpa relasi aset
     name = Column(String(100), nullable=False)  # Misalnya: "PC - DIREKTUR"
 
     # Kolom baru hasil adaptasi dari Spreadsheet
@@ -88,6 +88,50 @@ class Component(Base):
 
     # Relationship back to Asset
     asset = relationship("Asset", back_populates="components")
+
+    @property
+    def user_pc(self):
+        return self.name
+
+    @property
+    def os(self):
+        return self.os_name or "-"
+
+    @property
+    def jenis_pc(self):
+        if not self.pc_type:
+            return "PC Operasional"
+        if self.pc_type.startswith("PC "):
+            return self.pc_type
+        return f"PC {self.pc_type}"
+
+    @property
+    def cpu(self):
+        return self.processor_spec or "-"
+
+    @property
+    def mainboard(self):
+        return self.mainboard_spec or "-"
+
+    @property
+    def ram(self):
+        return self.ram_spec or "-"
+
+    @property
+    def vga(self):
+        return self.vga_spec or "-"
+
+    @property
+    def storage(self):
+        return self.storage_spec or "-"
+
+    @property
+    def last_update(self):
+        dt = self.updated_at or self.created_at
+        if dt:
+            months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+            return f"{dt.day} {months[dt.month - 1]} {dt.year}"
+        return "11 Sep 2026"
 
 
 class NetworkIP(Base):
