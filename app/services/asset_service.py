@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import pandas as pd
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -149,9 +149,15 @@ def import_assets_from_file(db: Session, file_bytes: bytes, filename: str) -> in
 # 2. LOGIKA KOMPONEN
 # ==========================================
 def get_components(db: Session, pc_type: Optional[str] = None):
-    query = db.query(Component)
+    query = db.query(Component).outerjoin(Asset)
     if pc_type and pc_type != "semua":
-        query = query.filter(Component.pc_type == pc_type)
+        query = query.filter(
+            or_(
+                Component.pc_type == pc_type,
+                Component.pc_type == f"PC {pc_type}",
+                Component.pc_type == pc_type.replace("PC ", "")
+            )
+        )
     return query.all()
 
 
