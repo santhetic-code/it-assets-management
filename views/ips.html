@@ -206,26 +206,80 @@ $(document).ready(function() {
     renderIpMap();
 
     var table = $('#dataTableIP').DataTable({
-        // Kustomisasi tombol secara individual
+        // Kustomisasi Export dengan Pop-up Validasi Enterprise
         buttons: [
-            {
-                extend: 'excel',
-                // Menyuntikkan ikon Excel bawaan Bootstrap Icons
-                text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel',
-                // Menambahkan class rounded agar ujungnya tidak kaku
-                className: 'btn btn-success btn-sm shadow-sm rounded' 
+            { 
+                extend: 'excel', 
+                text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', 
+                className: 'btn btn-success btn-sm shadow-sm rounded',
+                exportOptions: { columns: ':not(:last-child)' }, // Otomatis export semua kecuali tombol Aksi
+                action: function (e, dt, button, config) {
+                    var self = this;
+                    Swal.fire({
+                        title: 'Export ke Excel?',
+                        text: "Sistem akan mengekstrak data alokasi IP ke format Spreadsheet. Lanjutkan?",
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonColor: '#198754',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="bi bi-download me-1"></i> Ya, Download',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.fn.dataTable.ext.buttons.excelHtml5.action.call(self, e, dt, button, config);
+                            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'File Excel sedang diunduh.', timer: 1500, showConfirmButton: false });
+                        }
+                    });
+                }
             },
-            {
-                extend: 'pdf',
-                // Menyuntikkan ikon PDF
-                text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF',
-                className: 'btn btn-danger btn-sm shadow-sm rounded'
+            { 
+                extend: 'pdf', 
+                text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', 
+                className: 'btn btn-danger btn-sm shadow-sm rounded',
+                orientation: 'portrait', 
+                pageSize: 'A4',
+                exportOptions: { columns: ':not(:last-child)' },
+                action: function (e, dt, button, config) {
+                    var self = this;
+                    Swal.fire({
+                        title: 'Generate Laporan PDF?',
+                        text: "Sistem akan menyusun laporan PDF dari daftar IP ini. Lanjutkan?",
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="bi bi-download me-1"></i> Ya, Generate',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config);
+                            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'File PDF sedang diunduh.', timer: 1500, showConfirmButton: false });
+                        }
+                    });
+                }
             },
-            {
-                extend: 'print',
-                // Menyuntikkan ikon Print
-                text: '<i class="bi bi-printer-fill"></i> Print',
-                className: 'btn btn-secondary btn-sm shadow-sm rounded'
+            { 
+                extend: 'print', 
+                text: '<i class="bi bi-printer-fill"></i> Print', 
+                className: 'btn btn-secondary btn-sm shadow-sm rounded',
+                exportOptions: { columns: ':not(:last-child)' },
+                action: function (e, dt, button, config) {
+                    var self = this;
+                    Swal.fire({
+                        title: 'Cetak Data?',
+                        text: "Anda akan diarahkan ke antarmuka cetak browser.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#6c757d',
+                        cancelButtonColor: '#dee2e6',
+                        confirmButtonText: '<i class="bi bi-printer me-1"></i> Ya, Cetak',
+                        cancelButtonText: '<span class="text-dark">Batal</span>'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
+                        }
+                    });
+                }
             }
         ],
         dom: "<'row'<'col-sm-12'tr>>" +
@@ -303,22 +357,46 @@ document.getElementById('formNetwork').addEventListener('submit', async (e) => {
     } catch (error) { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' }); }
 });
 
-// 2. FUNGSI DELETE: Eksekusi penghapusan IP
+// 2. FUNGSI DELETE: Eksekusi penghapusan IP (Enterprise Validation)
 async function deleteIp(id) {
-    if (confirm("Yakin ingin menghapus alokasi IP ini?")) {
-        try {
-            const response = await fetch(`/api/ips/${id}`, {
-                method: 'DELETE',
-                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken}
-            });
-            if (response.ok) window.location.reload();
-            else {
-                const errData = await response.json();
-                Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data IP.' });
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: "Apakah Anda yakin ingin menghapus alokasi IP ini? Tindakan ini tidak dapat dibatalkan.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
+                const res = await fetch(`/api/ips/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token }
+                });
+                
+                if (res.ok) {
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Terhapus!', 
+                        text: 'Data IP berhasil dihapus dari sistem.', 
+                        showConfirmButton: false, 
+                        timer: 1500 
+                    }).then(() => window.location.reload());
+                } else {
+                    const errData = await res.json();
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data IP.' });
+                }
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
             }
-        } catch (error) { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' }); }
-    }
+        }
+    });
 }
+const deleteIP = deleteIp;
 
 // 3. FUNGSI UI: Menampilkan dan mengisi Modal Edit
 const editModal = new bootstrap.Modal(document.getElementById('editIpModal'));
