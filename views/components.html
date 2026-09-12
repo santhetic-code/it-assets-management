@@ -410,11 +410,9 @@
 </div>
 
 <script>
-    // Script untuk menampilkan Modal Detail
+    // 1. Script untuk menampilkan Modal Detail Spesifikasi
     $(document).on('click', '.btn-detail', function() {
         var btn = $(this);
-        
-        // Tembakkan data dari atribut tombol ke dalam ID text di Modal
         $('#detUser').text(btn.data('user') || '-');
         $('#detJenis').text(btn.data('jenis') || '-');
         $('#detOs').text(btn.data('os') || '-');
@@ -427,113 +425,23 @@
         $('#detKeyboard').text(btn.data('keyboard') || '-');
         $('#detMouse').text(btn.data('mouse') || '-');
 
-        // Munculkan Modal
         var modalSpek = new bootstrap.Modal(document.getElementById('modalDetailSpek'));
         modalSpek.show();
     });
 
-    $(document).ready(function() {
-        var table = $('#dataTableSpek').DataTable({
-            dom: "<'row'<'col-sm-12'tr>>" +
-                 "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
-            // 1. Sembunyikan 6 Kolom Hardware dari UI (Indeks 4 sampai 9)
-            columnDefs: [
-                { targets: [4, 5, 6, 7, 8, 9], visible: false }
-            ],
-            // 2. Kustomisasi Export agar menarik kolom tersembunyi
-            buttons: [
-                { 
-                    extend: 'excel', 
-                    text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', 
-                    className: 'btn btn-success btn-sm shadow-sm rounded',
-                    // Export kolom 0 s/d 10 (Jangan export kolom Aksi/11)
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } 
-                },
-                { 
-                    extend: 'pdf', 
-                    text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', 
-                    className: 'btn btn-danger btn-sm shadow-sm rounded',
-                    orientation: 'landscape', // Ubah ke Landscape agar muat banyak kolom!
-                    pageSize: 'A4',
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
-                },
-                { 
-                    extend: 'print', 
-                    text: '<i class="bi bi-printer-fill"></i> Print', 
-                    className: 'btn btn-secondary btn-sm shadow-sm rounded',
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
-                }
-            ],
-            language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
-        });
-
-        // Pindahkan Tombol Export
-        table.buttons().container()
-            .removeClass('btn-group flex-wrap')
-            .addClass('d-flex gap-2')
-            .appendTo('#tableControlsSpek');
-            
-        // Matikan search bawaan & Hidupkan Custom Search
-        $('#dataTableSpek_filter').hide();
-        $('#customSearchSpek').on('keyup', function() {
-            table.search(this.value).draw();
-        });
-
-        // Tab Filter (PERHATIAN: Indeks Jenis PC sekarang bergeser ke 10)
-        $('#tabFilterPC .nav-link').on('click', function(e) {
-            e.preventDefault();
-            $('#tabFilterPC .nav-link').removeClass('active');
-            $(this).addClass('active');
-            
-            var filterValue = $(this).attr('data-filter');
-            table.column(10).search(filterValue).draw(); // <-- Angka diubah ke 10
-        });
-    });
-
-    const formSpekPC = document.getElementById('formSpekPC') || document.getElementById('formSpek');
-    if (formSpekPC) {
-        formSpekPC.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(formSpekPC);
-            const data = {
-                name: formData.get('name') || document.getElementById('pc_name')?.value || '',
-                pc_type: formData.get('pc_type') || document.getElementById('pc_type')?.value || 'PC Operasional',
-                os_name: formData.get('os_name') || document.getElementById('os_name')?.value || '',
-                processor_spec: formData.get('processor_spec') || document.getElementById('processor_spec')?.value || '',
-                mainboard_spec: formData.get('mainboard_spec') || document.getElementById('mainboard_spec')?.value || '',
-                ram_spec: formData.get('ram_spec') || document.getElementById('ram_spec')?.value || '',
-                vga_spec: formData.get('vga_spec') || document.getElementById('vga_spec')?.value || '',
-                storage_spec: formData.get('storage_spec') || document.getElementById('storage_spec')?.value || '',
-                monitor: formData.get('monitor') || document.getElementById('monitor')?.value || '',
-                keyboard: formData.get('keyboard') || document.getElementById('keyboard')?.value || '',
-                mouse: formData.get('mouse') || document.getElementById('mouse')?.value || ''
-            };
-            try {
-                const res = await fetch('/api/components', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                    body: JSON.stringify(data)
-                });
-                if (res.ok) window.location.reload();
-                else {
-                    const errData = await res.json();
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menyimpan data komponen.' });
-                }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
-            }
-        });
-    }
-
+    // 2. Fungsi Eksekusi Hapus Data
     async function deleteComp(id) {
         if (confirm("Yakin ingin menghapus data komponen ini?")) {
             try {
+                // Proteksi jika token CSRF tidak terdefinisi
+                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
                 const res = await fetch(`/api/components/${id}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token }
                 });
-                if (res.ok) window.location.reload();
-                else {
+                if (res.ok) {
+                    window.location.reload();
+                } else {
                     const errData = await res.json();
                     Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data.' });
                 }
@@ -543,108 +451,179 @@
         }
     }
 
-    const editModal = new bootstrap.Modal(document.getElementById('editCompModal'));
+    // 3. Fungsi Penarik Data ke Modal Edit
     function openEditModal(id, asset_id, name, os, proc, mobo, ram, vga, storage, mon, kb, mouse, pc_type) {
-        const setField = (ids, val) => {
-            for (const fieldId of ids) {
-                const el = document.getElementById(fieldId);
-                if (el) {
-                    el.value = val || '';
-                    return;
-                }
-            }
-        };
-
-        setField(['edit_id'], id);
-        setField(['edit_asset_id'], (asset_id && asset_id !== 'None' && asset_id !== 'null') ? asset_id : '');
-        setField(['edit_nama_pc', 'edit_pc_name'], name);
-        setField(['edit_os', 'edit_os_name'], os);
-        setField(['edit_cpu', 'edit_processor_spec'], proc);
-        setField(['edit_mainboard', 'edit_mainboard_spec'], mobo);
-        setField(['edit_ram', 'edit_ram_spec'], ram);
-        setField(['edit_vga', 'edit_vga_spec'], vga);
-        setField(['edit_storage', 'edit_storage_spec'], storage);
-        setField(['edit_monitor'], mon);
-        setField(['edit_keyboard'], kb);
-        setField(['edit_mouse'], mouse);
+        $('#edit_id').val(id);
+        $('#edit_asset_id').val((asset_id && asset_id !== 'None' && asset_id !== 'null') ? asset_id : '');
+        $('#edit_nama_pc').val(name);
+        $('#edit_os').val(os);
+        $('#edit_cpu').val(proc);
+        $('#edit_mainboard').val(mobo);
+        $('#edit_ram').val(ram);
+        $('#edit_vga').val(vga);
+        $('#edit_storage').val(storage);
+        $('#edit_monitor').val(mon);
+        $('#edit_keyboard').val(kb);
+        $('#edit_mouse').val(mouse);
         
-        const typeElem = document.getElementById('edit_jenis_pc') || document.getElementById('edit_pc_type');
+        const typeElem = document.getElementById('edit_jenis_pc');
         if (typeElem) {
             typeElem.value = pc_type || 'PC Operasional';
-            if (!typeElem.value) {
-                typeElem.value = 'PC ' + pc_type;
-            }
-            if (!typeElem.value) {
-                typeElem.value = 'PC Operasional';
-            }
         }
-        editModal.show();
+        
+        // Memanggil modal secara aman agar tidak crash saat diload
+        const modalEl = document.getElementById('editCompModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
     }
 
-    const formEditSpek = document.getElementById('formEditSpek') || document.getElementById('formEditComp');
-    if (formEditSpek) {
-        formEditSpek.addEventListener('submit', async (e) => {
+    // ====================================================================
+    // SEMUA EVENT LISTENER DIBUNGKUS DI DALAM DOCUMENT READY AGAR AMAN
+    // ====================================================================
+    $(document).ready(function() {
+        
+        // --- A. INISIALISASI DATATABLES ---
+        var table = $('#dataTableSpek').DataTable({
+            dom: "<'row'<'col-sm-12'tr>>" +
+                 "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
+            columnDefs: [
+                { targets: [4, 5, 6, 7, 8, 9], visible: false }
+            ],
+            buttons: [
+                { extend: 'excel', text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', className: 'btn btn-success btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } },
+                { extend: 'pdf', text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', className: 'btn btn-danger btn-sm shadow-sm rounded', orientation: 'landscape', pageSize: 'A4', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } },
+                { extend: 'print', text: '<i class="bi bi-printer-fill"></i> Print', className: 'btn btn-secondary btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } }
+            ],
+            language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
+        });
+
+        table.buttons().container().removeClass('btn-group flex-wrap').addClass('d-flex gap-2').appendTo('#tableControlsSpek');
+        $('#dataTableSpek_filter').hide();
+        
+        $('#customSearchSpek').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+
+        $('#tabFilterPC .nav-link').on('click', function(e) {
             e.preventDefault();
-            const formData = new FormData(formEditSpek);
-            const id = formData.get('id') || document.getElementById('edit_id')?.value;
-            const rawAssetId = formData.get('asset_id') || document.getElementById('edit_asset_id')?.value;
-            const pcTypeElem = document.getElementById('edit_jenis_pc') || document.getElementById('edit_pc_type');
+            $('#tabFilterPC .nav-link').removeClass('active');
+            $(this).addClass('active');
+            var filterValue = $(this).attr('data-filter');
+            table.column(10).search(filterValue).draw();
+        });
+
+        // --- B. FORM TAMBAH DATA (Registrasi) ---
+        $('#formSpekPC').on('submit', async function(e) {
+            e.preventDefault(); // Menahan halaman agar tidak reload paksa
+            
+            const formData = new FormData(this);
             const data = {
-                asset_id: rawAssetId && !isNaN(parseInt(rawAssetId)) ? parseInt(rawAssetId) : null,
-                name: formData.get('name') || document.getElementById('edit_nama_pc')?.value || document.getElementById('edit_pc_name')?.value || '',
-                os_name: formData.get('os_name') || document.getElementById('edit_os')?.value || document.getElementById('edit_os_name')?.value || '',
-                processor_spec: formData.get('processor_spec') || document.getElementById('edit_cpu')?.value || document.getElementById('edit_processor_spec')?.value || '',
-                mainboard_spec: formData.get('mainboard_spec') || document.getElementById('edit_mainboard')?.value || document.getElementById('edit_mainboard_spec')?.value || '',
-                ram_spec: formData.get('ram_spec') || document.getElementById('edit_ram')?.value || document.getElementById('edit_ram_spec')?.value || '',
-                vga_spec: formData.get('vga_spec') || document.getElementById('edit_vga')?.value || document.getElementById('edit_vga_spec')?.value || '',
-                storage_spec: formData.get('storage_spec') || document.getElementById('edit_storage')?.value || document.getElementById('edit_storage_spec')?.value || '',
-                monitor: formData.get('monitor') || document.getElementById('edit_monitor')?.value || '',
-                keyboard: formData.get('keyboard') || document.getElementById('edit_keyboard')?.value || '',
-                mouse: formData.get('mouse') || document.getElementById('edit_mouse')?.value || '',
-                pc_type: formData.get('pc_type') || (pcTypeElem ? pcTypeElem.value : 'PC Operasional')
+                name: formData.get('name') || '',
+                pc_type: formData.get('pc_type') || 'PC Operasional',
+                os_name: formData.get('os_name') || '',
+                processor_spec: formData.get('processor_spec') || '',
+                mainboard_spec: formData.get('mainboard_spec') || '',
+                ram_spec: formData.get('ram_spec') || '',
+                vga_spec: formData.get('vga_spec') || '',
+                storage_spec: formData.get('storage_spec') || '',
+                monitor: formData.get('monitor') || '',
+                keyboard: formData.get('keyboard') || '',
+                mouse: formData.get('mouse') || ''
             };
+            
             try {
-                const res = await fetch(`/api/components/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
+                const res = await fetch('/api/components', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
                     body: JSON.stringify(data)
                 });
-                if (res.ok) window.location.reload();
-                else {
+                
+                if (res.ok) {
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data Spesifikasi tersimpan!', timer: 1500, showConfirmButton: false })
+                    .then(() => window.location.reload());
+                } else {
                     const errData = await res.json();
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal memperbarui data.' });
+                    // Mengurai detail error dari FastAPI agar mudah dibaca jika terjadi penolakan
+                    const errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+                    Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: errorMsg });
                 }
             } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem atau koneksi.' });
             }
         });
-    }
 
-    document.getElementById('formImportComponents').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('file', document.getElementById('import_comp_file').files[0]);
-
-        try {
-            const response = await fetch('/api/components/import', {
-                method: 'POST',
-                headers: { 'X-CSRF-Token': csrfToken },
-                body: formData
-            });
+        // --- C. FORM EDIT DATA ---
+        $('#formEditSpek').on('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const id = $('#edit_id').val();
+            const rawAssetId = $('#edit_asset_id').val();
             
-            const resData = await response.json();
-            if (response.ok) {
-                let msg = resData.message;
-                if (resData.errors && resData.errors.length > 0) {
-                    msg += `<br><br><small class="text-warning text-start d-block">Catatan:<br>${resData.errors.slice(0, 5).join('<br>')}</small>`;
+            const data = {
+                asset_id: (rawAssetId && rawAssetId !== 'None' && rawAssetId !== 'null' && !isNaN(parseInt(rawAssetId))) ? parseInt(rawAssetId) : null,
+                name: formData.get('name') || '',
+                pc_type: formData.get('pc_type') || 'PC Operasional',
+                os_name: formData.get('os_name') || '',
+                processor_spec: formData.get('processor_spec') || '',
+                mainboard_spec: formData.get('mainboard_spec') || '',
+                ram_spec: formData.get('ram_spec') || '',
+                vga_spec: formData.get('vga_spec') || '',
+                storage_spec: formData.get('storage_spec') || '',
+                monitor: formData.get('monitor') || '',
+                keyboard: formData.get('keyboard') || '',
+                mouse: formData.get('mouse') || ''
+            };
+            
+            try {
+                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
+                const res = await fetch(`/api/components/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+                    body: JSON.stringify(data)
+                });
+                
+                if (res.ok) {
+                    Swal.fire({ icon: 'success', title: 'Diperbarui', text: 'Perubahan spesifikasi berhasil disimpan!', timer: 1500, showConfirmButton: false })
+                    .then(() => window.location.reload());
+                } else {
+                    const errData = await res.json();
+                    const errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+                    Swal.fire({ icon: 'error', title: 'Gagal Memperbarui', text: errorMsg });
                 }
-                Swal.fire({ icon: 'success', title: 'Berhasil', html: msg }).then(() => window.location.reload());
-            } else {
-                Swal.fire({ icon: 'error', title: 'Gagal Impor', text: resData.detail || 'Terjadi kesalahan sistem.' });
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem atau koneksi.' });
             }
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Koneksi ke server terputus.' });
-        }
+        });
+
+        // --- D. FORM IMPORT EXCEL ---
+        $('#formImportComponents').on('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('file', document.getElementById('import_comp_file').files[0]);
+
+            try {
+                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
+                const response = await fetch('/api/components/import', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-Token': token },
+                    body: formData
+                });
+                
+                const resData = await response.json();
+                if (response.ok) {
+                    let msg = resData.message;
+                    if (resData.errors && resData.errors.length > 0) {
+                        msg += `<br><br><small class="text-warning text-start d-block">Catatan:<br>${resData.errors.slice(0, 5).join('<br>')}</small>`;
+                    }
+                    Swal.fire({ icon: 'success', title: 'Berhasil', html: msg }).then(() => window.location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal Impor', text: resData.detail || 'Terjadi kesalahan sistem.' });
+                }
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Koneksi ke server terputus.' });
+            }
+        });
     });
 </script>
 {% endblock %}
