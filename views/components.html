@@ -101,27 +101,35 @@
     <!-- Toolbar Terpadu -->
     <div class="d-flex justify-content-between align-items-end mb-3 border-bottom pb-2">
 
-        <!-- KIRI: Tabs Kategori PC (Bootstrap Nav Pills) -->
-        <ul class="nav nav-pills" id="tabFilterPC" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active fw-semibold" data-filter="" style="cursor: pointer;">Semua Data</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-semibold" data-filter="PC Operasional" style="cursor: pointer;">
-                    <i class="bi bi-pc-display me-1"></i> PC Operasional
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-semibold" data-filter="PC Server" style="cursor: pointer;">
-                    <i class="bi bi-server me-1"></i> PC Server
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-semibold" data-filter="PC Backup" style="cursor: pointer;">
-                    <i class="bi bi-hdd-network me-1"></i> PC Backup
-                </a>
-            </li>
-        </ul>
+        <!-- KIRI: Tabs Kategori PC & Ringkasan -->
+        <div class="d-flex align-items-center gap-3">
+            
+            <!-- Tab Filter (Tetap biarkan seperti kode Anda sebelumnya) -->
+            <ul class="nav nav-pills" id="tabFilterPC" role="tablist">
+                <li class="nav-item"><a class="nav-link active fw-semibold" data-filter="" style="cursor: pointer;">Semua Data</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Operasional" style="cursor: pointer;"><i class="bi bi-pc-display me-1"></i> PC Operasional</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Server" style="cursor: pointer;"><i class="bi bi-server me-1"></i> PC Server</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Backup" style="cursor: pointer;"><i class="bi bi-hdd-network me-1"></i> PC Backup</a></li>
+            </ul>
+
+            <!-- Pemisah Vertikal -->
+            <div class="vr text-secondary" style="height: 24px;"></div>
+
+            <!-- Ringkasan Angka -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Operasional:</span>
+                <span class="badge bg-primary rounded-pill px-2" id="count_op">0</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Server:</span>
+                <span class="badge bg-danger rounded-pill px-2" id="count_sv">0</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Backup:</span>
+                <span class="badge bg-warning text-dark rounded-pill px-2" id="count_bk">0</span>
+            </div>
+
+        </div>
 
         <!-- KANAN: Tombol Export & Custom Search -->
         <div class="d-flex align-items-center gap-3">
@@ -198,8 +206,20 @@
                     <td>{{ comp.mouse }}</td>
                     
                     <!-- JENIS PC -->
-                    <td class="text-center">
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">{{ comp.jenis_pc }}</span>
+                    <td class="text-center text-nowrap">
+                        {% if comp.pc_type == 'PC Server' or comp.pc_type == 'Server' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">
+                                <i class="bi bi-server me-1"></i>PC Server
+                            </span>
+                        {% elif comp.pc_type == 'PC Backup' or comp.pc_type == 'Backup' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3">
+                                <i class="bi bi-hdd-network me-1"></i>PC Backup
+                            </span>
+                        {% else %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
+                                <i class="bi bi-pc-display me-1"></i>PC Operasional
+                            </span>
+                        {% endif %}
                     </td>
                     
                     <!-- AKSI -->
@@ -496,6 +516,16 @@
             ],
             language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
         });
+
+        // ==========================================
+        // MENGHITUNG TOTAL JENIS PC SECARA OTOMATIS
+        // ==========================================
+        // Menggabungkan semua teks di kolom ke-10 (Jenis PC), lalu menghitung jumlah kemunculan katanya
+        var jenisPcData = table.column(10).data().join(' ');
+        
+        $('#count_op').text((jenisPcData.match(/PC Operasional/g) || []).length);
+        $('#count_sv').text((jenisPcData.match(/PC Server/g) || []).length);
+        $('#count_bk').text((jenisPcData.match(/PC Backup/g) || []).length);
 
         table.buttons().container().removeClass('btn-group flex-wrap').addClass('d-flex gap-2').appendTo('#tableControlsSpek');
         $('#dataTableSpek_filter').hide();
