@@ -449,26 +449,44 @@
         modalSpek.show();
     });
 
-    // 2. Fungsi Eksekusi Hapus Data
+    // 2. Fungsi Eksekusi Hapus Data (Enterprise Validation)
     async function deleteComp(id) {
-        if (confirm("Yakin ingin menghapus data komponen ini?")) {
-            try {
-                // Proteksi jika token CSRF tidak terdefinisi
-                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
-                const res = await fetch(`/api/components/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token }
-                });
-                if (res.ok) {
-                    window.location.reload();
-                } else {
-                    const errData = await res.json();
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data.' });
+        Swal.fire({
+            title: 'Konfirmasi Hapus',
+            text: "Apakah Anda yakin ingin menghapus data spesifikasi PC ini? Tindakan ini tidak dapat dibatalkan.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545', // Warna merah bahaya
+            cancelButtonColor: '#6c757d',  // Warna abu-abu netral
+            confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true // Menaruh tombol Batal di kiri, Hapus di kanan (Standar Windows/Mac)
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
+                    const res = await fetch(`/api/components/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token }
+                    });
+                    
+                    if (res.ok) {
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Terhapus!', 
+                            text: 'Data komponen berhasil dihapus dari sistem.', 
+                            showConfirmButton: false, 
+                            timer: 1500 
+                        }).then(() => window.location.reload());
+                    } else {
+                        const errData = await res.json();
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data.' });
+                    }
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
                 }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
             }
-        }
+        });
     }
 
     // 3. Fungsi Penarik Data ke Modal Edit
@@ -509,10 +527,83 @@
             columnDefs: [
                 { targets: [4, 5, 6, 7, 8, 9], visible: false }
             ],
+            // 2. Kustomisasi Export dengan Pop-up Validasi Enterprise
             buttons: [
-                { extend: 'excel', text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', className: 'btn btn-success btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } },
-                { extend: 'pdf', text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', className: 'btn btn-danger btn-sm shadow-sm rounded', orientation: 'landscape', pageSize: 'A4', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } },
-                { extend: 'print', text: '<i class="bi bi-printer-fill"></i> Print', className: 'btn btn-secondary btn-sm shadow-sm rounded', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } }
+                { 
+                    extend: 'excel', 
+                    text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', 
+                    className: 'btn btn-success btn-sm shadow-sm rounded',
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+                    // Mencegat aksi klik
+                    action: function (e, dt, button, config) {
+                        var self = this;
+                        Swal.fire({
+                            title: 'Export ke Excel?',
+                            text: "Sistem akan mengekstrak seluruh data spesifikasi ke format Spreadsheet (.xlsx). Lanjutkan?",
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonColor: '#198754',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: '<i class="bi bi-download me-1"></i> Ya, Download',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Lanjutkan unduhan bawaan DataTables
+                                $.fn.dataTable.ext.buttons.excelHtml5.action.call(self, e, dt, button, config);
+                                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'File Excel sedang diunduh.', timer: 1500, showConfirmButton: false });
+                            }
+                        });
+                    }
+                },
+                { 
+                    extend: 'pdf', 
+                    text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', 
+                    className: 'btn btn-danger btn-sm shadow-sm rounded',
+                    orientation: 'landscape', 
+                    pageSize: 'A4',
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+                    action: function (e, dt, button, config) {
+                        var self = this;
+                        Swal.fire({
+                            title: 'Generate Laporan PDF?',
+                            text: "Sistem akan menyusun laporan PDF (Format Landscape) dari data ini. Lanjutkan?",
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: '<i class="bi bi-download me-1"></i> Ya, Generate',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config);
+                                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'File PDF sedang diunduh.', timer: 1500, showConfirmButton: false });
+                            }
+                        });
+                    }
+                },
+                { 
+                    extend: 'print', 
+                    text: '<i class="bi bi-printer-fill"></i> Print', 
+                    className: 'btn btn-secondary btn-sm shadow-sm rounded',
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+                    action: function (e, dt, button, config) {
+                        var self = this;
+                        Swal.fire({
+                            title: 'Cetak Data?',
+                            text: "Anda akan diarahkan ke antarmuka cetak browser.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#6c757d',
+                            cancelButtonColor: '#dee2e6',
+                            confirmButtonText: '<i class="bi bi-printer me-1"></i> Ya, Cetak',
+                            cancelButtonText: '<span class="text-dark">Batal</span>'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
+                            }
+                        });
+                    }
+                }
             ],
             language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
         });
