@@ -344,17 +344,27 @@ document.getElementById('formNetwork').addEventListener('submit', async (e) => {
         keterangan: document.getElementById('keterangan').value || null
     };
     try {
-        const response = await fetch('/api/ips/', {
+        const res = await fetch('/api/ips/', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
             body: JSON.stringify(data)
         });
-        if (response.ok) window.location.reload();
-        else {
-            const errData = await response.json();
-            Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menyimpan alokasi IP baru.' });
+        if (res.ok) {
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Berhasil!', 
+                text: 'Data IP Jaringan berhasil ditambahkan.', 
+                timer: 1500, 
+                showConfirmButton: false 
+            }).then(() => window.location.reload());
+        } else {
+            const errData = await res.json();
+            const errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+            Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: errorMsg || 'Gagal menambahkan data IP.' });
         }
-    } catch (error) { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' }); }
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+    }
 });
 
 // 2. FUNGSI DELETE: Eksekusi penghapusan IP (Enterprise Validation)
@@ -435,17 +445,27 @@ document.getElementById('formEditIp').addEventListener('submit', async (e) => {
         keterangan: document.getElementById('edit_keterangan').value || null
     };
     try {
-        const response = await fetch(`/api/ips/${id}`, {
+        const res = await fetch(`/api/ips/${id}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
             body: JSON.stringify(data)
         });
-        if (response.ok) window.location.reload();
-        else {
-            const errData = await response.json();
-            Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal memperbarui data IP.' });
+        if (res.ok) {
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Diperbarui!', 
+                text: 'Perubahan data IP berhasil disimpan.', 
+                timer: 1500, 
+                showConfirmButton: false 
+            }).then(() => window.location.reload());
+        } else {
+            const errData = await res.json();
+            const errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+            Swal.fire({ icon: 'error', title: 'Gagal Memperbarui', text: errorMsg || 'Gagal memperbarui data IP.' });
         }
-    } catch (error) { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' }); }
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+    }
 });
 
 // 5. Inisialisasi Tooltip Bootstrap
