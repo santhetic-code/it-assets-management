@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import relationship
 
 # Mengambil Base dari konfigurasi database inti kita
@@ -230,3 +230,13 @@ class SystemLogs(Base):
     timestamp = Column(DateTime, default=get_utc_now)
 
     user = relationship("User", back_populates="audit_logs")
+
+
+class VaultCredential(Base):
+    __tablename__ = "vault_credentials"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nama_sistem = Column(String(100), nullable=False)  # Contoh: xmltronik.com
+    kategori = Column(String(50), nullable=False)      # Contoh: Website, Email, Mikrotik
+    kredensial_data = Column(JSON, nullable=False)     # Kolom Ajaib untuk menampung data dinamis
+    akses_role = Column(String(255), default="All")    # Untuk keamanan Lapis 2 (Siapa saja yang boleh lihat)

@@ -30,3 +30,24 @@ class CredentialResponse(CredentialBase):
 
     # Mengubah object SQLAlchemy menjadi dictionary JSON secara otomatis
     model_config = {"from_attributes": True}
+
+
+# ========== VAULT CREDENTIAL SCHEMAS (Sistem Kredensial Dinamis) ==========
+from typing import Dict, Any
+
+class VaultBase(BaseModel):
+    nama_sistem: str
+    kategori: str
+    kredensial_data: Dict[str, Any]  # Memastikan API bisa menerima format JSON apa pun
+    akses_role: Optional[str] = "All"
+
+class VaultCreate(VaultBase):
+    pass
+
+class VaultUpdate(VaultBase):
+    pass
+
+class VaultResponse(VaultBase):
+    id: int
+
+    model_config = {"from_attributes": True}
