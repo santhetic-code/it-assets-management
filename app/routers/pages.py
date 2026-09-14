@@ -146,11 +146,12 @@ def read_network(request: Request, db: DbSession, current_user: CurrentUser):
 
 @router.get("/vault")
 def read_vault(request: Request, db: DbSession, current_user: CurrentUser):
-    credentials = vault_service.get_all_credentials(db)
+    # Mengambil semua data vault dari database
+    vaults = db.query(domain.VaultCredential).all()
     return render_template(
         request=request,
         name="credentials.html",
-        context={"current_user": current_user, "credentials": credentials},
+        context={"current_user": current_user, "vaults": vaults},
     )
 
 
