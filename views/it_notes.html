@@ -74,9 +74,32 @@
                         {% endif %}
                     </td>
                     <td class="text-end text-nowrap">
-                        <button class="btn btn-sm btn-outline-info me-1" title="Detail Aset"><i class="bi bi-eye-fill"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary me-1" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                        <!-- Tombol View -->
+                        <button class="btn btn-sm btn-outline-info me-1" title="Detail Aset"
+                            data-id="{{ a.id }}" data-kode="{{ a.kode_aset or '-' }}" data-nama="{{ a.nama }}"
+                            data-kelp="{{ a.kelompok }}" data-sn="{{ a.sn_pid or '-' }}" data-lokasi="{{ a.lokasi }}"
+                            data-user="{{ a.digunakan_oleh or '-' }}" data-status="{{ a.status }}" 
+                            data-pemilik="{{ a.kepemilikan }}" data-tglmasuk="{{ a.tanggal_masuk or '-' }}"
+                            data-tglkeluar="{{ a.tanggal_keluar or '-' }}"
+                            onclick="viewAsset(this)">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+                        
+                        <!-- Tombol Edit -->
+                        <button class="btn btn-sm btn-outline-secondary me-1" title="Edit"
+                            data-id="{{ a.id }}" data-kode="{{ a.kode_aset or '' }}" data-nama="{{ a.nama }}"
+                            data-kelp="{{ a.kelompok }}" data-sn="{{ a.sn_pid or '' }}" data-lokasi="{{ a.lokasi }}"
+                            data-user="{{ a.digunakan_oleh or '' }}" data-status="{{ a.status }}" 
+                            data-pemilik="{{ a.kepemilikan }}" data-tglmasuk="{{ a.tanggal_masuk or '' }}"
+                            data-tglkeluar="{{ a.tanggal_keluar or '' }}"
+                            onclick="editAsset(this)">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        
+                        <!-- Tombol Hapus -->
+                        <button class="btn btn-sm btn-outline-danger" title="Hapus" onclick="deleteAsset({{ a.id }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -95,6 +118,7 @@
             </div>
             <div class="modal-body px-4 py-4">
                 <form id="formAsset" autocomplete="off">
+                    <input type="hidden" id="assetId">
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -134,11 +158,15 @@
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Tanggal Masuk Gudang</label>
                             <input type="date" class="form-control" id="inpTglMasuk">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Tanggal Keluar (Bila dipakai)</label>
+                            <input type="date" class="form-control" id="inpTglKeluar">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Kepemilikan <span class="text-danger">*</span></label>
                             <select class="form-select" id="inpPemilik" required>
                                 <option value="XML" selected>XML</option>
@@ -208,36 +236,65 @@
         });
     });
 
+    // Membuka form untuk Tambah Data Baru
     function openAddModal() {
+        $('#formAsset')[0].reset();
+        $('#assetId').val(''); // Kosongkan ID rahasia
+        $('.modal-title').html('<i class="bi bi-pc-display-horizontal text-primary me-2"></i> Tambah Data Aset');
         new bootstrap.Modal(document.getElementById('modalAddAsset')).show();
     }
 
-    // Fungsi Menyimpan Data Aset ke Database
+    // Membuka form untuk Edit Data (Menyalin data dari tabel ke form)
+    function editAsset(btn) {
+        $('#formAsset')[0].reset();
+        
+        // Sedot data dari atribut tombol
+        $('#assetId').val($(btn).data('id'));
+        $('#inpKode').val($(btn).data('kode'));
+        $('#inpNama').val($(btn).data('nama'));
+        $('#inpKelompok').val($(btn).data('kelp'));
+        $('#inpSn').val($(btn).data('sn'));
+        $('#inpTglMasuk').val($(btn).data('tglmasuk'));
+        $('#inpTglKeluar').val($(btn).data('tglkeluar'));
+        $('#inpPemilik').val($(btn).data('pemilik'));
+        $('#inpLokasi').val($(btn).data('lokasi'));
+        $('#inpStatus').val($(btn).data('status'));
+        $('#inpUser').val($(btn).data('user'));
+
+        $('.modal-title').html('<i class="bi bi-pencil-square text-warning me-2"></i> Edit Data Aset');
+        new bootstrap.Modal(document.getElementById('modalAddAsset')).show();
+    }
+
+    // Mengeksekusi Simpan (Bisa Create, Bisa Update)
     async function saveAsset() {
-        // Mengambil semua nilai dari form
+        const id = $('#assetId').val(); // Cek apakah ada ID (jika ada = Edit, jika kosong = Tambah)
+        
         const payload = {
             kode_aset: $('#inpKode').val() || null,
             nama: $('#inpNama').val(),
             kelompok: $('#inpKelompok').val(),
             sn_pid: $('#inpSn').val() || null,
             tanggal_masuk: $('#inpTglMasuk').val() || null,
+            tanggal_keluar: $('#inpTglKeluar').val() || null,
             kepemilikan: $('#inpPemilik').val(),
             lokasi: $('#inpLokasi').val(),
             status: $('#inpStatus').val(),
             digunakan_oleh: $('#inpUser').val() || null
         };
 
-        // Validasi sederhana (Pastikan kolom wajib diisi)
         if (!payload.nama || !payload.kelompok || !payload.kepemilikan || !payload.lokasi || !payload.status) {
-            Swal.fire('Data Belum Lengkap', 'Harap isi semua kolom yang bertanda bintang merah (*).', 'warning');
+            Swal.fire('Data Belum Lengkap', 'Harap isi semua kolom wajib (*).', 'warning');
             return;
         }
 
+        // Tentukan URL dan Metode berdasarkan status Edit / Tambah
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/assets/${id}` : '/api/assets/';
+
         try {
-            // Tembak data ke Endpoint API FastAPI
-            const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
-            const res = await fetch('/api/assets/', {
-                method: 'POST',
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || (typeof csrfToken !== 'undefined' ? csrfToken : '');
+            const res = await fetch(url, {
+                method: method,
                 headers: { 
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': token
@@ -246,21 +303,73 @@
             });
 
             if (res.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Data aset telah ditambahkan ke sistem.',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.reload(); // Refresh halaman agar tabel terupdate
-                });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data aset telah tersimpan.', timer: 1500, showConfirmButton: false })
+                .then(() => window.location.reload());
             } else {
-                Swal.fire('Gagal Menyimpan', 'Periksa kembali data Anda atau hubungi administrator.', 'error');
+                Swal.fire('Gagal Menyimpan', 'Periksa kembali data Anda.', 'error');
             }
         } catch (error) {
-            Swal.fire('Koneksi Terputus', 'Tidak dapat terhubung ke server database.', 'error');
+            Swal.fire('Koneksi Terputus', 'Tidak dapat terhubung ke server.', 'error');
         }
+    }
+
+    // Fungsi Validasi Hapus (Delete)
+    function deleteAsset(id) {
+        Swal.fire({
+            title: 'Hapus Aset Ini?',
+            text: "Aset yang dihapus akan hilang secara permanen dari sistem!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-trash"></i> Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || (typeof csrfToken !== 'undefined' ? csrfToken : '');
+                    const res = await fetch(`/api/assets/${id}`, { 
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-Token': token }
+                    });
+                    if (res.ok) {
+                        Swal.fire({ icon: 'success', title: 'Terhapus!', text: 'Data aset berhasil dibersihkan.', timer: 1500, showConfirmButton: false })
+                        .then(() => window.location.reload());
+                    }
+                } catch (error) {
+                    Swal.fire('Gagal', 'Terjadi kesalahan sistem saat menghapus.', 'error');
+                }
+            }
+        });
+    }
+
+    // Fungsi View Detail (Menggunakan pop-up HTML canggih dari SweetAlert)
+    function viewAsset(btn) {
+        const d = $(btn).data();
+        const detailHtml = `
+            <div class="text-start">
+                <table class="table table-sm table-borderless">
+                    <tr><td class="text-muted fw-bold" width="40%">Kode Aset</td><td>: <span class="text-primary fw-bold">${d.kode}</span></td></tr>
+                    <tr><td class="text-muted fw-bold">Nama Perangkat</td><td>: <span class="fw-bold">${d.nama}</span></td></tr>
+                    <tr><td class="text-muted fw-bold">Kelompok</td><td>: ${d.kelp}</td></tr>
+                    <tr><td class="text-muted fw-bold">Serial Number</td><td>: <span style="font-family: monospace;">${d.sn}</span></td></tr>
+                    <tr><td class="text-muted fw-bold">Status</td><td>: ${d.status === 'Digunakan' ? '<span class="text-success fw-bold">Digunakan</span>' : '<span class="text-warning fw-bold">Di Gudang</span>'}</td></tr>
+                    <tr><td class="text-muted fw-bold">Digunakan Oleh</td><td>: ${d.user}</td></tr>
+                    <tr><td class="text-muted fw-bold">Lokasi</td><td>: ${d.lokasi}</td></tr>
+                    <tr><td class="text-muted fw-bold">Kepemilikan</td><td>: ${d.pemilik}</td></tr>
+                    <tr><td class="text-muted fw-bold">Tanggal Masuk</td><td>: ${d.tglmasuk}</td></tr>
+                    <tr><td class="text-muted fw-bold">Tanggal Keluar</td><td>: ${d.tglkeluar}</td></tr>
+                </table>
+            </div>
+        `;
+        
+        Swal.fire({
+            title: 'Detail Aset IT',
+            html: detailHtml,
+            width: '600px',
+            confirmButtonText: 'Tutup',
+            confirmButtonColor: '#0A6BA8'
+        });
     }
 </script>
 {% endblock %}
