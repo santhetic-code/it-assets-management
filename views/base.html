@@ -13,11 +13,10 @@
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-      body { font-family: 'Inter', sans-serif; }
-    </style>
+    <!-- 1. Import Font Modern 'Poppins' dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- CSRF Meta Tag untuk dibaca oleh Fetch API JS -->
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -25,16 +24,32 @@
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css" rel="stylesheet">
 
-    <!-- Di sinilah nanti kita akan menaruh CSS Dark Mode -->
     <style>
         /* Mengubah skala seluruh website menjadi 80% secara default */
         html {
             font-size: 80%; 
         }
 
-        body { background-color: #f4f7fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; color: #3f4254; }
-        .sidebar .brand { padding: 15px 30px; font-size: 1.4rem; font-weight: 800; color: #181c32; margin-bottom: 20px; }
-        .sidebar .brand-dot { color: #3699ff; font-size: 1.8rem; line-height: 0; vertical-align: bottom; }
+        /* 1. ROOT VARIABLES (Palet Warna Khas ITAM PRO) */
+        :root {
+            --itam-cyan: #1DB5E5;  /* Biru muda terang (Logo) */
+            --itam-blue: #0A6BA8;  /* Biru tua (Logo) */
+            --itam-bg-body: #F0F4F9; /* Warna latar luar: Biru-abu sangat muda (KUNCI KONTRAS) */
+            --itam-card-bg: #FFFFFF; /* Warna kartu: Putih murni */
+            
+            --bs-primary: var(--itam-cyan);
+            --bs-font-sans-serif: 'Poppins', sans-serif;
+        }
+
+        /* 2. BODY & FONT */
+        body {
+            font-family: var(--bs-font-sans-serif);
+            background-color: var(--itam-bg-body);
+            color: #3f4254; /* Teks abu-abu gelap agar tidak sekeras warna hitam pekat */
+            overflow-x: hidden;
+        }
+
+        /* Layout Sidebar & Main Content */
         .sidebar-menu { padding: 0 15px; }
         .sidebar-menu .menu-title { font-size: 0.75rem; text-transform: uppercase; color: #a1a5b7; font-weight: 700; margin: 20px 0 10px 15px; letter-spacing: 1px; }
         .sidebar a { padding: 12px 20px; margin-bottom: 5px; text-decoration: none; font-size: 0.95rem; font-weight: 600; color: #7e8299; display: flex; align-items: center; border-radius: 12px; transition: all 0.3s ease; }
@@ -48,168 +63,89 @@
         @media (max-width: 767.98px) {
             .main-content { margin-left: 0; padding: 20px; padding-top: 70px; }
         }
-        .card-custom { background: #ffffff; border-radius: 20px; padding: 25px; border: none; box-shadow: 0 10px 30px rgba(149, 157, 165, 0.05); margin-bottom: 25px; }
-        .table thead { background-color: #f9fbfd; color: #a1a5b7; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .table td { vertical-align: middle; color: #5e6278; font-weight: 500; font-size: 0.95rem; }
 
-        /* --- KODE CSS UNTUK DARK MODE (Menggunakan Native Bootstrap 5.3) --- */
-        [data-bs-theme="dark"] body { background-color: #151521; }
-        [data-bs-theme="dark"] .sidebar { background-color: #1e1e2d; box-shadow: none; border-right: 1px solid #2b2b40; }
-        [data-bs-theme="dark"] .sidebar .brand { color: #ffffff; }
-        [data-bs-theme="dark"] .sidebar a { color: #9e9ea7; }
-        [data-bs-theme="dark"] .sidebar a:hover, [data-bs-theme="dark"] .sidebar a.active { background-color: #2b2b40; color: #3699ff; }
-        [data-bs-theme="dark"] .card-custom { background: #1e1e2d; box-shadow: none; border: 1px solid #2b2b40; }
-        
-        /* Override untuk warna text bawaan HTML kita */
-        [data-bs-theme="dark"] .text-dark { color: #ffffff !important; }
-        [data-bs-theme="dark"] .text-muted { color: #9e9ea7 !important; }
-        [data-bs-theme="dark"] .bg-light { background-color: #2b2b40 !important; }
-        [data-bs-theme="dark"] .border-light { border-color: #2b2b40 !important; }
+        /* 3. ELEMEN KARTU (CARDS) & MODAL */
+        .card, .card-custom, .modal-content {
+            background-color: var(--itam-card-bg);
+            border: none !important;
+            border-radius: 16px !important;
+            /* Bayangan diperbesar dan diberi sedikit rona biru agar menyatu dengan tema */
+            box-shadow: 0px 8px 24px rgba(10, 107, 168, 0.08) !important; 
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card-custom { padding: 25px; margin-bottom: 25px; }
 
-        /* Custom CSS untuk Tooltip Keterangan */
-        .tooltip-inner {
-            white-space: pre-wrap !important; /* Memaksa HTML membaca tombol Enter/Vertical */
-            text-align: left !important;      /* Rata kiri agar susunan addon lebih rapi dibaca */
-            max-width: 350px !important;      /* Memperlebar kotak hitam agar tidak terlalu sempit */
+        /* 4. TOMBOL UTAMA (GRADASI) */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--itam-cyan), var(--itam-blue));
+            border: none;
+            box-shadow: 0 4px 12px rgba(29, 181, 229, 0.25);
+            border-radius: 8px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--itam-blue), var(--itam-cyan));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(29, 181, 229, 0.4);
+            color: #ffffff;
         }
 
-        /* --- Animasi Transisi Halus (Fade In) Pindah Halaman --- */
+        /* 5. HEADER TABEL (Memecah kekosongan warna putih di tengah layar) */
+        .table thead { background-color: #f9fbfd; color: #a1a5b7; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .table td { vertical-align: middle; color: #5e6278; font-weight: 500; font-size: 0.95rem; }
+        .table-light th {
+            background-color: #E6F4FA !important; /* Background header biru sangat muda */
+            color: var(--itam-blue) !important;    /* Teks header biru tua */
+            border-bottom: 2px solid #BFE3F3 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* 6. TAB KATEGORI (Pills) */
+        .nav-pills .nav-link {
+            color: #5e6278;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .nav-pills .nav-link:hover {
+            background-color: rgba(29, 181, 229, 0.05);
+            color: var(--itam-cyan);
+        }
+        .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+            background-color: rgba(29, 181, 229, 0.1) !important; /* Background tombol tab aktif */
+            color: var(--itam-blue) !important;
+            font-weight: 600;
+        }
+
+        /* Tooltip, Animasi, Placeholder */
+        .tooltip-inner {
+            white-space: pre-wrap !important;
+            text-align: left !important;
+            max-width: 350px !important;
+        }
         .main-content {
             animation: fadeIn 0.15s ease-out;
         }
-
         @keyframes fadeIn {
             0% { opacity: 0; transform: translateY(10px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-
-        /* Custom CSS untuk memperjelas bahwa ini adalah Placeholder */
         ::placeholder {
             color: #adb5bd !important;
             opacity: 0.7 !important;
             font-weight: 400 !important;
             font-style: italic;
         }
-
     </style>
 
-    <!-- PENTING: Script ini harus di HEAD untuk mencegah kedipan (FOUC) saat pindah halaman -->
+    <!-- Script ini di HEAD untuk sinkronisasi tema -->
     <script>
         const savedTheme = localStorage.getItem('itam_theme') || 'light';
         document.documentElement.setAttribute('data-bs-theme', savedTheme);
     </script>
-
-    <!-- 1. Import Font Modern 'Poppins' dari Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        /* 2. ROOT VARIABLES (Mengekstrak warna dari Logo ITAM PRO) */
-        :root {
-            /* Palet Warna Logo ITAM PRO */
-            --itam-cyan: #1DB5E5;  /* Biru muda/Cyan dari logo atas */
-            --itam-blue: #0A6BA8;  /* Biru tua dari logo bawah */
-            --itam-bg-light: #F4F7FE; /* Latar belakang terang yang sangat lembut */
-            
-            /* Menimpa default Bootstrap */
-            --bs-primary: var(--itam-cyan);
-            --bs-font-sans-serif: 'Poppins', sans-serif;
-        }
-
-        /* 3. PERMAK TEMA TERANG (LIGHT MODE) */
-        body {
-            font-family: var(--bs-font-sans-serif);
-            background-color: var(--itam-bg-light);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        /* Melembutkan Sudut Kartu (SaaS Style) */
-        .card, .card-custom, .modal-content {
-            border: none !important;
-            border-radius: 16px !important; /* Membuat ujung membulat */
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04) !important; /* Bayangan halus mengambang */
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-
-        /* Mengubah Tombol Primary menjadi Gradasi Warna Logo */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--itam-cyan), var(--itam-blue));
-            border: none;
-            box-shadow: 0 4px 12px rgba(29, 181, 229, 0.3);
-            border-radius: 8px; /* Tombol membulat elegan */
-            font-weight: 500;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--itam-blue), var(--itam-cyan));
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(29, 181, 229, 0.4);
-        }
-
-        /* Merapikan tabel bawaan */
-        .table-light th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #e2e8f0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-
-        /* ======================================================== */
-        /* 4. PERMAK TEMA GELAP (DARK MODE)                         */
-        /* ======================================================== */
-        
-        /* Saat tombol dark mode diaktifkan, Bootstrap menyematkan atribut ini ke <html> */
-        [data-bs-theme="dark"] body {
-            background-color: #151521 !important; /* Hitam kebiruan khas IDE/Github */
-            color: #A1A5B7;
-        }
-
-        /* Merubah elemen putih menjadi abu-abu gelap */
-        [data-bs-theme="dark"] .card, 
-        [data-bs-theme="dark"] .card-custom,
-        [data-bs-theme="dark"] .modal-content,
-        [data-bs-theme="dark"] .bg-white,
-        [data-bs-theme="dark"] .bg-light {
-            background-color: #1E1E2D !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-        }
-
-        /* Teks gelap menjadi putih terang */
-        [data-bs-theme="dark"] .text-dark {
-            color: #FFFFFF !important;
-        }
-
-        [data-bs-theme="dark"] .text-muted {
-            color: #7E8299 !important;
-        }
-
-        /* Menyesuaikan border dan tabel agar tidak menyilaukan di Dark Mode */
-        [data-bs-theme="dark"] .border-bottom,
-        [data-bs-theme="dark"] .border-top,
-        [data-bs-theme="dark"] td,
-        [data-bs-theme="dark"] th {
-            border-color: #2B2B40 !important;
-        }
-
-        /* Header tabel di Dark Mode */
-        [data-bs-theme="dark"] .table-light th {
-            background-color: #1A1A27 !important;
-            color: #CDCDDE !important;
-        }
-
-        /* Input Form di Dark Mode */
-        [data-bs-theme="dark"] .form-control,
-        [data-bs-theme="dark"] .form-select {
-            background-color: #151521;
-            border: 1px solid #323248;
-            color: #FFFFFF;
-        }
-        [data-bs-theme="dark"] .form-control:focus {
-            border-color: var(--itam-cyan);
-            box-shadow: 0 0 0 0.25rem rgba(29, 181, 229, 0.25);
-        }
-    </style>
 </head>
 <body>
     <!-- Tombol Hamburger Mobile -->
@@ -219,10 +155,10 @@
 
     <!-- SIDEBAR (Hanya ditulis satu kali di sini!) -->
     <div class="sidebar offcanvas-md offcanvas-start" tabindex="-1" id="sidebarMenu">
-        <!-- Ganti di bagian header sidebar base.html -->
-        <a href="/" class="d-flex align-items-center mb-4 text-decoration-none justify-content-center">
-            <!-- Panggil logo Anda di sini -->
-            <img src="/static/img/logo-itam.png" alt="ITAM PRO" style="max-height: 40px; width: auto;">
+        <!-- Area Logo Sidebar -->
+        <a href="/" class="d-flex align-items-center mb-4 text-decoration-none justify-content-center w-100">
+            <!-- max-height dihapus, diganti width 160px (sesuaikan angka ini jika masih kurang besar) -->
+            <img src="/static/img/logo-itam.png" alt="ITAM PRO" style="width: 160px; height: auto; object-fit: contain; margin-top: 10px;">
         </a>
         <div class="sidebar-menu">
             <!-- Nanti script JavaScript akan menandai menu mana yang aktif secara otomatis -->
