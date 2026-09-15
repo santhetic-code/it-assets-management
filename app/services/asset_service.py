@@ -37,7 +37,7 @@ def create_asset(db: Session, asset_data: AssetCreate):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Tag Aset '{asset_data.asset_tag}' sudah terdaftar.",
+            detail=f"Kode/Tag Aset '{getattr(asset_data, 'kode_aset', getattr(asset_data, 'asset_tag', ''))}' sudah terdaftar.",
         )
 
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, JSON, String, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 
 # Mengambil Base dari konfigurasi database inti kita
 from app.core.database import Base
@@ -33,19 +33,16 @@ class Asset(Base):
     __tablename__ = "assets"
 
     id = Column(Integer, primary_key=True, index=True)
-    asset_tag = Column(
-        String(50), unique=True, index=True, nullable=False
-    )  # Harus unik
-    name = Column(String(100), nullable=False)
-    category = Column(String(50), nullable=False)
-    status = Column(String(50), nullable=False, default="Digunakan")
-    assigned_to = Column(String(100), nullable=True)
-    location = Column(String(100), nullable=True)
-    serial_number = Column(String(100), nullable=True)
-    condition = Column(String(50), default="Baru")
-    usage_status = Column(String(50), nullable=True)
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    kode_aset = Column(String(50), nullable=True, index=True)  # Opsional
+    nama = Column(String(150), nullable=False)
+    kelompok = Column(String(50), nullable=False)              # Monitor, Keyboard, dll
+    sn_pid = Column(String(100), nullable=True, index=True)    # Opsional
+    tanggal_masuk = Column(Date, nullable=True)
+    tanggal_keluar = Column(Date, nullable=True)               # Bisa kosong jika belum keluar
+    kepemilikan = Column(String(50), nullable=False)           # XML, MBL
+    lokasi = Column(String(100), nullable=False)               # Office Blok 12, dll
+    status = Column(String(50), nullable=False)                # Digunakan, Tidak Digunakan
+    digunakan_oleh = Column(String(100), nullable=True)        # Nama user yang memakai
 
     # Relasi ke tabel lain (Satu Aset bisa punya banyak Komponen, Log, dll)
     components = relationship(
@@ -60,6 +57,14 @@ class Asset(Base):
     purchase_info = relationship(
         "Purchase", back_populates="asset", cascade="all, delete-orphan"
     )
+
+    # Alias / Sinonim untuk kompatibilitas dengan modul lain
+    asset_tag = synonym("kode_aset")
+    name = synonym("nama")
+    category = synonym("kelompok")
+    serial_number = synonym("sn_pid")
+    assigned_to = synonym("digunakan_oleh")
+    location = synonym("lokasi")
 
 
 class Component(Base):
