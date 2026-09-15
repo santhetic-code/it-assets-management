@@ -14,10 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --itam-cyan: #1DB5E5;
+            --itam-blue: #0A6BA8;
+            --itam-bg-body: #F0F4F9;
+        }
         body {
             font-family: 'Poppins', sans-serif;
-            /* Gradien Latar Belakang Abu-abu Gelap (Mewah) */
-            background: radial-gradient(circle at top left, #3a3b4c, #1a1a24);
+            background-color: var(--itam-bg-body);
             height: 100vh;
             display: flex;
             align-items: center;
@@ -27,44 +31,41 @@
         .login-container {
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0px 8px 24px rgba(10, 107, 168, 0.08);
             max-width: 900px;
             width: 100%;
-            background: #1E1E2D; /* Warna area form (Gelap) */
+            background: #FFFFFF;
             display: flex;
         }
         .login-left {
-            /* Gradien Biru-Ungu Khas ITAM Pro */
-            background: linear-gradient(135deg, #4A62FF 0%, #8E44AD 100%);
+            background-color: #E6F4FA; /* Biru Sangat Muda */
             padding: 60px 50px;
-            color: white;
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-right: 1px solid #e1ebf2;
         }
         .login-right {
             padding: 60px 50px;
             flex: 1.2;
-            color: #FFFFFF;
+            background: #FFFFFF;
+            color: #3f4254;
         }
         .form-control {
-            background-color: #151521;
-            border: 1px solid #323248;
-            color: white;
+            background-color: #ffffff;
+            border: 1px solid #e1ebf2;
+            color: #3f4254;
             padding: 12px 15px;
         }
         .form-control:focus {
-            background-color: #151521;
-            border-color: #4A62FF;
-            color: white;
-            box-shadow: none;
-        }
-        .form-control::placeholder {
-            color: #5e6278;
+            border-color: var(--itam-cyan);
+            box-shadow: 0 0 0 0.25rem rgba(29, 181, 229, 0.25);
         }
         .btn-login {
-            background-color: #3E97FF;
+            background: linear-gradient(135deg, var(--itam-cyan), var(--itam-blue));
             color: white;
             border: none;
             padding: 12px;
@@ -75,17 +76,15 @@
             transition: all 0.3s;
         }
         .btn-login:hover {
-            background-color: #2b84eb;
-            color: white;
+            background: linear-gradient(135deg, var(--itam-blue), var(--itam-cyan));
             transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(29, 181, 229, 0.4);
+            color: white;
         }
-        /* Mengubah warna autofill bawaan browser agar tetap gelap */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active{
-            -webkit-box-shadow: 0 0 0 30px #151521 inset !important;
-            -webkit-text-fill-color: white !important;
+        .input-group-text {
+            background-color: #ffffff;
+            border: 1px solid #e1ebf2;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -94,33 +93,31 @@
 <div class="container d-flex justify-content-center p-3">
     <div class="login-container flex-column flex-md-row">
         
-        <!-- Kiri: Area Branding -->
+        <!-- Kiri: Area Branding dengan Logo Asli -->
         <div class="login-left">
-            <h2 class="fw-bold mb-4" style="letter-spacing: 1px;">
-                <i class="bi bi-grid-fill me-2"></i>ITAM Pro.
-            </h2>
-            <p style="font-size: 0.95rem; line-height: 1.7; opacity: 0.9;">
+            <img src="/static/img/logo-itam.png" alt="ITAM PRO" style="width: 100%; max-width: 200px; height: auto; object-fit: contain; margin-bottom: 25px;">
+            <p class="text-muted fw-medium" style="font-size: 0.95rem; line-height: 1.6;">
                 Sistem Manajemen Aset IT Terpadu. Kelola infrastruktur jaringan, inventaris, dan kredensial Anda dalam satu brankas digital yang aman.
             </p>
         </div>
 
-        <!-- Kanan: Area Formulir -->
+        <!-- Kanan: Area Formulir Bersih -->
         <div class="login-right">
-            <h3 class="fw-bold mb-1">Selamat Datang</h3>
-            <p class="mb-4 small" style="color: #5e6278;">Silakan masuk menggunakan akun Anda.</p>
+            <h3 class="fw-bold mb-1 text-dark">Selamat Datang</h3>
+            <p class="mb-4 small text-muted">Silakan masuk menggunakan akun Anda.</p>
 
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label small" style="color: #a1a5b7;">Username</label>
-                    <input type="text" class="form-control rounded-3" id="inpUsername" placeholder="Masukkan username" required autocomplete="username">
+                    <label class="form-label small fw-bold text-muted">Username</label>
+                    <input type="text" class="form-control rounded-3" id="inpUsername" required autocomplete="username">
                 </div>
                 
                 <div class="mb-4">
-                    <label class="form-label small" style="color: #a1a5b7;">Password</label>
+                    <label class="form-label small fw-bold text-muted">Password</label>
                     <div class="input-group">
-                        <input type="password" class="form-control border-end-0 rounded-start-3" id="inpPassword" placeholder="••••••••" required autocomplete="current-password">
-                        <span class="input-group-text bg-transparent border-start-0 border" style="border-color: #323248; cursor: pointer;" id="togglePassword">
-                            <i class="bi bi-eye text-muted"></i>
+                        <input type="password" class="form-control border-end-0 rounded-start-3" id="inpPassword" required autocomplete="current-password">
+                        <span class="input-group-text bg-transparent border-start-0 text-muted" id="togglePassword">
+                            <i class="bi bi-eye"></i>
                         </span>
                     </div>
                 </div>
@@ -147,14 +144,13 @@
 
     // 2. Logika Pengiriman Data Login (Tembak ke Backend JWT)
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault(); // Mencegah browser me-refresh halaman
+        e.preventDefault(); 
         
         const btn = document.getElementById('btnSubmit');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memvalidasi...';
         btn.disabled = true;
 
-        // Backend FastAPI OAuth2 meminta format 'application/x-www-form-urlencoded' (bukan JSON)
         const formData = new URLSearchParams();
         formData.append('username', document.getElementById('inpUsername').value);
         formData.append('password', document.getElementById('inpPassword').value);
@@ -176,31 +172,17 @@
                     title: 'Akses Diberikan',
                     text: `Selamat datang kembali, ${data.name}!`,
                     timer: 1500,
-                    showConfirmButton: false,
-                    background: '#1E1E2D', // Sesuaikan warna popup
-                    color: '#fff'
+                    showConfirmButton: false
                 }).then(() => {
-                    window.location.href = '/'; // Arahkan ke Halaman Dashboard Utama
+                    window.location.href = '/'; // Arahkan ke Dashboard
                 });
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Akses Ditolak',
-                    text: data.detail || 'Username atau sandi salah!',
-                    background: '#1E1E2D',
-                    color: '#fff'
-                });
+                Swal.fire('Akses Ditolak', data.detail || 'Username atau sandi salah!', 'error');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Server Terputus',
-                text: 'Tidak dapat menghubungi server otentikasi.',
-                background: '#1E1E2D',
-                color: '#fff'
-            });
+            Swal.fire('Server Terputus', 'Tidak dapat menghubungi server otentikasi.', 'error');
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
