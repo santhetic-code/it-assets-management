@@ -85,18 +85,95 @@
     </div>
 </div>
 
-<!-- Modal Form Tambah Aset Sementara (Placeholder) -->
-<div class="modal fade" id="modalAddAsset" tabindex="-1">
+<!-- Modal Tambah Data Aset -->
+<div class="modal fade" id="modalAddAsset" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold">Tambah Data Aset Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pc-display-horizontal text-primary me-2"></i> Tambah Data Aset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center py-5">
-                <i class="bi bi-tools fs-1 text-primary mb-3"></i>
-                <h5>Formulir Aset Sedang Disiapkan</h5>
-                <p class="text-muted">Desain form untuk menambah data akan kita bangun di tahap selanjutnya.</p>
+            <div class="modal-body px-4 py-4">
+                <form id="formAsset" autocomplete="off">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Kode Aset (Opsional)</label>
+                            <input type="text" class="form-control" id="inpKode" placeholder="Cth: LPT-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Nama Perangkat <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-primary" id="inpNama" placeholder="Cth: Lenovo ThinkPad T14" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Kelompok <span class="text-danger">*</span></label>
+                            <select class="form-select" id="inpKelompok" required>
+                                <option value="" selected disabled>-- Pilih Kelompok --</option>
+                                <option value="Laptop">Laptop</option>
+                                <option value="Komputer / PC">Komputer / PC</option>
+                                <option value="Monitor">Monitor</option>
+                                <option value="Keyboard">Keyboard</option>
+                                <option value="Mouse">Mouse</option>
+                                <option value="SSD / HDD">SSD / HDD</option>
+                                <option value="RAM">RAM</option>
+                                <option value="Server">Server</option>
+                                <option value="Router / Jaringan">Router / Jaringan</option>
+                                <option value="CCTV">CCTV</option>
+                                <option value="Kendaraan">Kendaraan</option>
+                                <option value="Meja / Kursi">Meja / Kursi</option>
+                                <option value="Infrastruktur Lainnya">Infrastruktur Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">SN / PID (Opsional)</label>
+                            <input type="text" class="form-control" id="inpSn" placeholder="Serial Number / Product ID">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Tanggal Masuk Gudang</label>
+                            <input type="date" class="form-control" id="inpTglMasuk">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">Kepemilikan <span class="text-danger">*</span></label>
+                            <select class="form-select" id="inpPemilik" required>
+                                <option value="XML" selected>XML</option>
+                                <option value="MBL">MBL</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 border-top pt-3 mt-4">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Lokasi Aset <span class="text-danger">*</span></label>
+                            <select class="form-select" id="inpLokasi" required>
+                                <option value="Office Blok 12">Office Blok 12</option>
+                                <option value="Office Blok 13">Office Blok 13</option>
+                                <option value="Office Blok 14">Office Blok 14</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="inpStatus" required>
+                                <option value="Digunakan">Digunakan</option>
+                                <option value="Tidak Digunakan" selected>Tidak Digunakan (Gudang)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Digunakan Oleh</label>
+                            <input type="text" class="form-control" id="inpUser" placeholder="Kosongkan jika di gudang">
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary fw-bold px-4" onclick="saveAsset()">Simpan Data</button>
             </div>
         </div>
     </div>
@@ -133,6 +210,57 @@
 
     function openAddModal() {
         new bootstrap.Modal(document.getElementById('modalAddAsset')).show();
+    }
+
+    // Fungsi Menyimpan Data Aset ke Database
+    async function saveAsset() {
+        // Mengambil semua nilai dari form
+        const payload = {
+            kode_aset: $('#inpKode').val() || null,
+            nama: $('#inpNama').val(),
+            kelompok: $('#inpKelompok').val(),
+            sn_pid: $('#inpSn').val() || null,
+            tanggal_masuk: $('#inpTglMasuk').val() || null,
+            kepemilikan: $('#inpPemilik').val(),
+            lokasi: $('#inpLokasi').val(),
+            status: $('#inpStatus').val(),
+            digunakan_oleh: $('#inpUser').val() || null
+        };
+
+        // Validasi sederhana (Pastikan kolom wajib diisi)
+        if (!payload.nama || !payload.kelompok || !payload.kepemilikan || !payload.lokasi || !payload.status) {
+            Swal.fire('Data Belum Lengkap', 'Harap isi semua kolom yang bertanda bintang merah (*).', 'warning');
+            return;
+        }
+
+        try {
+            // Tembak data ke Endpoint API FastAPI
+            const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
+            const res = await fetch('/api/assets/', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': token
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Data aset telah ditambahkan ke sistem.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.reload(); // Refresh halaman agar tabel terupdate
+                });
+            } else {
+                Swal.fire('Gagal Menyimpan', 'Periksa kembali data Anda atau hubungi administrator.', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Koneksi Terputus', 'Tidak dapat terhubung ke server database.', 'error');
+        }
     }
 </script>
 {% endblock %}
