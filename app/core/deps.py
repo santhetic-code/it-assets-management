@@ -15,7 +15,7 @@ def get_current_user(request: Request, db: DbSession):
     """
     Penjaga Lapis 1: Mengecek apakah pengguna sudah login dan memiliki token valid.
     """
-    token = request.cookies.get("itam_session")
+    token = request.cookies.get("access_token") or request.cookies.get("itam_session")
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -41,6 +41,12 @@ def get_current_user(request: Request, db: DbSession):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Akun pengguna tidak ditemukan di sistem.",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Akun Anda sedang dinonaktifkan.",
         )
     return user
 
