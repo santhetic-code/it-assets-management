@@ -117,7 +117,9 @@ def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
 # ==========================================
 @router.get("/it-notes")
 def read_it_notes(request: Request, db: DbSession, current_user: CurrentUser):
-    assets = asset_service.get_all_assets(db)
+    # Mengambil seluruh data aset dari MySQL
+    assets = db.query(domain.Asset).all()
+    # Mengirimkan variabel 'assets' ke Jinja2
     return render_template(
         request=request,
         name="it_notes.html",
