@@ -17,8 +17,10 @@ def init_superadmin(db: Session):
         hashed_pw = get_password_hash(settings.SUPERADMIN_PASSWORD)
         super_admin = User(
             username=settings.SUPERADMIN_USERNAME,
+            full_name="Administrator Utama",
             password_hash=hashed_pw,
-            role="Super Admin"
+            role="Super Admin",
+            is_active=True,
         )
         db.add(super_admin)
         db.commit()

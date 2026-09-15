@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import relationship, synonym
 
 # Mengambil Base dari konfigurasi database inti kita
@@ -16,9 +16,11 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
+    full_name = Column(String(100), nullable=False)  # TAMBAHAN: Nama Lengkap Asli
     password_hash = Column(String(255), nullable=False)
-    role = Column(String(50), default="Auditor")  # Super Admin, Staff IT, Auditor
+    role = Column(String(50), nullable=False)        # Super Admin, Staff IT, Viewer
     avatar = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True)        # TAMBAHAN: Status Aktif/Nonaktif (Soft Delete)
     created_at = Column(DateTime, default=get_utc_now)
 
     # Relasi ke log aktivitas
