@@ -99,6 +99,117 @@
         document.documentElement.setAttribute('data-bs-theme', savedTheme);
     </script>
 
+    <!-- 1. Import Font Modern 'Poppins' dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* 2. ROOT VARIABLES (Mengekstrak warna dari Logo ITAM PRO) */
+        :root {
+            /* Palet Warna Logo ITAM PRO */
+            --itam-cyan: #1DB5E5;  /* Biru muda/Cyan dari logo atas */
+            --itam-blue: #0A6BA8;  /* Biru tua dari logo bawah */
+            --itam-bg-light: #F4F7FE; /* Latar belakang terang yang sangat lembut */
+            
+            /* Menimpa default Bootstrap */
+            --bs-primary: var(--itam-cyan);
+            --bs-font-sans-serif: 'Poppins', sans-serif;
+        }
+
+        /* 3. PERMAK TEMA TERANG (LIGHT MODE) */
+        body {
+            font-family: var(--bs-font-sans-serif);
+            background-color: var(--itam-bg-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Melembutkan Sudut Kartu (SaaS Style) */
+        .card, .card-custom, .modal-content {
+            border: none !important;
+            border-radius: 16px !important; /* Membuat ujung membulat */
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04) !important; /* Bayangan halus mengambang */
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        /* Mengubah Tombol Primary menjadi Gradasi Warna Logo */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--itam-cyan), var(--itam-blue));
+            border: none;
+            box-shadow: 0 4px 12px rgba(29, 181, 229, 0.3);
+            border-radius: 8px; /* Tombol membulat elegan */
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--itam-blue), var(--itam-cyan));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(29, 181, 229, 0.4);
+        }
+
+        /* Merapikan tabel bawaan */
+        .table-light th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+
+        /* ======================================================== */
+        /* 4. PERMAK TEMA GELAP (DARK MODE)                         */
+        /* ======================================================== */
+        
+        /* Saat tombol dark mode diaktifkan, Bootstrap menyematkan atribut ini ke <html> */
+        [data-bs-theme="dark"] body {
+            background-color: #151521 !important; /* Hitam kebiruan khas IDE/Github */
+            color: #A1A5B7;
+        }
+
+        /* Merubah elemen putih menjadi abu-abu gelap */
+        [data-bs-theme="dark"] .card, 
+        [data-bs-theme="dark"] .card-custom,
+        [data-bs-theme="dark"] .modal-content,
+        [data-bs-theme="dark"] .bg-white,
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #1E1E2D !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Teks gelap menjadi putih terang */
+        [data-bs-theme="dark"] .text-dark {
+            color: #FFFFFF !important;
+        }
+
+        [data-bs-theme="dark"] .text-muted {
+            color: #7E8299 !important;
+        }
+
+        /* Menyesuaikan border dan tabel agar tidak menyilaukan di Dark Mode */
+        [data-bs-theme="dark"] .border-bottom,
+        [data-bs-theme="dark"] .border-top,
+        [data-bs-theme="dark"] td,
+        [data-bs-theme="dark"] th {
+            border-color: #2B2B40 !important;
+        }
+
+        /* Header tabel di Dark Mode */
+        [data-bs-theme="dark"] .table-light th {
+            background-color: #1A1A27 !important;
+            color: #CDCDDE !important;
+        }
+
+        /* Input Form di Dark Mode */
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #151521;
+            border: 1px solid #323248;
+            color: #FFFFFF;
+        }
+        [data-bs-theme="dark"] .form-control:focus {
+            border-color: var(--itam-cyan);
+            box-shadow: 0 0 0 0.25rem rgba(29, 181, 229, 0.25);
+        }
+    </style>
 </head>
 <body>
     <!-- Tombol Hamburger Mobile -->
@@ -108,16 +219,11 @@
 
     <!-- SIDEBAR (Hanya ditulis satu kali di sini!) -->
     <div class="sidebar offcanvas-md offcanvas-start" tabindex="-1" id="sidebarMenu">
-        <div class="brand d-flex align-items-center mt-2 mb-4" style="padding: 15px 30px;">
-            <!-- Ikon Logo -->
-            <div class="bg-primary text-white rounded p-1 me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                <i class="bi bi-grid-fill fs-5" style="margin-right: 0;"></i>
-            </div>
-            <!-- Teks Logo -->
-            <span class="fs-4 fw-bolder text-body d-flex align-items-baseline">
-                ITAM<span class="text-primary fw-light ms-1">Pro</span><span class="text-primary">.</span>
-            </span>
-        </div>
+        <!-- Ganti di bagian header sidebar base.html -->
+        <a href="/" class="d-flex align-items-center mb-4 text-decoration-none justify-content-center">
+            <!-- Panggil logo Anda di sini -->
+            <img src="/static/img/logo-itam.png" alt="ITAM PRO" style="max-height: 40px; width: auto;">
+        </a>
         <div class="sidebar-menu">
             <!-- Nanti script JavaScript akan menandai menu mana yang aktif secara otomatis -->
             <div class="menu-title">Main Menu</div>
