@@ -37,8 +37,14 @@
 </div>
 
 <!-- AREA TABEL MASTER DATA -->
-<div class="card card-custom border-top border-primary border-4">
-    <div class="table-responsive p-3">
+<div class="card card-custom border-top border-primary border-4 p-3">
+    <div class="mb-3">
+        <!-- Tambahkan ID pada masing-masing tombol -->
+        <button id="btnExportExcel" class="btn btn-success btn-sm fw-bold shadow-sm me-1"><i class="bi bi-file-earmark-excel-fill"></i> Excel</button>
+        <button id="btnExportPdf" class="btn btn-danger btn-sm fw-bold shadow-sm me-1"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+        <button id="btnExportPrint" class="btn btn-secondary btn-sm fw-bold shadow-sm"><i class="bi bi-printer-fill"></i> Print</button>
+    </div>
+    <div class="table-responsive">
         <table id="dataTableAssets" class="table table-hover align-middle w-100">
             <thead class="table-light">
                 <tr>
@@ -209,10 +215,8 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Library Ekstensi DataTables untuk Export -->
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<!-- Library Wajib Export -->
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
@@ -221,57 +225,23 @@
 
 <script>
     $(document).ready(function() {
-        // Inisialisasi DataTables dengan Fitur Export
+        // 1. Inisialisasi DataTables
         var table = $('#dataTableAssets').DataTable({
             language: { 
                 search: "_INPUT_", 
                 searchPlaceholder: "Cari Nama, SN, atau Kode...",
-                lengthMenu: "Tampilkan _MENU_ data",
-                info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ aset"
             },
             pageLength: 10,
             ordering: true,
-            // Perintah DOM untuk meletakkan Tombol Export di Kiri dan Search di Kanan
-            dom: '<"row align-items-center mb-3"<"col-md-6"B><"col-md-6 d-flex justify-content-end"f>>rt<"row align-items-center mt-3"<"col-md-6"i><"col-md-6"p>>',
+            // Kita nyalakan mesin 'buttons' di balik layar, tapi TIDAK menampilkannya di UI (dom tidak memakai 'B')
             buttons: [
-                {
-                    extend: 'excelHtml5',
-                    text: '<i class="bi bi-file-earmark-excel-fill me-1"></i> Excel',
-                    className: 'btn btn-success btn-sm fw-bold shadow-sm',
-                    title: 'Laporan Master Data Aset ITAM',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6] // Mengecualikan kolom ke-7 (Aksi)
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    text: '<i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF',
-                    className: 'btn btn-danger btn-sm fw-bold shadow-sm ms-2',
-                    title: 'Laporan Master Data Aset ITAM',
-                    orientation: 'landscape', // Format memanjang agar tabel tidak terjepit
-                    pageSize: 'A4',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6] // Mengecualikan kolom ke-7 (Aksi)
-                    },
-                    customize: function (doc) {
-                        // Merapikan lebar tabel di dalam file PDF
-                        doc.styles.tableHeader.alignment = 'left';
-                        doc.content[1].table.widths = ['15%', '20%', '15%', '15%', '15%', '10%', '10%'];
-                    }
-                },
-                {
-                    extend: 'print',
-                    text: '<i class="bi bi-printer-fill me-1"></i> Print',
-                    className: 'btn btn-secondary btn-sm fw-bold shadow-sm ms-2',
-                    title: 'Laporan Master Data Aset ITAM',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6] // Mengecualikan kolom ke-7 (Aksi)
-                    }
-                }
+                { extend: 'excelHtml5', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
+                { extend: 'pdfHtml5', orientation: 'landscape', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
+                { extend: 'print', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } }
             ]
         });
 
-        // Fitur Filter Dropdown Khusus Kelompok Aset (Tetap dipertahankan)
+        // 2. Filter Dropdown Kelompok (Tetap Dipertahankan)
         $('#filterKelompok').on('change', function() {
             var selectedValue = $(this).val();
             if (selectedValue) {
@@ -279,6 +249,22 @@
             } else {
                 table.column(2).search('').draw(); 
             }
+        });
+
+        // ==========================================
+        // 3. JANTUNG EXPORT (Penyambung Tombol)
+        // Saat tombol HTML Anda diklik, ia akan menyuruh DataTables mengeksekusi export
+        // ==========================================
+        $('#btnExportExcel').on('click', function() {
+            table.button('.buttons-excel').trigger();
+        });
+        
+        $('#btnExportPdf').on('click', function() {
+            table.button('.buttons-pdf').trigger();
+        });
+        
+        $('#btnExportPrint').on('click', function() {
+            table.button('.buttons-print').trigger();
         });
     });
 
