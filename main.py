@@ -8,7 +8,7 @@ from app.core.deps import get_current_user
 from app.models import domain
 
 # Import seluruh router dari arsitektur MVC kita
-from app.routers import assets, auth, ips, pages, vault
+from app.routers import assets, auth, components, ips, maintenance, pages, purchases, qr, vault
 
 app = FastAPI(title="ITAM Pro Enterprise")
 
@@ -36,6 +36,10 @@ app.include_router(pages.router)
 app.include_router(vault.router, dependencies=[Depends(get_current_user)])
 app.include_router(ips.router, dependencies=[Depends(get_current_user)])
 app.include_router(assets.router, dependencies=[Depends(get_current_user)])
+app.include_router(components.router, dependencies=[Depends(get_current_user)])
+app.include_router(purchases.router, dependencies=[Depends(get_current_user)])
+app.include_router(maintenance.router, dependencies=[Depends(get_current_user)])
+app.include_router(qr.router, dependencies=[Depends(get_current_user)])
 
 
 # 4. Inisialisasi Database & Akun Pertama Kali Saat Server Menyala (Guarded Startup)

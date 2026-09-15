@@ -18,56 +18,47 @@ from app.models.schemas.purchase import PurchaseCreate, PurchaseUpdate
 # ==========================================
 # 1. LOGIKA ASET
 # ==========================================
+def get_assets(db: Session, skip: int = 0, limit: int = 1000):
+    # Mengambil semua data aset (dibatasi 1000 agar tidak berat)
+    return db.query(Asset).offset(skip).limit(limit).all()
+
+
 def get_all_assets(db: Session):
-    return db.query(Asset).all()
+    return get_assets(db)
 
 
 def get_asset_by_tag(db: Session, tag: str):
     return db.query(Asset).filter(Asset.asset_tag == tag).first()
 
 
-def create_asset(db: Session, asset_data: AssetCreate):
-    new_asset = Asset(**asset_data.model_dump())
-    try:
-        db.add(new_asset)
-        db.commit()
-        db.refresh(new_asset)
-        return new_asset
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Kode/Tag Aset '{getattr(asset_data, 'kode_aset', getattr(asset_data, 'asset_tag', ''))}' sudah terdaftar.",
-        )
+def create_asset(db: Session, asset: AssetCreate):
+    # Memasukkan data baru ke database
+    db_asset = Asset(**asset.model_dump())
+    db.add(db_asset)
+    db.commit()
+    db.refresh(db_asset)
+    return db_asset
 
 
-def update_asset(db: Session, asset_id: int, asset_data: AssetUpdate):
+def update_asset(db: Session, asset_id: int, asset: AssetUpdate):
+    # Mencari aset berdasarkan ID lalu menimpanya dengan data baru
     db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
-    if not db_asset:
-        raise HTTPException(status_code=404, detail="Aset tidak ditemukan.")
-
-    update_data = asset_data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_asset, key, value)
-
-    try:
+    if db_asset:
+        for key, value in asset.model_dump().items():
+            setattr(db_asset, key, value)
         db.commit()
         db.refresh(db_asset)
-        return db_asset
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=400, detail="Tag Aset bertabrakan dengan data lain."
-        )
+    return db_asset
 
 
 def delete_asset(db: Session, asset_id: int):
+    # Mencari dan menghapus aset
     db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
-    if not db_asset:
-        raise HTTPException(status_code=404, detail="Aset tidak ditemukan.")
-    db.delete(db_asset)
-    db.commit()
-    return {"message": "Aset berhasil dihapus."}
+    if db_asset:
+        db.delete(db_asset)
+        db.commit()
+        return True
+    return False
 
 
 def import_assets_from_file(db: Session, file_bytes: bytes, filename: str) -> int:
