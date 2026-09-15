@@ -252,19 +252,61 @@
         });
 
         // ==========================================
-        // 3. JANTUNG EXPORT (Penyambung Tombol)
-        // Saat tombol HTML Anda diklik, ia akan menyuruh DataTables mengeksekusi export
+        // 3. JANTUNG EXPORT DENGAN POP-UP VALIDASI
         // ==========================================
+        
+        // Validasi Export Excel
         $('#btnExportExcel').on('click', function() {
-            table.button('.buttons-excel').trigger();
+            Swal.fire({
+                title: 'Unduh Excel?',
+                text: "Data master aset ini akan direkap ke dalam format Microsoft Excel.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754', // Warna Hijau Excel
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-file-earmark-excel-fill"></i> Ya, Unduh',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    table.button('.buttons-excel').trigger(); // Eksekusi download jika pilih "Ya"
+                }
+            });
         });
         
+        // Validasi Export PDF
         $('#btnExportPdf').on('click', function() {
-            table.button('.buttons-pdf').trigger();
+            Swal.fire({
+                title: 'Unduh PDF?',
+                text: "Data master aset ini akan direkap ke dalam dokumen PDF.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545', // Warna Merah PDF
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-file-earmark-pdf-fill"></i> Ya, Unduh',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    table.button('.buttons-pdf').trigger();
+                }
+            });
         });
         
+        // Validasi Print
         $('#btnExportPrint').on('click', function() {
-            table.button('.buttons-print').trigger();
+            Swal.fire({
+                title: 'Cetak Data?',
+                text: "Anda akan diarahkan ke layar pencetakan dokumen.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#6c757d', // Warna Abu-abu Print
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: '<i class="bi bi-printer-fill"></i> Ya, Cetak',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    table.button('.buttons-print').trigger();
+                }
+            });
         });
     });
 
