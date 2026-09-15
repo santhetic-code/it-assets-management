@@ -209,9 +209,19 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Library Ekstensi DataTables untuk Export -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
 <script>
     $(document).ready(function() {
-        // Inisialisasi DataTables dengan fitur Pencarian Pintar
+        // Inisialisasi DataTables dengan Fitur Export
         var table = $('#dataTableAssets').DataTable({
             language: { 
                 search: "_INPUT_", 
@@ -220,18 +230,54 @@
                 info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ aset"
             },
             pageLength: 10,
-            ordering: true
+            ordering: true,
+            // Perintah DOM untuk meletakkan Tombol Export di Kiri dan Search di Kanan
+            dom: '<"row align-items-center mb-3"<"col-md-6"B><"col-md-6 d-flex justify-content-end"f>>rt<"row align-items-center mt-3"<"col-md-6"i><"col-md-6"p>>',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="bi bi-file-earmark-excel-fill me-1"></i> Excel',
+                    className: 'btn btn-success btn-sm fw-bold shadow-sm',
+                    title: 'Laporan Master Data Aset ITAM',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6] // Mengecualikan kolom ke-7 (Aksi)
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF',
+                    className: 'btn btn-danger btn-sm fw-bold shadow-sm ms-2',
+                    title: 'Laporan Master Data Aset ITAM',
+                    orientation: 'landscape', // Format memanjang agar tabel tidak terjepit
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6] // Mengecualikan kolom ke-7 (Aksi)
+                    },
+                    customize: function (doc) {
+                        // Merapikan lebar tabel di dalam file PDF
+                        doc.styles.tableHeader.alignment = 'left';
+                        doc.content[1].table.widths = ['15%', '20%', '15%', '15%', '15%', '10%', '10%'];
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="bi bi-printer-fill me-1"></i> Print',
+                    className: 'btn btn-secondary btn-sm fw-bold shadow-sm ms-2',
+                    title: 'Laporan Master Data Aset ITAM',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6] // Mengecualikan kolom ke-7 (Aksi)
+                    }
+                }
+            ]
         });
 
-        // Fitur Filter Dropdown Khusus Kelompok Aset
+        // Fitur Filter Dropdown Khusus Kelompok Aset (Tetap dipertahankan)
         $('#filterKelompok').on('change', function() {
             var selectedValue = $(this).val();
-            // Kolom indeks ke-2 adalah "KELOMPOK" (dimulai dari 0: Kode, 1: Nama, 2: Kelompok)
-            // Regex '^' dan '$' memastikan filter presisi (misal: "Mouse" tidak tercampur "Mousepad")
             if (selectedValue) {
                 table.column(2).search('^' + selectedValue + '$', true, false).draw();
             } else {
-                table.column(2).search('').draw(); // Tampilkan semua jika kosong
+                table.column(2).search('').draw(); 
             }
         });
     });
