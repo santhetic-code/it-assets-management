@@ -5,23 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - ITAM Pro</title>
     
-    <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Font Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --itam-cyan: #1DB5E5;
             --itam-blue: #0A6BA8;
-            --itam-bg-body: #F0F4F9;
+            --itam-bg: #F4F7FA;
         }
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--itam-bg-body);
+            /* Latar luar diberi gradasi radial yang sangat halus agar tidak flat */
+            background-color: var(--itam-bg);
+            background-image: radial-gradient(at 0% 0%, hsla(196,100%,79%,0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, hsla(205,89%,35%,0.1) 0px, transparent 50%);
             height: 100vh;
             display: flex;
             align-items: center;
@@ -29,16 +29,18 @@
             margin: 0;
         }
         .login-container {
-            border-radius: 16px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0px 8px 24px rgba(10, 107, 168, 0.08);
+            box-shadow: 0 20px 40px rgba(10, 107, 168, 0.1);
             max-width: 900px;
             width: 100%;
             background: #FFFFFF;
             display: flex;
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
         .login-left {
-            background-color: #E6F4FA; /* Biru Sangat Muda */
+            /* Perpaduan gradasi biru muda yang lebih hidup dan segar */
+            background: linear-gradient(135deg, #e0f2f9 0%, #c4e8f6 100%);
             padding: 60px 50px;
             flex: 1;
             display: flex;
@@ -46,45 +48,88 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            border-right: 1px solid #e1ebf2;
+            position: relative;
+            z-index: 1;
+        }
+        /* Ornamen Aksen Geometris untuk menghidupkan suasana */
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(29, 181, 229, 0.15);
+            border-radius: 50%;
+            z-index: -1;
+        }
+        .login-left::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            right: -50px;
+            width: 250px;
+            height: 250px;
+            background: rgba(10, 107, 168, 0.08);
+            border-radius: 50%;
+            z-index: -1;
         }
         .login-right {
             padding: 60px 50px;
             flex: 1.2;
             background: #FFFFFF;
-            color: #3f4254;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        /* Kolom Input Modern (Focus dalam 1 Grup) */
+        .input-group-custom {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+        .input-group-custom:focus-within {
+            background-color: #ffffff;
+            border-color: var(--itam-cyan);
+            box-shadow: 0 0 0 4px rgba(29, 181, 229, 0.15);
         }
         .form-control {
-            background-color: #ffffff;
-            border: 1px solid #e1ebf2;
+            border: none;
+            background: transparent;
             color: #3f4254;
-            padding: 12px 15px;
+            padding: 14px 16px;
+            font-size: 0.95rem;
+            box-shadow: none !important;
         }
-        .form-control:focus {
-            border-color: var(--itam-cyan);
-            box-shadow: 0 0 0 0.25rem rgba(29, 181, 229, 0.25);
+        .input-icon {
+            padding: 14px 16px;
+            color: #94a3b8;
+            background: transparent;
+            cursor: pointer;
+            border: none;
         }
         .btn-login {
             background: linear-gradient(135deg, var(--itam-cyan), var(--itam-blue));
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             font-weight: 600;
+            font-size: 1rem;
             width: 100%;
-            margin-top: 15px;
-            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 8px 16px rgba(29, 181, 229, 0.25);
+            transition: all 0.3s ease;
         }
         .btn-login:hover {
-            background: linear-gradient(135deg, var(--itam-blue), var(--itam-cyan));
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(29, 181, 229, 0.4);
+            background: linear-gradient(135deg, #19a4d1, #085a8e);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(29, 181, 229, 0.35);
             color: white;
-        }
-        .input-group-text {
-            background-color: #ffffff;
-            border: 1px solid #e1ebf2;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -93,36 +138,38 @@
 <div class="container d-flex justify-content-center p-3">
     <div class="login-container flex-column flex-md-row">
         
-        <!-- Kiri: Area Branding dengan Logo Asli -->
+        <!-- Kiri: Area Branding -->
         <div class="login-left">
             <img src="/static/img/logo-itam.png" alt="ITAM PRO" style="width: 100%; max-width: 200px; height: auto; object-fit: contain; margin-bottom: 25px;">
-            <p class="text-muted fw-medium" style="font-size: 0.95rem; line-height: 1.6;">
-                Sistem Manajemen Aset IT Terpadu. Kelola infrastruktur jaringan, inventaris, dan kredensial Anda dalam satu brankas digital yang aman.
+            <p class="fw-medium" style="color: #085a8e; font-size: 0.95rem; line-height: 1.7;">
+                Sistem Manajemen Aset IT Terpadu.<br>Kelola infrastruktur jaringan, inventaris, dan kredensial Anda dalam satu brankas digital yang aman.
             </p>
         </div>
 
-        <!-- Kanan: Area Formulir Bersih -->
+        <!-- Kanan: Area Formulir -->
         <div class="login-right">
-            <h3 class="fw-bold mb-1 text-dark">Selamat Datang</h3>
-            <p class="mb-4 small text-muted">Silakan masuk menggunakan akun Anda.</p>
+            <h3 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.5px;">Selamat Datang</h3>
+            <p class="mb-4 small" style="color: #64748b;">Silakan masuk menggunakan akun Anda.</p>
 
             <form id="loginForm">
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-muted">Username</label>
-                    <input type="text" class="form-control rounded-3" id="inpUsername" required autocomplete="username">
-                </div>
-                
                 <div class="mb-4">
-                    <label class="form-label small fw-bold text-muted">Password</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control border-end-0 rounded-start-3" id="inpPassword" required autocomplete="current-password">
-                        <span class="input-group-text bg-transparent border-start-0 text-muted" id="togglePassword">
-                            <i class="bi bi-eye"></i>
-                        </span>
+                    <label class="form-label small fw-bold" style="color: #475569;">Username</label>
+                    <div class="input-group-custom">
+                        <input type="text" class="form-control" id="inpUsername" autocomplete="username" required>
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-login shadow-sm" id="btnSubmit">
+                <div class="mb-4">
+                    <label class="form-label small fw-bold" style="color: #475569;">Password</label>
+                    <div class="input-group-custom">
+                        <input type="password" class="form-control" id="inpPassword" autocomplete="current-password" required>
+                        <div class="input-icon" id="togglePassword">
+                            <i class="bi bi-eye-slash"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-login" id="btnSubmit">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Masuk ke Sistem
                 </button>
             </form>
@@ -131,18 +178,25 @@
 </div>
 
 <script>
-    // 1. Fitur Toggle Lihat/Sembunyikan Password
+    // 1. Toggle Mata Password
     const togglePassword = document.querySelector('#togglePassword');
     const passwordInput = document.querySelector('#inpPassword');
     
     togglePassword.addEventListener('click', function () {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
-        this.querySelector('i').classList.toggle('bi-eye');
-        this.querySelector('i').classList.toggle('bi-eye-slash');
+        const icon = this.querySelector('i');
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+        // Memberikan aksen warna saat mata terbuka
+        if(type === 'text') {
+            icon.classList.add('text-primary');
+        } else {
+            icon.classList.remove('text-primary');
+        }
     });
 
-    // 2. Logika Pengiriman Data Login (Tembak ke Backend JWT)
+    // 2. Logika Login
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault(); 
         
@@ -158,9 +212,7 @@
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData
             });
 
@@ -174,7 +226,7 @@
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
-                    window.location.href = '/'; // Arahkan ke Dashboard
+                    window.location.href = '/'; 
                 });
             } else {
                 Swal.fire('Akses Ditolak', data.detail || 'Username atau sandi salah!', 'error');
