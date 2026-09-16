@@ -196,7 +196,7 @@
         }
     });
 
-    // 2. Logika Login
+    // 2. Logika Pengiriman Data Login (Tembak ke Backend JSON)
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault(); 
         
@@ -205,15 +205,17 @@
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memvalidasi...';
         btn.disabled = true;
 
-        const formData = new URLSearchParams();
-        formData.append('username', document.getElementById('inpUsername').value);
-        formData.append('password', document.getElementById('inpPassword').value);
+        // Racik data menjadi JSON
+        const payload = {
+            username: document.getElementById('inpUsername').value,
+            password: document.getElementById('inpPassword').value
+        };
 
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData
+                headers: { 'Content-Type': 'application/json' }, // Wajib application/json
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
@@ -229,12 +231,13 @@
                     window.location.href = '/'; 
                 });
             } else {
-                Swal.fire('Akses Ditolak', data.detail || 'Username atau sandi salah!', 'error');
+                // Sekarang pesan error dari backend akan langsung tercetak sempurna di sini!
+                Swal.fire('Akses Ditolak', data.detail || 'Terjadi kesalahan kredensial', 'error');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         } catch (error) {
-            Swal.fire('Server Terputus', 'Tidak dapat menghubungi server otentikasi.', 'error');
+            Swal.fire('Server Terputus', 'Pastikan Uvicorn menyala dan router auth didaftarkan di main.py', 'error');
             btn.innerHTML = originalText;
             btn.disabled = false;
         }

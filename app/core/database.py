@@ -4,7 +4,11 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from app.core.config import settings
 
 # 1. Koneksi Dinamis menggunakan parameter DATABASE_URL dari .env
-engine = create_engine(settings.DATABASE_URL)
+engine = create_engine(
+    settings.DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=3600,
+)
 
 # 2. Pembuatan Sesi Database
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
