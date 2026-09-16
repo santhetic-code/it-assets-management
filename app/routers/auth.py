@@ -1,18 +1,23 @@
+from datetime import datetime
 import os
 import shutil
-from typing import List
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import CurrentUser, DbSession, get_audit_logger, require_super_admin
-from app.core.security import create_access_token, get_password_hash, verify_password
+from app.core.security import create_access_token, get_password_hash, verify_jwt_token, verify_password
 from app.models.domain import User
 from app.models.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services import auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+class LogoutRequest(BaseModel):
+    username: str
 
 
 class NewUserRequest(BaseModel):
@@ -46,6 +51,11 @@ def login(request_data: LoginRequest, response: Response, db: Session = Depends(
     if user.is_active is False or user.is_active == 0:
         raise HTTPException(status_code=403, detail="Akun Anda sedang dinonaktifkan.")
 
+    # Nyalakan radar online dan rekam waktu terakhir login
+    user.is_online = True
+    user.last_login = datetime.utcnow()
+    db.commit()
+
     # 4. Buat Tiket JWT (Toleransi jika full_name kosong)
     nama_tampil = user.full_name if user.full_name else user.username
     role_tampil = user.role if user.role else "Staff IT"
@@ -75,7 +85,36 @@ def login(request_data: LoginRequest, response: Response, db: Session = Depends(
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(
+    response: Response,
+    request: Request,
+    request_data: Optional[LogoutRequest] = None,
+    db: Session = Depends(get_db),
+):
+    # Matikan radar online di database
+    target_username = request_data.username if request_data and request_data.username else None
+    if not target_username:
+        token = request.cookies.get("access_token") or request.cookies.get("itam_session")
+        if token:
+            try:
+                payload = verify_jwt_token(token)
+                sub = payload.get("sub")
+                if str(sub).isdigit():
+                    u = db.query(User).filter(User.id == int(sub)).first()
+                    if u:
+                        target_username = u.username
+                else:
+                    target_username = payload.get("username") or sub
+            except Exception:
+                pass
+
+    if target_username:
+        user = db.query(User).filter(User.username == target_username).first()
+        if user:
+            user.is_online = False
+            db.commit()
+
+    # Hancurkan tiket sesi
     response.delete_cookie("access_token")
     response.delete_cookie("itam_session")
     return {"message": "Berhasil Logout"}

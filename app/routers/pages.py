@@ -72,7 +72,10 @@ def login_submit(
     # 3. Jika berhasil: buat RedirectResponse ke Dashboard (302)
     response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
-    # 4. Set Cookie Sesi JWT aman
+    # 4. Set radar online & Cookie Sesi JWT aman
+    user.is_online = True
+    db.commit()
+
     access_token = create_access_token(
         data={"sub": str(user.id), "username": user.username, "role": user.role}
     )
@@ -88,8 +91,23 @@ def login_submit(
 
 
 @router.get("/logout")
-def logout_action():
+def logout_action(request: Request, db: DbSession):
+    token = request.cookies.get("access_token") or request.cookies.get("itam_session")
+    if token:
+        try:
+            payload = verify_jwt_token(token)
+            sub = payload.get("sub")
+            if str(sub).isdigit():
+                u = db.query(domain.User).filter(domain.User.id == int(sub)).first()
+            else:
+                u = db.query(domain.User).filter(domain.User.username == sub).first()
+            if u:
+                u.is_online = False
+                db.commit()
+        except Exception:
+            pass
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    response.delete_cookie("access_token")
     response.delete_cookie("itam_session")
     return response
 

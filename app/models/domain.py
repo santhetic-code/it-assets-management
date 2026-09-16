@@ -16,11 +16,22 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
-    full_name = Column(String(100), nullable=False)  # TAMBAHAN: Nama Lengkap Asli
+    full_name = Column(String(100), nullable=False)
+
+    # --- 3 KOLOM BARU UNTUK PROFIL LENGKAP ---
+    email = Column(String(100), nullable=True)
+    phone = Column(String(20), nullable=True)
+    department = Column(String(50), nullable=True)
+
     password_hash = Column(String(255), nullable=False)
-    role = Column(String(50), nullable=False)        # Super Admin, Staff IT, Viewer
+    role = Column(String(50), nullable=False)
     avatar = Column(String(255), nullable=True)
-    is_active = Column(Boolean, default=True)        # TAMBAHAN: Status Aktif/Nonaktif (Soft Delete)
+    is_active = Column(Boolean, default=True)
+    is_online = Column(Boolean, default=False)
+
+    # --- KOLOM BARU UNTUK AUDIT KEAMANAN ---
+    last_login = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, default=get_utc_now)
 
     # Relasi ke log aktivitas

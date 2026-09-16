@@ -237,15 +237,8 @@
                             <!-- Menarik Role (Jabatan) dari session -->
                             <span class="text-primary fw-semibold" style="font-size: 0.75rem;">{{ current_user.role }}</span>
                         </div>
-                        {% if current_user and current_user.profile_picture %}
-                        <img src="{{ current_user.profile_picture }}" alt="User" class="rounded-circle shadow-sm" width="45" height="45" style="object-fit: cover;">
-                        {% elif current_user and current_user.username %}
-                        <div class="rounded-circle shadow-sm bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 45px; height: 45px; font-size: 1.2rem;">
-                            {{ current_user.username[0]|upper }}
-                        </div>
-                        {% else %}
-                        <img src="/static/avatars/avatar_admin_20260717154446.jpg" alt="User" class="rounded-circle shadow-sm" width="45" height="45" style="object-fit: cover;">
-                        {% endif %}
+                        {% set avatar_url = current_user.avatar if current_user.avatar else 'https://ui-avatars.com/api/?name=' ~ (current_user.full_name or current_user.username) ~ '&background=E6F4FA&color=0A6BA8&bold=true' %}
+                        <img src="{{ avatar_url }}" class="rounded-circle shadow-sm border border-2 border-white" width="42" height="42" style="object-fit: cover;" alt="User Avatar">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-3">
                         <li><h6 class="dropdown-header text-dark fw-bold">Akun Saya</h6></li>
@@ -366,8 +359,12 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        // Menembak API logout di backend
-                        const res = await fetch('/api/auth/logout', { method: 'POST' });
+                        // Menembak API logout dan mengirimkan username
+                        const res = await fetch('/api/auth/logout', { 
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username: "{{ current_user.username }}" })
+                        });
                         if (res.ok) {
                             // Arahkan kembali ke halaman Login
                             window.location.href = '/login';
