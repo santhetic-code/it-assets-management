@@ -8,7 +8,7 @@
 
 <div class="row g-4">
     <!-- KOLOM KIRI: Profil & Ganti Kata Sandi -->
-    <div class="col-md-5 col-lg-4">
+    <div class="col-md-5 col-lg-4 {% if current_user.role != 'Super Admin' %}col-md-8 col-lg-6 mx-auto{% endif %}">
         <div class="card-custom h-100">
             <!-- Info Profil Dinamis -->
             <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
@@ -38,7 +38,7 @@
                 </div>
                 
                 <!-- TOMBOL LOGOUT -->
-                <a href="/logout" class="btn btn-sm btn-outline-danger shadow-sm">
+                <a href="#" onclick="confirmLogout(event)" class="btn btn-sm btn-outline-danger shadow-sm">
                     <i class="bi bi-power"></i> Logout
                 </a>
             </div>
@@ -54,57 +54,54 @@
             {% endif %}
 
             <!-- Form Ganti Sandi -->
-            <form action="/change-password" method="POST">
+            <form id="formChangePassword">
                 <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
-    <div class="mb-3">
-        <label class="form-label small fw-bold text-muted">Kata Sandi Lama</label>
-        <div class="input-group">
-            <!-- Atribut placeholder dihapus -->
-            <input type="password" id="old_password" name="old_password" class="form-control bg-light" required>
-            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('old_password', this)">
-                <i class="bi bi-eye"></i>
-            </button>
-        </div>
-    </div>
-    
-    <div class="mb-3">
-        <label class="form-label small fw-bold text-muted">Kata Sandi Baru</label>
-        <div class="input-group">
-            <!-- Atribut placeholder dihapus -->
-            <input type="password" id="new_password" name="new_password" class="form-control bg-light" required>
-            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('new_password', this)">
-                <i class="bi bi-eye"></i>
-            </button>
-        </div>
-    </div>
-    
-    <div class="mb-4">
-        <label class="form-label small fw-bold text-muted">Konfirmasi Kata Sandi Baru</label>
-        <div class="input-group">
-            <!-- Atribut placeholder dihapus -->
-            <input type="password" id="confirm_password" name="confirm_password" class="form-control bg-light" required>
-            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('confirm_password', this)">
-                <i class="bi bi-eye"></i>
-            </button>
-        </div>
-    </div>
-    
-    <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-arrow-repeat me-1"></i> Perbarui Sandi</button>
-</form>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Kata Sandi Lama</label>
+                    <div class="input-group">
+                        <input type="password" id="inpOldPass" name="old_password" class="form-control bg-light" required>
+                        <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('inpOldPass', this)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Kata Sandi Baru</label>
+                    <div class="input-group">
+                        <input type="password" id="inpNewPass" name="new_password" class="form-control bg-light" required>
+                        <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('inpNewPass', this)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">Konfirmasi Kata Sandi Baru</label>
+                    <div class="input-group">
+                        <input type="password" id="inpConfPass" name="confirm_password" class="form-control bg-light" required>
+                        <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('inpConfPass', this)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-arrow-repeat me-1"></i> Perbarui Sandi</button>
+            </form>
         </div>
     </div>
 
+    <!-- Cek apakah yang sedang login adalah Super Admin -->
+    {% if current_user.role == 'Super Admin' %}
     <!-- KOLOM KANAN: Tabel Daftar Pengguna -->
     <div class="col-md-7 col-lg-8">
-        <div class="card-custom h-100">
+        <div class="card card-custom border-top border-primary border-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h6 class="fw-bold text-dark mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Daftar Pengguna Sistem</h6>
-                  <!-- Tombol pemicu Modal (Hanya muncul jika bukan Viewer) -->
-                {% if current_user.role == "Super Admin" %}
+                <!-- Tombol pemicu Modal -->
                 <button class="btn btn-sm btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
                     <i class="bi bi-person-plus-fill me-1"></i> Tambah User
                 </button>
-                {% endif %}
             </div>
 
             <div class="table-responsive">
@@ -136,27 +133,18 @@
                             <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ u.role }}</span></td>
                             <td><span class="text-success fw-bold small"><i class="bi bi-check-circle-fill me-1"></i> Aktif</span></td>
                             <td class="text-end">
-                                <!-- Hanya Super Admin yang boleh Edit & Hapus pengguna lain -->
-                                {% if current_user.role == "Super Admin" %}
-                                    
-                                    <!-- Tombol Edit (Sembunyikan jika itu akun developer) -->
-                                    {% if u.username != "developer" %}
-                                    <button class="btn btn-sm btn-light text-primary border me-1" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ u.id }}" title="Ubah Role"><i class="bi bi-pencil-square"></i></button>
-                                    {% else %}
-                                    <span class="badge bg-secondary border me-1" title="Akun Paten System"><i class="bi bi-shield-lock-fill"></i> Paten</span>
-                                    {% endif %}
-                                    
-                                    <!-- Tombol Hapus (Aman dari hapus diri sendiri & aman dari hapus developer) -->
-                                    {% if u.username != current_user.username and u.username != "developer" %}
-                                    <form action="/delete-user/{{ u.id }}" method="POST" class="d-inline" onsubmit="return confirm('PERINGATAN: Yakin ingin menghapus akun {{ u.username }} selamanya?');">
-                                        <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
-                                        <button type="submit" class="btn btn-sm btn-light text-danger border" title="Hapus Akun"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                    {% endif %}
-                                    
+                                <!-- Tombol Edit (Sembunyikan jika itu akun developer) -->
+                                {% if u.username != "developer" %}
+                                <button class="btn btn-sm btn-light text-primary border me-1" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ u.id }}" title="Ubah Role"><i class="bi bi-pencil-square"></i></button>
                                 {% else %}
-                                    <!-- Jika login sebagai Viewer/Staff -->
-                                    <span class="badge bg-light text-muted border">Terkunci</span>
+                                <span class="badge bg-secondary border me-1" title="Akun Paten System"><i class="bi bi-shield-lock-fill"></i> Paten</span>
+                                {% endif %}
+                                
+                                <!-- Tombol Hapus (Aman dari hapus diri sendiri & aman dari hapus developer) -->
+                                {% if u.username != current_user.username and u.username != "developer" %}
+                                <button type="button" class="btn btn-sm btn-light text-danger border" title="Hapus Akun" onclick="deleteAccount({{ u.id }}, '{{ u.username }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                                 {% endif %}
                             </td>
                         </tr>
@@ -171,8 +159,10 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
+{% if current_user.role == 'Super Admin' %}
 <!-- MODAL TAMBAH USER -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -182,18 +172,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
-            <!-- Form mengarah ke route /add-user yang baru Anda buat -->
-            <form action="/add-user" method="POST">
+            <!-- Form Tambah Pengguna Baru -->
+            <form id="formAddUser">
                 <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
                 <div class="modal-body px-4 py-4">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Username</label>
-                        <input type="text" name="username" class="form-control bg-light" placeholder="Contoh: staf_it_01" required autocomplete="off">
+                        <input type="text" id="inpNewUsername" name="username" class="form-control bg-light" placeholder="Contoh: staf_it_01" required autocomplete="off">
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Hak Akses (Role)</label>
-                        <select name="role" class="form-select bg-light" required>
+                        <select id="inpNewRole" name="role" class="form-select bg-light" required>
                             <option value="" disabled selected>Pilih hak akses...</option>
                             <option value="Super Admin">Super Admin</option>
                             <option value="Staff IT">Staff IT</option>
@@ -205,11 +195,11 @@
                         <label class="form-label small fw-bold text-muted">Kata Sandi Awal</label>
                         <!-- Bungkus dengan input-group agar tombol mata bisa menyatu di kanan -->
                         <div class="input-group">
-                            <!-- ID harus unik, kita beri nama new_user_password -->
-                            <input type="password" id="new_user_password" name="password" class="form-control bg-light" required>
+                            <!-- ID harus unik, kita beri nama inpNewPassword -->
+                            <input type="password" id="inpNewPassword" name="password" class="form-control bg-light" required>
                             
                             <!-- Tombol pemicu Javascript -->
-                            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('new_user_password', this)">
+                            <button class="btn btn-outline-secondary bg-light" type="button" onclick="togglePassword('inpNewPassword', this)">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </div>
@@ -227,6 +217,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 {% endblock %}
 
@@ -252,25 +243,19 @@
 <div class="modal fade" id="avatarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow">
-            <!-- PENTING: enctype="multipart/form-data" wajib ada untuk kirim file -->
-            <form action="/update-avatar" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
-                <div class="modal-header border-bottom-0 pb-0 pt-3 px-3">
-                    <h6 class="modal-title fw-bold"><i class="bi bi-image text-primary me-2"></i>Upload Foto</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body px-3 py-3">
-                    <input type="file" name="avatar_file" class="form-control form-control-sm bg-light" accept="image/png, image/jpeg, image/jpg" required>
-                    <div class="form-text small mt-2">Format: JPG/PNG.</div>
-                </div>
-                <div class="modal-footer border-top-0 pb-3 px-3 pt-0">
-                    <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Simpan Foto</button>
-                </div>
-            </form>
+            <div class="modal-header border-bottom-0 pb-0 pt-3 px-3">
+                <h6 class="modal-title fw-bold"><i class="bi bi-image text-primary me-2"></i>Upload Foto</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-3 py-3">
+                <input type="file" id="inpAvatarUpload" name="avatar_file" class="form-control form-control-sm bg-light" accept="image/png, image/jpeg, image/jpg" required>
+                <div class="form-text small mt-2">Format: JPG/PNG. Foto akan langsung diunggah setelah dipilih.</div>
+            </div>
         </div>
     </div>
 </div>
 
+{% if current_user.role == 'Super Admin' %}
 <!-- MODAL EDIT ROLE (Dihasilkan otomatis untuk tiap user) -->
 {% for u in users %}
 <div class="modal fade" id="editRoleModal{{ u.id }}" tabindex="-1" aria-hidden="true">
@@ -298,6 +283,7 @@
     </div>
 </div>
 {% endfor %}
+{% endif %}
 
 <!-- SCRIPT INTERCEPTOR FORM (Wajib diletakkan DI DALAM blok Jinja2) -->
 <script>
@@ -305,6 +291,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const forms = document.querySelectorAll("form");
     
     forms.forEach(form => {
+        if (form.id === "formAddUser" || form.id === "formChangePassword") return;
         form.addEventListener("submit", async function(e) {
             e.preventDefault(); // WAJIB: Hentikan browser pindah ke layar putih JSON
             
@@ -358,6 +345,138 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
+});
+
+function deleteAccount(userId, username) {
+    Swal.fire({
+        title: `Cabut Akses ${username}?`,
+        text: "Akun yang dihapus tidak akan bisa login kembali ke sistem ITAM Pro.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash"></i> Ya, Hapus',
+        cancelButtonText: 'Batal'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                // Menembak endpoint delete di backend
+                const response = await fetch(`/api/auth/users/${userId}`, { 
+                    method: 'DELETE' 
+                });
+                
+                const data = await response.json();
+
+                if (response.ok) {
+                    Swal.fire('Terhapus!', 'Akun telah berhasil dicabut dari sistem.', 'success')
+                    .then(() => window.location.reload()); // Refresh tabel
+                } else {
+                    // Jika yang dihapus adalah akun developer, pesan error dari backend akan muncul di sini
+                    Swal.fire('Gagal', data.detail, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Terjadi masalah pada server.', 'error');
+            }
+        }
+    });
+}
+
+// Agar JS tahu siapa yang sedang login saat ini
+const sessionUsername = "{{ current_user.username }}";
+
+// 1. FUNGSI TAMBAH USER BARU
+// (Pastikan tag <form> pada modal tambah user Anda memiliki id="formAddUser")
+$('#formAddUser').on('submit', async function(e) {
+    e.preventDefault();
+    const payload = {
+        username: $('#inpNewUsername').val(), // Ganti ID sesuai input username Anda
+        role: $('#inpNewRole').val(),         // Ganti ID sesuai select role Anda
+        password: $('#inpNewPassword').val()  // Ganti ID sesuai input password Anda
+    };
+
+    try {
+        const res = await fetch('/api/auth/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            Swal.fire('Berhasil!', 'Pengguna baru telah ditambahkan.', 'success')
+            .then(() => window.location.reload());
+        } else {
+            Swal.fire('Gagal', data.detail, 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Koneksi ke API terputus.', 'error');
+    }
+});
+
+// 2. FUNGSI GANTI PASSWORD
+// (Pastikan tag <form> ganti sandi Anda memiliki id="formChangePassword")
+$('#formChangePassword').on('submit', async function(e) {
+    e.preventDefault();
+    
+    const oldPass = $('#inpOldPass').val(); // Sesuaikan ID
+    const newPass = $('#inpNewPass').val(); // Sesuaikan ID
+    const confPass = $('#inpConfPass').val(); // Sesuaikan ID
+
+    if (newPass !== confPass) {
+        Swal.fire('Validasi Gagal', 'Kata sandi baru dan konfirmasi tidak cocok!', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/auth/change-password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: sessionUsername,
+                old_password: oldPass,
+                new_password: newPass
+            })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            Swal.fire('Berhasil!', 'Kata sandi Anda telah diperbarui.', 'success')
+            .then(() => {
+                $('#formChangePassword')[0].reset();
+            });
+        } else {
+            Swal.fire('Gagal', data.detail, 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
+    }
+});
+
+// 3. FUNGSI UPLOAD AVATAR
+// (Pastikan input file Anda memiliki id="inpAvatarUpload")
+$('#inpAvatarUpload').on('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const res = await fetch(`/api/auth/users/${sessionUsername}/avatar`, {
+            method: 'POST',
+            body: formData // File tidak memakai JSON.stringify
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            Swal.fire('Berhasil!', 'Foto profil diperbarui.', 'success')
+            .then(() => window.location.reload());
+        } else {
+            Swal.fire('Gagal', data.detail, 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Gagal mengupload gambar.', 'error');
+    }
 });
 </script>
 {% endblock %}
