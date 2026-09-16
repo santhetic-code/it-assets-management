@@ -7,47 +7,28 @@
 
 {% block content %}
 <style>
-    /* ITAM PRO SAAS STYLES */
-    .saas-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 4px 24px rgba(10, 107, 168, 0.06);
-        background: #ffffff;
-    }
-    .avatar-wrapper { position: relative; width: 90px; height: 90px; }
+    /* SAAS UI STYLES */
+    .saas-card { border: none; border-radius: 16px; box-shadow: 0 4px 24px rgba(10, 107, 168, 0.05); background: #ffffff; }
+    .avatar-wrapper { position: relative; width: 85px; height: 85px; }
     .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 3px solid #e2e8f0; }
     
-    /* Nav Tabs Custom */
-    .nav-tabs-custom {
-        border-bottom: 2px solid #f1f5f9;
-        gap: 1rem;
-    }
-    .nav-tabs-custom .nav-link {
-        border: none;
-        color: #64748b;
-        font-weight: 600;
-        padding: 1rem 1.5rem;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s;
-    }
+    /* Horizontal Tabs */
+    .nav-tabs-custom { border-bottom: 2px solid #f1f5f9; gap: 1rem; }
+    .nav-tabs-custom .nav-link { border: none; color: #64748b; font-weight: 600; padding: 1rem 1.5rem; border-bottom: 3px solid transparent; transition: all 0.3s; }
     .nav-tabs-custom .nav-link:hover { color: #0A6BA8; }
-    .nav-tabs-custom .nav-link.active {
-        color: #0A6BA8;
-        background: transparent;
-        border-bottom: 3px solid #1DB5E5;
-    }
+    .nav-tabs-custom .nav-link.active { color: #0A6BA8; background: transparent; border-bottom: 3px solid #1DB5E5; }
 
-    /* Input Sleek */
+    /* Input Fields */
     .input-icon-group { position: relative; }
     .input-icon-group .form-control { padding-left: 2.8rem; border-radius: 10px; border: 1px solid #cbd5e1; padding-top: 0.7rem; padding-bottom: 0.7rem; }
     .input-icon-group .form-control:focus { border-color: #1DB5E5; box-shadow: 0 0 0 3px rgba(29, 181, 229, 0.15); }
     .input-icon-group .bi-left { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1.1rem; }
 
-    /* Password Strength Meter */
+    /* Password Strength */
     .strength-meter { height: 6px; border-radius: 3px; background-color: #e2e8f0; margin-top: 8px; overflow: hidden; }
     .strength-meter-fill { height: 100%; width: 0; transition: all 0.3s ease; }
+    
     .btn-itam-primary { background: linear-gradient(135deg, #1DB5E5, #0A6BA8); color: white; border: none; border-radius: 10px; font-weight: 600; padding: 10px 24px; }
-    .btn-itam-primary:hover { background: linear-gradient(135deg, #0A6BA8, #1DB5E5); color: white; transform: translateY(-2px); }
 </style>
 
 <!-- HEADER PROFIL (OVERVIEW) -->
@@ -67,7 +48,7 @@
                 <span class="fw-bold text-dark"><i class="bi bi-building text-primary me-1"></i> {{ current_user.department or 'Belum diatur' }}</span>
             </div>
             <div>
-                <p class="text-muted small fw-bold mb-1">Terakhir Login</p>
+                <p class="text-muted small fw-bold mb-1">Aktivitas Terakhir</p>
                 <span class="text-success fw-bold small"><i class="bi bi-clock-history me-1"></i> 
                     {{ current_user.last_login.strftime('%d %b %Y, %H:%M') if current_user.last_login else 'Saat ini' }}
                 </span>
@@ -91,7 +72,7 @@
     {% endif %}
 </ul>
 
-<div class="tab-content" id="accountTabsContent">
+<div class="tab-content">
     
     <!-- TAB 1: PROFIL UTAMA -->
     <div class="tab-pane fade show active" id="tab-profil">
@@ -121,7 +102,7 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted">Nomor WhatsApp / Telegram</label>
+                        <label class="form-label small fw-bold text-muted">No. WhatsApp / Telegram</label>
                         <div class="input-icon-group">
                             <i class="bi bi-telephone bi-left"></i>
                             <input type="text" class="form-control bg-light" value="{{ current_user.phone or '-' }}" readonly>
@@ -129,7 +110,7 @@
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-top">
-                    <small class="text-muted"><i class="bi bi-info-circle text-primary me-1"></i> Fitur edit profil secara mandiri akan segera hadir di pembaruan selanjutnya.</small>
+                    <small class="text-muted"><i class="bi bi-info-circle text-primary me-1"></i> Edit profil secara mandiri akan hadir di pembaruan selanjutnya.</small>
                 </div>
             </div>
         </div>
@@ -142,7 +123,7 @@
                 <div class="row">
                     <div class="col-lg-6">
                         <h5 class="fw-bold text-dark mb-1">Perbarui Kata Sandi</h5>
-                        <p class="text-muted small mb-4">Gunakan kombinasi yang kuat untuk melindungi akun Anda.</p>
+                        <p class="text-muted small mb-4">Gunakan kombinasi yang kuat untuk melindungi aset PT XML TRONIK.</p>
                         
                         <form id="formChangePassword">
                             <div class="mb-4">
@@ -156,20 +137,19 @@
                                 <label class="form-label small fw-bold text-muted">Sandi Baru</label>
                                 <div class="input-icon-group">
                                     <i class="bi bi-lock-fill bi-left text-primary"></i>
-                                    <input type="password" class="form-control" id="inpNewPass" required>
+                                    <input type="password" class="form-control" id="inpNewPass" required minlength="8">
                                 </div>
-                                <!-- Password Strength Meter -->
                                 <div class="strength-meter"><div class="strength-meter-fill" id="meterFill"></div></div>
                                 <div class="d-flex justify-content-between mt-1">
                                     <small id="meterText" class="text-muted fw-bold" style="font-size: 0.7rem;">Kekuatan Sandi</small>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Min. 8 Karakter, 1 Angka</small>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Min. 8 Karakter</small>
                                 </div>
                             </div>
                             <div class="mb-4 mt-3">
                                 <label class="form-label small fw-bold text-muted">Konfirmasi Sandi Baru</label>
                                 <div class="input-icon-group">
                                     <i class="bi bi-check2-circle bi-left"></i>
-                                    <input type="password" class="form-control" id="inpConfPass" required>
+                                    <input type="password" class="form-control" id="inpConfPass" required minlength="8">
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-itam-primary" id="btnSavePass">Simpan Kata Sandi</button>
@@ -180,18 +160,18 @@
         </div>
     </div>
 
-    <!-- TAB 3: MANAJEMEN PENGGUNA (EKSKLUSIF SUPER ADMIN) -->
+    <!-- TAB 3: MANAJEMEN PENGGUNA -->
     {% if current_user.role == 'Super Admin' %}
     <div class="tab-pane fade" id="tab-pengguna">
         <div class="card saas-card border-top border-primary border-4">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h5 class="fw-bold text-dark mb-1">Direktori Pengguna</h5>
-                        <p class="text-muted small mb-0">Kelola akses, reset sandi, dan pantau aktivitas login staf.</p>
+                        <h5 class="fw-bold text-dark mb-1"><i class="bi bi-people-fill text-primary me-2"></i> Direktori Pengguna</h5>
+                        <p class="text-muted small mb-0">Kelola akses dan pantau aktivitas login staf.</p>
                     </div>
-                    <button class="btn btn-itam-primary rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddUser">
-                        <i class="bi bi-person-plus-fill me-1"></i> Tambah Staf Baru
+                    <button class="btn btn-itam-primary rounded-pill btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddUser">
+                        <i class="bi bi-person-plus-fill me-1"></i> Tambah Staf
                     </button>
                 </div>
                 
@@ -213,11 +193,11 @@
                                     <div class="d-flex align-items-center gap-3">
                                         {% set row_avatar = u.avatar if u.avatar else 'https://ui-avatars.com/api/?name=' ~ (u.full_name or u.username) ~ '&background=E6F4FA&color=0A6BA8&bold=true' %}
                                         <div class="position-relative">
-                                            <img src="{{ row_avatar }}" class="rounded-circle border border-2 border-white shadow-sm" width="45" height="45" style="object-fit: cover;" alt="Avatar">
+                                            <img src="{{ row_avatar }}" class="rounded-circle border border-2 border-white shadow-sm" width="40" height="40" style="object-fit: cover;">
                                             {% if u.is_online %}
-                                                <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-white rounded-circle" title="Online"></span>
+                                                <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-white rounded-circle" style="transform: translate(2px, -2px);"></span>
                                             {% else %}
-                                                <span class="position-absolute bottom-0 end-0 p-1 bg-secondary border border-2 border-white rounded-circle" title="Offline"></span>
+                                                <span class="position-absolute bottom-0 end-0 p-1 bg-secondary border border-2 border-white rounded-circle" style="transform: translate(2px, -2px);"></span>
                                             {% endif %}
                                         </div>
                                         <div>
@@ -229,9 +209,9 @@
                                 <td><span class="text-secondary fw-medium small">{{ u.department or '-' }}</span></td>
                                 <td>
                                     {% if u.role == 'Super Admin' %}
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">{{ u.role }}</span>
+                                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">{{ u.role }}</span>
                                     {% else %}
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3">{{ u.role }}</span>
+                                        <span class="badge bg-info-subtle text-info rounded-pill px-3">{{ u.role }}</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -243,8 +223,7 @@
                                     {% if u.username == 'developer' %}
                                         <span class="badge bg-dark rounded-pill px-3 py-2"><i class="bi bi-shield-lock-fill me-1"></i> Paten</span>
                                     {% else %}
-                                        <!-- Tombol Granular Masa Depan: Edit & Suspend -->
-                                        <button class="btn btn-sm btn-light text-primary me-1" title="Edit Data" onclick="Swal.fire('Fitur Segera Hadir', 'Fitur edit profil staf sedang dikembangkan.', 'info')"><i class="bi bi-pencil-square"></i></button>
+                                        <button class="btn btn-sm btn-light text-primary me-1" title="Edit Profil" onclick="Swal.fire('Info', 'Fitur Edit segera hadir.', 'info')"><i class="bi bi-pencil-square"></i></button>
                                         <button class="btn btn-sm btn-light text-danger" title="Cabut Akses" onclick="deleteAccount({{ u.id }}, '{{ u.username }}')"><i class="bi bi-trash"></i></button>
                                     {% endif %}
                                 </td>
@@ -257,7 +236,7 @@
         </div>
     </div>
 
-    <!-- Modal Tambah User (Diperbarui) -->
+    <!-- Modal Tambah User -->
     <div class="modal fade" id="modalAddUser" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content saas-card">
@@ -281,8 +260,8 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted">Kata Sandi Awal</label>
-                                <input type="password" class="form-control" id="inpNewPassword" required>
+                                <label class="form-label small fw-bold text-muted">Sandi Awal</label>
+                                <input type="password" class="form-control" id="inpNewPassword" required minlength="8">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-itam-primary w-100 mt-4">Daftarkan Staf</button>
@@ -297,7 +276,7 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Library DataTables untuk Search Bar Tabel Pengguna -->
+<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
@@ -305,12 +284,10 @@
     const sessionUsername = "{{ current_user.username }}";
 
     $(document).ready(function() {
-        // Inisialisasi DataTables (Search Bar & Pagination)
         if($('#tableUsers').length) {
             $('#tableUsers').DataTable({
                 language: { search: "_INPUT_", searchPlaceholder: "Cari staf atau departemen..." },
-                pageLength: 5,
-                lengthChange: false
+                pageLength: 5, lengthChange: false
             });
         }
 
@@ -318,11 +295,10 @@
         $('#inpNewPass').on('input', function() {
             const val = $(this).val();
             let strength = 0;
-            
-            if (val.length >= 8) strength += 1; // Minimal 8 karakter
-            if (val.match(/[A-Z]/)) strength += 1; // Ada huruf besar
-            if (val.match(/[0-9]/)) strength += 1; // Ada angka
-            if (val.match(/[^a-zA-Z0-9]/)) strength += 1; // Ada simbol spesial
+            if (val.length >= 8) strength += 1;
+            if (val.match(/[A-Z]/)) strength += 1;
+            if (val.match(/[0-9]/)) strength += 1;
+            if (val.match(/[^a-zA-Z0-9]/)) strength += 1;
 
             const meter = $('#meterFill');
             const text = $('#meterText');
@@ -336,31 +312,22 @@
             } else if (strength === 2) {
                 meter.css({ 'width': '50%', 'background-color': '#ffc107' });
                 text.text('Sedang').addClass('text-warning').removeClass('text-danger text-success');
-            } else if (strength === 3) {
-                meter.css({ 'width': '75%', 'background-color': '#1DB5E5' });
-                text.text('Kuat').addClass('text-success').removeClass('text-danger text-warning');
-            } else if (strength >= 4) {
+            } else if (strength >= 3) {
                 meter.css({ 'width': '100%', 'background-color': '#198754' });
                 text.text('Sangat Kuat').addClass('text-success').removeClass('text-danger text-warning');
             }
         });
     });
 
-    // FUNGSI GANTI KATA SANDI
+    // FUNGSI UBAH SANDI
     $('#formChangePassword').on('submit', async function(e) {
         e.preventDefault();
         const oldPass = $('#inpOldPass').val();
         const newPass = $('#inpNewPass').val();
         const confPass = $('#inpConfPass').val();
 
-        if (newPass !== confPass) {
-            Swal.fire('Validasi Gagal', 'Kata sandi baru dan konfirmasi tidak cocok!', 'warning');
-            return;
-        }
-        if (newPass.length < 8) {
-            Swal.fire('Validasi Gagal', 'Kata sandi minimal harus 8 karakter.', 'warning');
-            return;
-        }
+        if (newPass !== confPass) { Swal.fire('Gagal', 'Sandi baru tidak cocok!', 'warning'); return; }
+        if (newPass.length < 8) { Swal.fire('Gagal', 'Sandi minimal 8 karakter.', 'warning'); return; }
 
         const btn = $('#btnSavePass');
         btn.prop('disabled', true).html('<i class="spinner-border spinner-border-sm me-2"></i>Menyimpan...');
@@ -372,21 +339,14 @@
                 body: JSON.stringify({ username: sessionUsername, old_password: oldPass, new_password: newPass })
             });
             const data = await res.json();
-
             if (res.ok) {
-                Swal.fire('Berhasil!', 'Sandi berhasil diperbarui.', 'success').then(() => {
+                Swal.fire('Berhasil!', 'Sandi diperbarui.', 'success').then(() => {
                     $('#formChangePassword')[0].reset();
                     $('#meterFill').css('width', '0');
-                    $('#meterText').text('Kekuatan Sandi').removeClass('text-danger text-warning text-success');
                 });
-            } else {
-                Swal.fire('Gagal', data.detail, 'error');
-            }
-        } catch (error) {
-            Swal.fire('Error', 'Kesalahan koneksi.', 'error');
-        } finally {
-            btn.prop('disabled', false).html('<i class="bi bi-arrow-clockwise me-2"></i>Perbarui Sandi');
-        }
+            } else { Swal.fire('Gagal', data.detail, 'error'); }
+        } catch (error) { Swal.fire('Error', 'Kesalahan koneksi.', 'error'); }
+        finally { btn.prop('disabled', false).text('Simpan Kata Sandi'); }
     });
 
     // FUNGSI TAMBAH USER
@@ -405,13 +365,13 @@
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
-                Swal.fire('Berhasil!', 'Staf baru ditambahkan.', 'success').then(() => window.location.reload());
+                Swal.fire('Berhasil!', 'Staf baru berhasil ditambahkan.', 'success').then(() => window.location.reload());
             } else {
                 const data = await res.json();
                 Swal.fire('Gagal', data.detail, 'error');
             }
         } catch (error) {
-            Swal.fire('Error', 'Koneksi terputus.', 'error');
+            Swal.fire('Error', 'Koneksi terputus ke server.', 'error');
         }
     });
 
@@ -419,7 +379,7 @@
     function deleteAccount(userId, username) {
         Swal.fire({
             title: `Cabut Akses ${username}?`,
-            text: "Akun ini akan dicabut permanen.",
+            text: "Akun ini akan dicabut permanen dari sistem.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
@@ -430,13 +390,13 @@
                 try {
                     const response = await fetch(`/api/auth/users/${userId}`, { method: 'DELETE' });
                     if (response.ok) {
-                        Swal.fire('Terhapus!', 'Akses dicabut.', 'success').then(() => window.location.reload());
+                        Swal.fire('Terhapus!', 'Akses staf berhasil dicabut.', 'success').then(() => window.location.reload());
                     } else {
                         const data = await response.json();
                         Swal.fire('Gagal', data.detail, 'error');
                     }
                 } catch (error) {
-                    Swal.fire('Error', 'Masalah server.', 'error');
+                    Swal.fire('Error', 'Terjadi masalah pada server.', 'error');
                 }
             }
         });

@@ -7,7 +7,14 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import CurrentUser, DbSession, get_audit_logger, require_super_admin
+from app.core.deps import (
+    CurrentUser,
+    DbSession,
+    get_audit_logger,
+    get_current_super_admin,
+    get_current_user,
+    require_super_admin,
+)
 from app.core.security import create_access_token, get_password_hash, verify_jwt_token, verify_password
 from app.models.domain import User
 from app.models.schemas.user import UserCreate, UserResponse, UserUpdate
@@ -133,9 +140,9 @@ def read_users(db: DbSession):
 
 
 # ==========================================
-# API 1: TAMBAH PENGGUNA BARU
+# API 1: TAMBAH PENGGUNA BARU (TERKUNCI)
 # ==========================================
-@router.post("/users")
+@router.post("/users", dependencies=[Depends(get_current_super_admin)])
 def create_new_user(data: NewUserRequest, db: Session = Depends(get_db)):
     # Cek apakah username sudah dipakai
     user_exist = db.query(User).filter(User.username == data.username).first()
@@ -163,7 +170,10 @@ def update_user(user_id: int, user_data: UserUpdate, db: DbSession):
     return auth_service.update_user(db, user_id, user_data)
 
 
-@router.delete("/users/{user_id}")
+# ==========================================
+# API: HAPUS PENGGUNA (TERKUNCI)
+# ==========================================
+@router.delete("/users/{user_id}", dependencies=[Depends(get_current_super_admin)])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     # 1. Cari user di database berdasarkan ID
     user = db.query(User).filter(User.id == user_id).first()
