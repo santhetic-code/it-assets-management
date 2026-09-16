@@ -4,15 +4,15 @@ from app.models.domain import User
 
 db = SessionLocal()
 
-# Cari user dengan username 'developer'
+# Mencari akun Anda
 user = db.query(User).filter(User.username == "developer").first()
 
 if user:
-    # Update password menjadi 'admin123' dengan enkripsi baru
-    user.password_hash = get_password_hash("admin123")
+    # Mengunci password Anda dengan mesin enkripsi baru
+    user.password_hash = get_password_hash("XML01022007")
     db.commit()
-    print("Berhasil! Password akun 'developer' sekarang adalah: admin123")
+    print("Berhasil! Sistem sekarang mengenali password: XML01022007")
 else:
-    print("Gagal: User 'developer' tidak ditemukan di database.")
+    print("Gagal: User tidak ditemukan.")
 
 db.close()
