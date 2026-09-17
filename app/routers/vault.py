@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.core.database import get_db
+from app.core.deps import get_current_user, require_super_admin
 from app.models.domain import Vault, VaultUserAccess, User
 from app.models.schemas.vault import VaultCreate, VaultResponse, DecryptResponse, VaultAccessToggle
-from app.core.deps import get_current_user, require_super_admin
-from app.core.security import encrypt_vault_data, decrypt_vault_data
+# Import mesin enkripsi kita!
+from app.core.security import encrypt_payload, decrypt_payload
 
 router = APIRouter(prefix="/api/vaults", tags=["Credential Vault"])
 
@@ -30,47 +31,49 @@ def get_vaults(db: Session = Depends(get_db), current_user: User = Depends(get_c
 # ==========================================
 # 2. TAMBAH KREDENSIAL BARU (LANGSUNG ENKRIPSI)
 # ==========================================
-@router.post("/", dependencies=[Depends(require_super_admin)])
-def create_vault(data: VaultCreate, db: Session = Depends(get_db)):
+@router.post("/", response_model=VaultResponse, dependencies=[Depends(require_super_admin)])
+def create_vault(vault_in: VaultCreate, db: Session = Depends(get_db)):
+    # 1. Enkripsi seluruh JSON menjadi satu string acak Fernet
+    encrypted_str = encrypt_payload(vault_in.secrets)
+    
+    # 2. Simpan ke database
     new_vault = Vault(
-        name=data.name,
-        category=data.category,
-        url=data.url,
-        username=data.username,
-        encrypted_password=encrypt_vault_data(data.password), # 🔒 PROSES ENKRIPSI AES
-        description=data.description
+        name=vault_in.name,
+        category=vault_in.category,
+        url=vault_in.url,
+        description=vault_in.description,
+        encrypted_payload=encrypted_str  # Simpan payload di sini
     )
     db.add(new_vault)
     db.commit()
-    return {"message": "Kredensial berhasil diamankan ke dalam Vault."}
+    db.refresh(new_vault)
+    
+    return new_vault
 
 # ==========================================
 # 3. ON-DEMAND DECRYPTION (SAAT TOMBOL REVEAL DIKLIK)
 # ==========================================
 @router.get("/{vault_id}/decrypt", response_model=DecryptResponse)
-def decrypt_password(vault_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def decrypt_vault(vault_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     vault = db.query(Vault).filter(Vault.id == vault_id).first()
     if not vault:
-        raise HTTPException(status_code=404, detail="Kredensial tidak ditemukan.")
-    
-    # Validasi Izin Akses (Zero-Trust)
+        raise HTTPException(status_code=404, detail="Kredensial tidak ditemukan")
+
+    # Logika Cek Akses
     if current_user.role != "Super Admin":
         access = db.query(VaultUserAccess).filter(
             VaultUserAccess.vault_id == vault_id,
             VaultUserAccess.user_id == current_user.id
         ).first()
-        
         if not access:
-            raise HTTPException(status_code=403, detail="Bypass Terdeteksi: Anda tidak memiliki izin untuk mendekripsi sandi ini.")
-            
-        # TODO: Di sini nanti kita tambahkan pengecekan `expires_at` untuk akses sementara
-    
-    # 🔓 Buka Gembok AES (Dekripsi)
-    raw_password = decrypt_vault_data(vault.encrypted_password)
-    
-    # TODO: Logika Audit Trail (Mencatat siapa yang melihat sandi ini) akan ditambahkan di sini
-    
-    return {"password": raw_password}
+            raise HTTPException(status_code=403, detail="Anda tidak memiliki izin mengakses kredensial ini")
+
+    # Dekripsi payload menjadi dictionary kembali
+    try:
+        decrypted_dict = decrypt_payload(vault.encrypted_payload)
+        return {"secrets": decrypted_dict}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Gagal mendekripsi data. Kunci mungkin tidak cocok.")
 
 # ==========================================
 # 4. AMBIL DAFTAR STAF & STATUS AKSES (KHUSUS SUPER ADMIN)
@@ -122,4 +125,3 @@ def toggle_vault_access(vault_id: int, data: VaultAccessToggle, db: Session = De
     
     db.commit()
     return {"message": "Hak akses berhasil diperbarui."}
-

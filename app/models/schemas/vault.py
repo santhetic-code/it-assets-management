@@ -1,31 +1,28 @@
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
+from typing import Optional, Dict, Any
 
-# Skema Dasar
 class VaultBase(BaseModel):
     name: str
     category: str
     url: Optional[str] = None
-    username: Optional[str] = None
     description: Optional[str] = None
 
-# Skema Saat Super Admin Menyimpan Data Baru
+# Skema saat Super Admin menyimpan data baru
 class VaultCreate(VaultBase):
-    password: str  # Teks murni, akan dienkripsi di backend
+    secrets: Dict[str, Any]  # Menerima objek JSON dinamis tanpa batas
 
-# Skema Saat Tabel Dimuat (Sandi Dihilangkan Sepenuhnya!)
+# Skema yang dikembalikan ke UI (tidak mengandung rahasia)
 class VaultResponse(VaultBase):
     id: int
-    created_at: datetime
 
-    model_config = {"from_attributes": True}
+    class Config:
+        from_attributes = True
 
-# Skema Khusus Saat Tombol "👁️ Reveal" Diklik
+# Skema saat tombol "Reveal" ditekan
 class DecryptResponse(BaseModel):
-    password: str
+    secrets: Dict[str, Any]  # Mengembalikan JSON utuh yang sudah didekripsi
 
-# Skema saat Super Admin menggeser tombol ON/OFF hak akses
+# Skema untuk toggle akses staf
 class VaultAccessToggle(BaseModel):
     user_id: int
     has_access: bool
