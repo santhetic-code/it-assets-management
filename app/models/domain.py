@@ -267,17 +267,20 @@ class Vault(Base):
     __tablename__ = "vaults"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)       # Misal: "Router Mikrotik Lobi"
-    category = Column(String(50), nullable=False)    # Misal: "Network", "Database", "Server"
-    url = Column(String(255), nullable=True)         # Misal: "192.168.1.1"
-    username = Column(String(100), nullable=True)    # Username aset
-    encrypted_password = Column(Text, nullable=False)# SANDI YANG DIGEMBOK (AES)
+    name = Column(String(100), nullable=False)
+    category = Column(String(50), nullable=False)
+    url = Column(String(255), nullable=True)
+    
+    # Kolom ini akan menampung SELURUH data dinamis (username, password, PIN, API Key, dll)
+    encrypted_payload = Column(Text, nullable=False) 
+    
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-
-    # Penghubung ke tabel relasi
+    
+    # Relasi yang sudah kita buat sebelumnya tetap dibiarkan
     accesses = relationship("VaultUserAccess", back_populates="vault", cascade="all, delete-orphan")
     requests = relationship("VaultRequest", back_populates="vault", cascade="all, delete-orphan")
+
 
 
 # ==========================================

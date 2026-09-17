@@ -203,3 +203,27 @@ def decrypt_vault_data(encrypted_text: str) -> str:
     except Exception:
         return "⚠️ DECRYPTION_FAILED (Kunci Salah/Data Rusak)"
 
+
+# ==========================================
+# MESIN ENKRIPSI DINAMIS (JSON PAYLOAD)
+# ==========================================
+import json
+from app.core.config import settings
+
+# Inisialisasi Mesin Enkripsi dengan Kunci Master
+fernet = Fernet((settings.VAULT_SECRET_KEY or ENCRYPTION_KEY).encode())
+
+def encrypt_payload(payload_dict: dict) -> str:
+    """Mengubah dictionary JSON menjadi string terenkripsi."""
+    # Ubah dict ke string JSON, lalu ubah ke bytes, lalu enkripsi
+    json_str = json.dumps(payload_dict)
+    encrypted_bytes = fernet.encrypt(json_str.encode())
+    # Kembalikan sebagai string agar mudah disimpan ke MariaDB
+    return encrypted_bytes.decode()
+
+def decrypt_payload(encrypted_str: str) -> dict:
+    """Mengubah string terenkripsi kembali menjadi dictionary JSON."""
+    # Ubah string ke bytes, lalu dekripsi, lalu ubah kembali ke dictionary
+    decrypted_bytes = fernet.decrypt(encrypted_str.encode())
+    return json.loads(decrypted_bytes.decode())
+
