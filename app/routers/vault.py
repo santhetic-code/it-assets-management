@@ -125,3 +125,42 @@ def toggle_vault_access(vault_id: int, data: VaultAccessToggle, db: Session = De
     
     db.commit()
     return {"message": "Hak akses berhasil diperbarui."}
+
+
+# ==========================================
+# 6. UPDATE KREDENSIAL (RE-ENCRYPT)
+# ==========================================
+@router.put("/{vault_id}", response_model=VaultResponse, dependencies=[Depends(require_super_admin)])
+def update_vault(vault_id: int, vault_in: VaultCreate, db: Session = Depends(get_db)):
+    vault = db.query(Vault).filter(Vault.id == vault_id).first()
+    if not vault:
+        raise HTTPException(status_code=404, detail="Kredensial tidak ditemukan")
+    
+    # 1. Enkripsi ulang JSON secrets dengan data yang baru diedit
+    encrypted_str = encrypt_payload(vault_in.secrets)
+    
+    # 2. Update data ke MariaDB
+    vault.name = vault_in.name
+    vault.category = vault_in.category
+    vault.url = vault_in.url
+    vault.description = vault_in.description
+    vault.encrypted_payload = encrypted_str
+    
+    db.commit()
+    db.refresh(vault)
+    return vault
+
+
+# ==========================================
+# 7. HAPUS KREDENSIAL PERMANEN
+# ==========================================
+@router.delete("/{vault_id}", dependencies=[Depends(require_super_admin)])
+def delete_vault(vault_id: int, db: Session = Depends(get_db)):
+    vault = db.query(Vault).filter(Vault.id == vault_id).first()
+    if not vault:
+        raise HTTPException(status_code=404, detail="Kredensial tidak ditemukan")
+    
+    db.delete(vault)
+    db.commit()
+    return {"message": "Kredensial berhasil dihancurkan secara permanen"}
+
