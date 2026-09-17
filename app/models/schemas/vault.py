@@ -24,3 +24,8 @@ class VaultResponse(VaultBase):
 # Skema Khusus Saat Tombol "👁️ Reveal" Diklik
 class DecryptResponse(BaseModel):
     password: str
+
+# Skema saat Super Admin menggeser tombol ON/OFF hak akses
+class VaultAccessToggle(BaseModel):
+    user_id: int
+    has_access: bool
