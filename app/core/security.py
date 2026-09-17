@@ -166,3 +166,40 @@ async def secure_save_file(
         )
 
     return True
+
+
+# ==========================================
+# MESIN ENKRIPSI VAULT (AES-256 FERNET)
+# ==========================================
+import os
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Mengambil Master Key dari file .env
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+
+# Jaga-jaga jika lupa isi .env, sistem akan membuat kunci sementara (Tidak untuk Production!)
+if not ENCRYPTION_KEY:
+    ENCRYPTION_KEY = Fernet.generate_key().decode()
+
+fernet_machine = Fernet(ENCRYPTION_KEY.encode())
+
+
+def encrypt_vault_data(plain_text: str) -> str:
+    """Menggembok string menjadi teks acak"""
+    if not plain_text:
+        return plain_text
+    return fernet_machine.encrypt(plain_text.encode()).decode()
+
+
+def decrypt_vault_data(encrypted_text: str) -> str:
+    """Membuka gembok teks acak menjadi string asli"""
+    if not encrypted_text:
+        return encrypted_text
+    try:
+        return fernet_machine.decrypt(encrypted_text.encode()).decode()
+    except Exception:
+        return "⚠️ DECRYPTION_FAILED (Kunci Salah/Data Rusak)"
+

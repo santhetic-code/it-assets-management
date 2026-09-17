@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import shutil
 from typing import List, Optional
@@ -58,9 +58,9 @@ def login(request_data: LoginRequest, response: Response, db: Session = Depends(
     if user.is_active is False or user.is_active == 0:
         raise HTTPException(status_code=403, detail="Akun Anda sedang dinonaktifkan.")
 
-    # Nyalakan radar online dan rekam waktu terakhir login
+    # Nyalakan radar online dan rekam waktu terakhir login (WIB)
     user.is_online = True
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.utcnow() + timedelta(hours=7)
     db.commit()
 
     # 4. Buat Tiket JWT (Toleransi jika full_name kosong)
@@ -159,6 +159,24 @@ def create_new_user(data: NewUserRequest, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     return {"message": "Pengguna baru berhasil ditambahkan"}
+
+
+# ==========================================
+# API: UPDATE PROFIL UTAMA (Oleh User Sendiri)
+# ==========================================
+@router.put("/users/profile")
+def update_profile(
+    data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    current_user.full_name = data.full_name
+    current_user.email = data.email
+    current_user.phone = data.phone
+    current_user.department = data.department
+
+    db.commit()
+    return {"message": "Profil berhasil diperbarui", "name": current_user.full_name}
 
 
 @router.put(

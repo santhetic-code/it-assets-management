@@ -22,30 +22,6 @@
 {% block title %}Dashboard - ITAM Pro{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="fw-bold text-dark mb-1">Dashboard</h3>
-        <span class="text-muted small fw-semibold">Statistik infrastruktur & status perangkat (Live)</span>
-    </div>
-    <div class="d-flex align-items-center">
-    <!-- 1. Menampilkan Username dan Role dari Database -->
-    <div class="text-end me-3 d-none d-sm-block">
-        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ current_user.username }}</div>
-        <div class="text-muted" style="font-size: 0.75rem;">{{ current_user.role }}</div>
-    </div>
-    
-    <!-- 2. Logika Menampilkan Foto Profil -->
-    {% if current_user.profile_picture %}
-        <!-- Jika punya foto, tampilkan fotonya (menggunakan format tanpa garis miring yang kemarin berhasil) -->
-        <img src="{{ current_user.profile_picture }}" alt="Profile" class="rounded-circle border shadow-sm" style="width: 42px; height: 42px; object-fit: cover;">
-    {% else %}
-        <!-- Jika belum upload foto, tampilkan huruf pertama dari username-nya -->
-        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm fw-bold fs-5" style="width: 42px; height: 42px;">
-            {{ current_user.username[0] | upper }}
-        </div>
-    {% endif %}
-</div>
-</div>
 
 <!-- 4 KARTU RINGKASAN DINAMIS -->
 <div class="row g-4 mb-4">

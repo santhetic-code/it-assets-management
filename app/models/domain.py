@@ -258,3 +258,68 @@ class VaultCredential(Base):
     kategori = Column(String(50), nullable=False)      # Contoh: Website, Email, Mikrotik
     kredensial_data = Column(JSON, nullable=False)     # Kolom Ajaib untuk menampung data dinamis
     akses_role = Column(String(255), default="All")    # Untuk keamanan Lapis 2 (Siapa saja yang boleh lihat)
+
+
+# ==========================================
+# 1. TABEL MASTER KREDENSIAL (VAULT)
+# ==========================================
+class Vault(Base):
+    __tablename__ = "vaults"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)       # Misal: "Router Mikrotik Lobi"
+    category = Column(String(50), nullable=False)    # Misal: "Network", "Database", "Server"
+    url = Column(String(255), nullable=True)         # Misal: "192.168.1.1"
+    username = Column(String(100), nullable=True)    # Username aset
+    encrypted_password = Column(Text, nullable=False)# SANDI YANG DIGEMBOK (AES)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Penghubung ke tabel relasi
+    accesses = relationship("VaultUserAccess", back_populates="vault", cascade="all, delete-orphan")
+    requests = relationship("VaultRequest", back_populates="vault", cascade="all, delete-orphan")
+
+
+# ==========================================
+# 2. TABEL OTORISASI (ACCESS CONTROL LIST)
+# ==========================================
+class VaultUserAccess(Base):
+    __tablename__ = "vault_user_access"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vault_id = Column(Integer, ForeignKey("vaults.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    # Untuk fitur "Temporary Access" & Audit
+    expires_at = Column(DateTime, nullable=True)  # Jika lewat waktu ini, akses hangus (NULL = Permanen)
+    granted_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # Siapa yg memberi izin
+    granted_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relasi
+    vault = relationship("Vault", back_populates="accesses")
+    user = relationship("User", foreign_keys=[user_id])
+    admin = relationship("User", foreign_keys=[granted_by])
+
+
+# ==========================================
+# 3. TABEL REQUEST WORKFLOW (MINTA IZIN AKSES)
+# ==========================================
+class VaultRequest(Base):
+    __tablename__ = "vault_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vault_id = Column(Integer, ForeignKey("vaults.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    reason = Column(Text, nullable=False)  # Alasan butuh akses ("Mau restart service SQL")
+    status = Column(String(20), default="Pending")  # Status: Pending, Approved, Rejected
+
+    requested_at = Column(DateTime, default=datetime.utcnow)
+    responded_at = Column(DateTime, nullable=True)
+    responded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    # Relasi
+    vault = relationship("Vault", back_populates="requests")
+    user = relationship("User", foreign_keys=[user_id])
+    responder = relationship("User", foreign_keys=[responded_by])
+

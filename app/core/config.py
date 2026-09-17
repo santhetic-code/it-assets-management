@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Security Keys
     SECRET_KEY: str
     VAULT_KEY: str
+    ENCRYPTION_KEY: str = ""
 
     # JWT Settings
     ALGORITHM: str = "HS256"
