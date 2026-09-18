@@ -182,27 +182,6 @@ class Credential(Base):
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
 
-class Purchase(Base):
-    __tablename__ = "purchases"
-
-    id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(
-        Integer, ForeignKey("assets.id", ondelete="SET NULL"), nullable=True
-    )
-    item_name = Column(String(150), nullable=True)
-    vendor = Column(String(100), nullable=True)
-    purchase_date = Column(Date, nullable=True)
-    price_per_item = Column(Float, default=0.0)
-    quantity = Column(Integer, default=1)
-    cost = Column(Float, default=0.0)
-    total_price = Column(Float, default=0.0)
-    buyer_name = Column(String(100), nullable=True)
-    invoice_link = Column(String(255), nullable=True)
-    nota_file = Column(String(255), nullable=True)
-
-    asset = relationship("Asset", back_populates="purchase_info")
-
-
 class MaintenanceLog(Base):
     __tablename__ = "maintenance_logs"
 
@@ -334,6 +313,10 @@ class Purchase(Base):
     __tablename__ = "purchases"
 
     id = Column(Integer, primary_key=True, index=True)
+
+    # Opsional: link ke aset tertentu (jika pembelian adalah penggantian/upgrade aset)
+    asset_id = Column(Integer, ForeignKey("assets.id", ondelete="SET NULL"), nullable=True)
+
     item_name = Column(String(255), nullable=False)
     vendor = Column(String(255), nullable=True)
 
@@ -343,7 +326,7 @@ class Purchase(Base):
     total_price = Column(Numeric(15, 2), nullable=False, default=0)
 
     purchase_date = Column(Date, nullable=False)
-    category = Column(String(100), nullable=True)     # Perangkat Keras, Lisensi, dll.
+    category = Column(String(100), nullable=True)       # Perangkat Keras, Lisensi, dll.
     description = Column(Text, nullable=True)
 
     # Lokasi file nota/invoice yang di-upload (relatif ke static/)
@@ -352,5 +335,6 @@ class Purchase(Base):
     created_at = Column(DateTime, default=get_utc_now)
     created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
-    # Relasi ke user pembuat
+    # Relasi
+    asset = relationship("Asset", back_populates="purchase_info", foreign_keys=[asset_id])
     creator = relationship("User", foreign_keys=[created_by])
