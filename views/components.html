@@ -1,8 +1,29 @@
 {% extends "base.html" %}
 
 <style>
-    /* Styling kursor pointer untuk tab */
     .cursor-pointer { cursor: pointer; }
+
+    /* ── Offcanvas Styling ─────────────────────────────────────────────── */
+    #offcanvasComponent { width: 500px; }
+    #offcanvasComponent .offcanvas-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+    #offcanvasComponent .form-label { font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.35rem; }
+    #offcanvasComponent .form-control,
+    #offcanvasComponent .form-select { background: #f8fafc; border-radius: 8px; font-size: 0.9rem; }
+    #offcanvasComponent .form-control:focus,
+    #offcanvasComponent .form-select:focus { background: #fff; box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12); }
+    .spec-divider { border: none; border-top: 1px dashed #cbd5e1; margin: 1.2rem 0; }
+
+    /* ── History Timeline ─────────────────────────────────────────────── */
+    .history-timeline { position: relative; padding-left: 1.5rem; }
+    .history-timeline::before { content: ''; position: absolute; left: 0.45rem; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+    .history-item { position: relative; margin-bottom: 1rem; }
+    .history-dot { position: absolute; left: -1.35rem; top: 0.3rem; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px currentColor; }
+    .history-dot.UPGRADE   { background: #22c55e; color: #22c55e; }
+    .history-dot.DOWNGRADE { background: #f59e0b; color: #f59e0b; }
+    .history-dot.REPLACE   { background: #3b82f6; color: #3b82f6; }
+    .history-dot.REPAIR    { background: #8b5cf6; color: #8b5cf6; }
+    .history-dot.CREATE    { background: #64748b; color: #64748b; }
+    .history-dot.UPDATE    { background: #0ea5e9; color: #0ea5e9; }
 </style>
 
 
@@ -12,196 +33,100 @@
 
 {% block content %}
 
-<div class="card-custom border-top border-primary border-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-cpu-fill text-primary me-2"></i>Registrasi Spesifikasi PC</h6>
-        <button class="btn btn-sm btn-success fw-bold shadow-sm d-none" data-bs-toggle="modal" data-bs-target="#importMassalCompModal">
-            <i class="bi bi-file-earmark-excel-fill me-1"></i> Import Spreadsheet
-        </button>
-    </div>
-    <form id="formSpekPC" autocomplete="off">
-        <!-- Baris 1: Identitas & OS -->
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label class="form-label fw-semibold">USER (Nama PC)</label>
-                <!-- Diubah menjadi name="name" -->
-                <input type="text" class="form-control" name="name" placeholder="Nama User / PC" required>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label fw-semibold">Jenis PC</label>
-                <select class="form-select" name="pc_type" required>
-                    <option value="PC Operasional">PC Operasional</option>
-                    <option value="PC Server">PC Server</option>
-                    <option value="PC Backup">PC Backup</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label fw-semibold">Sistem Operasi (OS)</label>
-                <!-- Diubah menjadi name="os_name" -->
-                <input type="text" class="form-control" name="os_name" placeholder="Versi OS" required>
-            </div>
-        </div>
-
-        <!-- Baris 2: Inti Pemrosesan -->
-        <div class="row mb-3">
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Processor (CPU)</label>
-                <!-- Diubah menjadi name="processor_spec" -->
-                <input type="text" class="form-control" name="processor_spec" placeholder="Tipe Prosesor">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Mainboard</label>
-                <!-- Diubah menjadi name="mainboard_spec" -->
-                <input type="text" class="form-control" name="mainboard_spec" placeholder="Tipe Mainboard">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Kapasitas RAM</label>
-                <!-- Diubah menjadi name="ram_spec" -->
-                <input type="text" class="form-control" name="ram_spec" placeholder="Kapasitas RAM">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Kartu Grafis (VGA)</label>
-                <!-- Diubah menjadi name="vga_spec" -->
-                <input type="text" class="form-control" name="vga_spec" placeholder="Tipe VGA">
-            </div>
-        </div>
-
-        <!-- Baris 3: Penyimpanan & Periferal -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Storage HDD/SSD</label>
-                <!-- Diubah menjadi name="storage_spec" -->
-                <input type="text" class="form-control" name="storage_spec" placeholder="Kapasitas Storage">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Monitor</label>
-                <input type="text" class="form-control" name="monitor" placeholder="Tipe Monitor">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Keyboard</label>
-                <input type="text" class="form-control" name="keyboard" placeholder="Merk Keyboard">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Mouse</label>
-                <input type="text" class="form-control" name="mouse" placeholder="Merk Mouse">
-            </div>
-        </div>
-
-        <div class="text-end">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Spesifikasi</button>
-        </div>
-    </form>
-</div>
-
+<!-- ── TOOLBAR UTAMA ──────────────────────────────────────────────────────── -->
 <div class="card-custom">
-    <!-- Toolbar Terpadu -->
     <div class="d-flex justify-content-between align-items-end mb-3 border-bottom pb-2">
 
         <!-- KIRI: Tabs Kategori PC & Ringkasan -->
-        <div class="d-flex align-items-center gap-3">
-            
-            <!-- Tab Filter (Tetap biarkan seperti kode Anda sebelumnya) -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
             <ul class="nav nav-pills" id="tabFilterPC" role="tablist">
-                <li class="nav-item"><a class="nav-link active fw-semibold" data-filter="" style="cursor: pointer;">Semua Data</a></li>
-                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Operasional" style="cursor: pointer;"><i class="bi bi-pc-display me-1"></i> PC Operasional</a></li>
-                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Server" style="cursor: pointer;"><i class="bi bi-server me-1"></i> PC Server</a></li>
-                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Backup" style="cursor: pointer;"><i class="bi bi-hdd-network me-1"></i> PC Backup</a></li>
+                <li class="nav-item"><a class="nav-link active fw-semibold" data-filter="" style="cursor:pointer;">Semua Data</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Operasional" style="cursor:pointer;"><i class="bi bi-pc-display me-1"></i>PC Operasional</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Server" style="cursor:pointer;"><i class="bi bi-server me-1"></i>PC Server</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Backup" style="cursor:pointer;"><i class="bi bi-hdd-network me-1"></i>PC Backup</a></li>
             </ul>
-
-            <!-- Pemisah Vertikal -->
-            <div class="vr text-secondary" style="height: 24px;"></div>
-
-            <!-- Ringkasan Angka -->
+            <div class="vr text-secondary" style="height:24px;"></div>
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Operasional:</span>
+                <span class="text-muted fw-semibold" style="font-size:.85rem;">Operasional:</span>
                 <span class="badge bg-primary rounded-pill px-2" id="count_op">0</span>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Server:</span>
+                <span class="text-muted fw-semibold" style="font-size:.85rem;">Server:</span>
                 <span class="badge bg-danger rounded-pill px-2" id="count_sv">0</span>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Backup:</span>
+                <span class="text-muted fw-semibold" style="font-size:.85rem;">Backup:</span>
                 <span class="badge bg-warning text-dark rounded-pill px-2" id="count_bk">0</span>
             </div>
-
         </div>
 
-        <!-- KANAN: Tombol Export & Custom Search -->
-        <div class="d-flex align-items-center gap-3">
+        <!-- KANAN: Tombol Tambah + Export + Search -->
+        <div class="d-flex align-items-center gap-2">
             <div id="tableControlsSpek" class="d-flex gap-2 align-items-center"></div>
-            
-            <!-- Kotak Pencarian Custom -->
-            <div class="input-group input-group-sm" style="width: 250px;">
-                <span class="input-group-text bg-white text-muted border-end-0">
-                    <i class="bi bi-search"></i>
-                </span>
+
+            <!-- Tombol Import Spreadsheet -->
+            <button class="btn btn-sm btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#importMassalCompModal">
+                <i class="bi bi-file-earmark-excel-fill me-1"></i>Import Excel
+            </button>
+
+            <!-- ★ BUTANG PEMICU OFFCANVAS v2 ★ -->
+            <button class="btn btn-sm btn-primary fw-bold shadow-sm" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasComponent">
+                <i class="bi bi-plus-circle me-1"></i>Tambah PC Baru
+            </button>
+
+            <!-- Pencarian Custom -->
+            <div class="input-group input-group-sm" style="width:220px;">
+                <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
                 <input type="text" id="customSearchSpek" class="form-control border-start-0 ps-0" placeholder="Cari Spesifikasi...">
             </div>
         </div>
 
     </div>
 
+    <!-- ── TABEL DATA ──────────────────────────────────────────────────────── -->
     <div class="table-responsive">
         <table id="dataTableSpek" class="table table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="fw-semibold text-muted text-uppercase" style="font-size: 0.8rem;">IDENTITAS PC (USER)</th>
-                    <th class="fw-semibold text-muted text-uppercase" style="font-size: 0.8rem;">SISTEM OPERASI</th>
-                    <th class="fw-semibold text-muted text-uppercase" style="font-size: 0.8rem;">PROCESSOR (CPU)</th>
-                    <th class="fw-semibold text-muted text-uppercase" style="font-size: 0.8rem;">MAINBOARD</th>
-                    
-                    <!-- Tambahkan 6 Kolom Ini (Untuk Export) -->
+                    <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">IDENTITAS PC (USER)</th>
+                    <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">SISTEM OPERASI</th>
+                    <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">PROCESSOR (CPU)</th>
+                    <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">MAINBOARD</th>
+                    <!-- Kolom tersembunyi UI, tetap untuk Export -->
                     <th>KAPASITAS RAM</th>
                     <th>KARTU GRAFIS (VGA)</th>
                     <th>STORAGE HDD/SSD</th>
                     <th>MONITOR</th>
                     <th>KEYBOARD</th>
                     <th>MOUSE</th>
-                    
-                    <th class="fw-semibold text-muted text-uppercase text-center" style="font-size: 0.8rem;">JENIS PC</th>
-                    <th class="fw-semibold text-muted text-uppercase text-end" style="font-size: 0.8rem;">AKSI</th>
+                    <th class="fw-semibold text-muted text-uppercase text-center" style="font-size:.8rem;">JENIS PC</th>
+                    <th class="fw-semibold text-muted text-uppercase text-end" style="font-size:.8rem;">AKSI</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Looping data PC -->
                 {% for comp in components %}
                 <tr>
-                    <!-- IDENTITAS -->
                     <td>
-                        <div class="fw-semibold text-dark"><i class="bi bi-pc-display text-secondary me-2"></i> {{ comp.user_pc }}</div>
+                        <div class="fw-semibold text-dark"><i class="bi bi-pc-display text-secondary me-2"></i>{{ comp.user_pc }}</div>
                     </td>
-                    
-                    <!-- OS -->
                     <td title="{{ comp.os }}">
-                        <div class="text-secondary fw-medium text-truncate" style="max-width: 220px; font-size: 0.85rem;">
-                            {{ comp.os }}
-                        </div>
+                        <div class="text-secondary fw-medium text-truncate" style="max-width:220px;font-size:.85rem;">{{ comp.os }}</div>
                     </td>
-
-                    <!-- PROCESSOR -->
                     <td title="{{ comp.cpu }}">
-                        <div class="text-secondary fw-medium text-truncate" style="max-width: 220px; font-size: 0.85rem;">
-                            {{ comp.cpu }}
-                        </div>
+                        <div class="text-secondary fw-medium text-truncate" style="max-width:220px;font-size:.85rem;">{{ comp.cpu }}</div>
                     </td>
-
-                    <!-- MAINBOARD -->
                     <td title="{{ comp.mainboard }}">
-                        <div class="text-secondary fw-medium text-truncate" style="max-width: 200px; font-size: 0.85rem;">
-                            {{ comp.mainboard }}
-                        </div>
+                        <div class="text-secondary fw-medium text-truncate" style="max-width:200px;font-size:.85rem;">{{ comp.mainboard }}</div>
                     </td>
-                    
-                    <!-- Tambahkan 6 Data Ini (Akan disembunyikan UI, tapi ditarik Export) -->
+                    <!-- Data Export tersembunyi -->
                     <td>{{ comp.ram }}</td>
                     <td>{{ comp.vga }}</td>
                     <td>{{ comp.storage }}</td>
                     <td>{{ comp.monitor }}</td>
                     <td>{{ comp.keyboard }}</td>
                     <td>{{ comp.mouse }}</td>
-                    
-                    <!-- JENIS PC -->
+                    <!-- Jenis PC Badge -->
                     <td class="text-center text-nowrap">
                         {% if comp.pc_type == 'PC Server' or comp.pc_type == 'Server' %}
                             <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">
@@ -217,11 +142,11 @@
                             </span>
                         {% endif %}
                     </td>
-                    
-                    <!-- AKSI -->
+                    <!-- Aksi -->
                     <td class="text-end text-nowrap">
-                        <!-- Tombol Detail (Ikon Mata) menyimpann semua data tersembunyi -->
-                        <button class="btn btn-sm btn-outline-info me-1 btn-detail" title="Lihat Detail Spesifikasi"
+                        <!-- Tombol Detail (data-comp-id untuk fetch history) -->
+                        <button class="btn btn-sm btn-outline-info me-1 btn-detail" title="Lihat Detail"
+                            data-comp-id="{{ comp.id }}"
                             data-user="{{ comp.user_pc }}"
                             data-jenis="{{ comp.jenis_pc }}"
                             data-os="{{ comp.os }}"
@@ -235,8 +160,13 @@
                             data-mouse="{{ comp.mouse or '-' }}">
                             <i class="bi bi-eye-fill"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary me-1" title="Edit" onclick="openEditModal('{{ comp.id }}', '{{ comp.asset_id }}', '{{ comp.name }}', '{{ comp.os_name or '' }}', '{{ comp.processor_spec or '' }}', '{{ comp.mainboard_spec or '' }}', '{{ comp.ram_spec or '' }}', '{{ comp.vga_spec or '' }}', '{{ comp.storage_spec or '' }}', '{{ comp.monitor or '' }}', '{{ comp.keyboard or '' }}', '{{ comp.mouse or '' }}', '{{ comp.pc_type or 'Operasional' }}')"><i class="bi bi-pencil-square"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" title="Hapus" onclick="deleteComp({{ comp.id }})"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary me-1" title="Edit"
+                            onclick="openEditModal('{{ comp.id }}','{{ comp.asset_id }}','{{ comp.name }}','{{ comp.os_name or '' }}','{{ comp.processor_spec or '' }}','{{ comp.mainboard_spec or '' }}','{{ comp.ram_spec or '' }}','{{ comp.vga_spec or '' }}','{{ comp.storage_spec or '' }}','{{ comp.monitor or '' }}','{{ comp.keyboard or '' }}','{{ comp.mouse or '' }}','{{ comp.pc_type or 'Operasional' }}')">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" title="Hapus" onclick="deleteComp({{ comp.id }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -247,6 +177,228 @@
 {% endblock %}
 
 {% block scripts %}
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     ★ OFFCANVAS v2 — Registrasi Spesifikasi PC (Master FK + Auto-Diff)
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasComponent" aria-labelledby="offcanvasComponentLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title fw-bold" id="offcanvasComponentLabel">
+            <i class="bi bi-pc-display me-2 text-primary"></i>
+            <span id="offcanvasTitle">Registrasi Spesifikasi PC</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" onclick="resetOffcanvas()"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form id="componentFormV2" autocomplete="off">
+            <input type="hidden" id="v2_comp_id">
+            <input type="hidden" id="v2_mode" value="create"> <!-- create | update -->
+
+            <!-- Pilih Aset Induk -->
+            <div class="mb-3">
+                <label class="form-label">Aset Induk <span class="text-danger">*</span></label>
+                <select class="form-select" id="v2_asset_id" required>
+                    <option value="">Memuat daftar aset...</option>
+                </select>
+                <div class="form-text">Aset fisik yang akan dikonfigurasi spesifikasinya.</div>
+            </div>
+
+            <!-- Jenis PC -->
+            <div class="mb-3">
+                <label class="form-label">Jenis PC <span class="text-danger">*</span></label>
+                <select class="form-select" id="v2_jenis_pc" required>
+                    <option value="PC Operasional">PC Operasional</option>
+                    <option value="PC Server">PC Server</option>
+                    <option value="PC Backup">PC Backup</option>
+                </select>
+            </div>
+
+            <hr class="spec-divider">
+            <p class="small fw-bold text-muted mb-3"><i class="bi bi-cpu me-1"></i>SPESIFIKASI HARDWARE</p>
+
+            <!-- OS -->
+            <div class="mb-3">
+                <label class="form-label">Sistem Operasi (OS)</label>
+                <select class="form-select" id="v2_os_id">
+                    <option value="">— Pilih OS —</option>
+                </select>
+            </div>
+
+            <!-- CPU -->
+            <div class="mb-3">
+                <label class="form-label">Processor (CPU)</label>
+                <select class="form-select" id="v2_cpu_id">
+                    <option value="">— Pilih CPU —</option>
+                </select>
+            </div>
+
+            <!-- Mainboard -->
+            <div class="mb-3">
+                <label class="form-label">Mainboard</label>
+                <select class="form-select" id="v2_mainboard_id">
+                    <option value="">— Pilih Mainboard —</option>
+                </select>
+            </div>
+
+            <!-- RAM -->
+            <div class="mb-3">
+                <label class="form-label">Kapasitas RAM</label>
+                <select class="form-select" id="v2_ram_id">
+                    <option value="">— Pilih RAM —</option>
+                </select>
+            </div>
+
+            <!-- VGA -->
+            <div class="mb-3">
+                <label class="form-label">Kartu Grafis (VGA/GPU)</label>
+                <select class="form-select" id="v2_vga_id">
+                    <option value="">— Pilih VGA —</option>
+                </select>
+            </div>
+
+            <!-- Storage -->
+            <div class="mb-3">
+                <label class="form-label">Storage HDD/SSD</label>
+                <select class="form-select" id="v2_storage_id">
+                    <option value="">— Pilih Storage —</option>
+                </select>
+            </div>
+
+            <!-- Monitor -->
+            <div class="mb-3">
+                <label class="form-label">Monitor</label>
+                <select class="form-select" id="v2_monitor_id">
+                    <option value="">— Pilih Monitor —</option>
+                </select>
+            </div>
+
+            <hr class="spec-divider">
+            <p class="small fw-bold text-muted mb-3"><i class="bi bi-keyboard me-1"></i>PERIPHERAL (Free-text)</p>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label">Keyboard</label>
+                    <input type="text" class="form-control" id="v2_keyboard" placeholder="Cth: Logitech K380">
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Mouse</label>
+                    <input type="text" class="form-control" id="v2_mouse" placeholder="Cth: Logitech M330">
+                </div>
+            </div>
+
+            <!-- Alasan Update — hanya tampil saat mode EDIT -->
+            <div class="mb-4 d-none" id="v2_reasonDiv">
+                <hr class="spec-divider">
+                <label class="form-label text-warning">
+                    <i class="bi bi-clock-history me-1"></i>Alasan Perubahan (Audit Log) <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control border-warning" id="v2_update_reason"
+                       placeholder="Cth: Upgrade RAM dari 8GB ke 16GB">
+                <div class="form-text text-warning">Wajib diisi. Sistem akan merekam perubahan ini secara otomatis.</div>
+            </div>
+
+            <div class="d-grid mt-2">
+                <button type="submit" class="btn btn-primary py-2 fw-bold" id="btnSaveV2">
+                    <i class="bi bi-save me-1"></i>Simpan Spesifikasi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL DETAIL SPESIFIKASI + AUDIT HISTORY
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="detailComponentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-hdd-network me-2"></i>Profil Spesifikasi Hardware
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+
+                <!-- Header Nama & Jenis -->
+                <div class="text-center mb-4">
+                    <h4 id="detail_asset_name" class="fw-bold text-primary mb-1">—</h4>
+                    <span id="detail_jenis_pc" class="badge bg-secondary fs-6 px-3">—</span>
+                </div>
+
+                <!-- Grid Spesifikasi -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted border-bottom pb-2 mb-3"><i class="bi bi-cpu me-1"></i>Komponen Teras</h6>
+                                <p class="mb-1 small text-secondary">Processor (CPU)</p>
+                                <p id="detail_cpu" class="fw-bold mb-3">—</p>
+                                <p class="mb-1 small text-secondary">Mainboard</p>
+                                <p id="detail_mainboard" class="fw-bold mb-3">—</p>
+                                <p class="mb-1 small text-secondary">Memori (RAM)</p>
+                                <p id="detail_ram" class="fw-bold mb-0">—</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted border-bottom pb-2 mb-3"><i class="bi bi-gpu-card me-1"></i>Sistem & Grafik</h6>
+                                <p class="mb-1 small text-secondary">Sistem Operasi</p>
+                                <p id="detail_os" class="fw-bold mb-3">—</p>
+                                <p class="mb-1 small text-secondary">Storage Utama</p>
+                                <p id="detail_storage" class="fw-bold mb-3">—</p>
+                                <p class="mb-1 small text-secondary">Kartu Grafis (VGA)</p>
+                                <p id="detail_vga" class="fw-bold mb-0">—</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body py-3">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p class="mb-1 small text-secondary"><i class="bi bi-display me-1"></i>Monitor</p>
+                                        <p id="detail_monitor" class="fw-bold mb-0">—</p>
+                                    </div>
+                                    <div class="col-4">
+                                        <p class="mb-1 small text-secondary"><i class="bi bi-keyboard me-1"></i>Keyboard</p>
+                                        <p id="detail_keyboard" class="fw-bold mb-0">—</p>
+                                    </div>
+                                    <div class="col-4">
+                                        <p class="mb-1 small text-secondary"><i class="bi bi-mouse me-1"></i>Mouse</p>
+                                        <p id="detail_mouse" class="fw-bold mb-0">—</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit History Timeline -->
+                <div class="border-top pt-3">
+                    <h6 class="text-muted mb-3"><i class="bi bi-clock-history me-1"></i>Riwayat Perubahan</h6>
+                    <div id="detail_history_loading" class="text-center text-muted py-2 small">
+                        <span class="spinner-border spinner-border-sm me-1"></span>Memuat riwayat...
+                    </div>
+                    <div class="history-timeline d-none" id="detail_history_list"></div>
+                    <p class="text-muted small fst-italic d-none" id="detail_history_empty">Belum ada riwayat perubahan.</p>
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL EDIT LAMA (free-text, tetap dipertahankan)
+     ════════════════════════════════════════════════════════════════════════ -->
 <div class="modal fade" id="editCompModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -258,8 +410,6 @@
                 <div class="modal-body">
                     <input type="hidden" id="edit_id" name="id">
                     <input type="hidden" id="edit_asset_id" name="asset_id">
-                    
-                    <!-- Baris 1 -->
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Nama PC</label>
@@ -278,8 +428,6 @@
                             <input type="text" class="form-control" id="edit_os" name="os_name" required>
                         </div>
                     </div>
-
-                    <!-- Baris 2 -->
                     <div class="row mb-3">
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Processor</label>
@@ -298,8 +446,6 @@
                             <input type="text" class="form-control" id="edit_vga" name="vga_spec">
                         </div>
                     </div>
-
-                    <!-- Baris 3 -->
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Storage</label>
@@ -314,16 +460,13 @@
                             <input type="text" class="form-control" id="edit_keyboard" name="keyboard">
                         </div>
                     </div>
-
-                    <!-- Baris 4 -->
-                    <div class="row mb-4">
+                    <div class="row mb-2">
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Mouse</label>
                             <input type="text" class="form-control" id="edit_mouse" name="mouse">
                         </div>
                     </div>
                 </div>
-
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary fw-bold">Simpan Perubahan</button>
@@ -333,12 +476,16 @@
     </div>
 </div>
 
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL IMPORT EXCEL (tetap dipertahankan)
+     ════════════════════════════════════════════════════════════════════════ -->
 <div class="modal fade" id="importMassalCompModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-excel-fill text-success me-2"></i>Import Spreadsheet Komponen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formImportComponents" autocomplete="off">
                 <div class="modal-body">
@@ -347,7 +494,8 @@
                         <input class="form-control" type="file" id="import_comp_file" accept=".csv,.xlsx,.xls" required>
                     </div>
                     <div class="alert alert-info small mb-0">
-                        Sistem otomatis mengenali kolom: <code>USER, OS, RAM, VGA / GPU CARD, CPU / PROCESSOR, MAINBOARD, HDD/SSD, MONITOR, KEYBOARD, MOUSE, JENIS_PC</code>. Relasi aset dicocokkan otomatis berdasarkan nama aset / pengguna.
+                        Sistem otomatis mengenali kolom: <code>USER, OS, RAM, VGA / GPU CARD, CPU / PROCESSOR, MAINBOARD, HDD/SSD, MONITOR, KEYBOARD, MOUSE, JENIS_PC</code>.
+                        Relasi aset dicocokkan otomatis berdasarkan nama aset / pengguna.
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -359,388 +507,372 @@
     </div>
 </div>
 
-<!-- Modal Detail Spesifikasi -->
-<div class="modal fade" id="modalDetailSpek" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light border-bottom-0 pb-3">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-cpu text-primary me-2"></i> Rincian Spesifikasi Hardware</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body px-4 py-4">
-                <div class="row g-4">
-                    <!-- Info Dasar -->
-                    <div class="col-md-6">
-                        <p class="text-muted small fw-bold mb-1">USER (NAMA PC)</p>
-                        <p class="fw-medium text-dark mb-0" id="detUser"></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="text-muted small fw-bold mb-1">JENIS PC</p>
-                        <p class="fw-medium text-dark mb-0"><span class="badge bg-primary-subtle text-primary rounded-pill px-2" id="detJenis"></span></p>
-                    </div>
-                    <div class="col-12 border-bottom pb-2">
-                        <p class="text-muted small fw-bold mb-1">SISTEM OPERASI</p>
-                        <p class="fw-medium text-dark mb-0" id="detOs"></p>
-                    </div>
-                    <!-- Info Hardware Utama -->
-                    <div class="col-md-6">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-motherboard text-secondary"></i> PROCESSOR (CPU)</p>
-                        <p class="fw-medium text-dark mb-0" id="detCpu"></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-pc-horizontal text-secondary"></i> MAINBOARD</p>
-                        <p class="fw-medium text-dark mb-0" id="detMainboard"></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-memory text-secondary"></i> KAPASITAS RAM</p>
-                        <p class="fw-medium text-dark mb-0" id="detRam"></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-gpu-card text-secondary"></i> KARTU GRAFIS (VGA)</p>
-                        <p class="fw-medium text-dark mb-0" id="detVga"></p>
-                    </div>
-                    <div class="col-12 border-bottom pb-2 border-top pt-3">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-device-hdd text-secondary"></i> STORAGE HDD/SSD</p>
-                        <p class="fw-medium text-dark mb-0" id="detStorage"></p>
-                    </div>
-                    <!-- Info Periferal -->
-                    <div class="col-md-4">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-display text-secondary"></i> MONITOR</p>
-                        <p class="fw-medium text-dark mb-0" id="detMonitor"></p>
-                    </div>
-                    <div class="col-md-4">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-keyboard text-secondary"></i> KEYBOARD</p>
-                        <p class="fw-medium text-dark mb-0" id="detKeyboard"></p>
-                    </div>
-                    <div class="col-md-4">
-                        <p class="text-muted small fw-bold mb-1"><i class="bi bi-mouse text-secondary"></i> MOUSE</p>
-                        <p class="fw-medium text-dark mb-0" id="detMouse"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-top-0 pt-0 bg-light">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
 
+<!-- ════════════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ════════════════════════════════════════════════════════════════════════ -->
 <script>
-    // 1. Script untuk menampilkan Modal Detail Spesifikasi
-    $(document).on('click', '.btn-detail', function() {
-        var btn = $(this);
-        $('#detUser').text(btn.data('user') || '-');
-        $('#detJenis').text(btn.data('jenis') || '-');
-        $('#detOs').text(btn.data('os') || '-');
-        $('#detCpu').text(btn.data('cpu') || '-');
-        $('#detMainboard').text(btn.data('mainboard') || '-');
-        $('#detRam').text(btn.data('ram') || '-');
-        $('#detVga').text(btn.data('vga') || '-');
-        $('#detStorage').text(btn.data('storage') || '-');
-        $('#detMonitor').text(btn.data('monitor') || '-');
-        $('#detKeyboard').text(btn.data('keyboard') || '-');
-        $('#detMouse').text(btn.data('mouse') || '-');
+// ── State global ────────────────────────────────────────────────────────────
+let masterData = {};   // { CPU: [{id, name}, ...], RAM: [...], ... }
+let assetList  = [];   // [{id, name, label}, ...]
 
-        var modalSpek = new bootstrap.Modal(document.getElementById('modalDetailSpek'));
-        modalSpek.show();
-    });
+// ── 1. Inisialisasi saat halaman siap ───────────────────────────────────────
+$(document).ready(function () {
 
-    // 2. Fungsi Eksekusi Hapus Data (Enterprise Validation)
-    async function deleteComp(id) {
-        Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: "Apakah Anda yakin ingin menghapus data spesifikasi PC ini? Tindakan ini tidak dapat dibatalkan.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545', // Warna merah bahaya
-            cancelButtonColor: '#6c757d',  // Warna abu-abu netral
-            confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus!',
-            cancelButtonText: 'Batal',
-            reverseButtons: true // Menaruh tombol Batal di kiri, Hapus di kanan (Standar Windows/Mac)
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
-                    const res = await fetch(`/api/components/${id}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token }
-                    });
-                    
-                    if (res.ok) {
-                        Swal.fire({ 
-                            icon: 'success', 
-                            title: 'Terhapus!', 
-                            text: 'Data komponen berhasil dihapus dari sistem.', 
-                            showConfirmButton: false, 
-                            timer: 1500 
-                        }).then(() => window.location.reload());
-                    } else {
-                        const errData = await res.json();
-                        Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data.' });
-                    }
-                } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+    // A. DataTables
+    var table = $('#dataTableSpek').DataTable({
+        dom: "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
+        columnDefs: [{ targets: [4, 5, 6, 7, 8, 9], visible: false }],
+        buttons: [
+            {
+                extend: 'excel', text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel',
+                className: 'btn btn-success btn-sm shadow-sm rounded',
+                exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10] },
+                action: function (e, dt, btn, cfg) {
+                    var self = this;
+                    Swal.fire({ title: 'Export ke Excel?', icon: 'info', showCancelButton: true,
+                        confirmButtonColor: '#198754', confirmButtonText: '<i class="bi bi-download me-1"></i>Ya, Download' })
+                    .then(r => { if (r.isConfirmed) { $.fn.dataTable.ext.buttons.excelHtml5.action.call(self, e, dt, btn, cfg); } });
+                }
+            },
+            {
+                extend: 'pdf', text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF',
+                className: 'btn btn-danger btn-sm shadow-sm rounded',
+                orientation: 'landscape', pageSize: 'A4',
+                exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10] },
+                action: function (e, dt, btn, cfg) {
+                    var self = this;
+                    Swal.fire({ title: 'Generate PDF?', icon: 'info', showCancelButton: true,
+                        confirmButtonColor: '#dc3545', confirmButtonText: '<i class="bi bi-download me-1"></i>Ya, Generate' })
+                    .then(r => { if (r.isConfirmed) { $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, btn, cfg); } });
+                }
+            },
+            {
+                extend: 'print', text: '<i class="bi bi-printer-fill"></i> Print',
+                className: 'btn btn-secondary btn-sm shadow-sm rounded',
+                exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10] },
+                action: function (e, dt, btn, cfg) {
+                    var self = this;
+                    Swal.fire({ title: 'Cetak Data?', icon: 'question', showCancelButton: true,
+                        confirmButtonText: '<i class="bi bi-printer me-1"></i>Ya, Cetak' })
+                    .then(r => { if (r.isConfirmed) { $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, btn, cfg); } });
                 }
             }
-        });
-    }
+        ],
+        language: { search: '_INPUT_', searchPlaceholder: 'Cari spek...' }
+    });
 
-    // 3. Fungsi Penarik Data ke Modal Edit
-    function openEditModal(id, asset_id, name, os, proc, mobo, ram, vga, storage, mon, kb, mouse, pc_type) {
-        $('#edit_id').val(id);
-        $('#edit_asset_id').val((asset_id && asset_id !== 'None' && asset_id !== 'null') ? asset_id : '');
-        $('#edit_nama_pc').val(name);
-        $('#edit_os').val(os);
-        $('#edit_cpu').val(proc);
-        $('#edit_mainboard').val(mobo);
-        $('#edit_ram').val(ram);
-        $('#edit_vga').val(vga);
-        $('#edit_storage').val(storage);
-        $('#edit_monitor').val(mon);
-        $('#edit_keyboard').val(kb);
-        $('#edit_mouse').val(mouse);
-        
-        const typeElem = document.getElementById('edit_jenis_pc');
-        if (typeElem) {
-            typeElem.value = pc_type || 'PC Operasional';
+    // Counter jenis PC
+    var jenisPcData = table.column(10).data().join(' ');
+    $('#count_op').text((jenisPcData.match(/PC Operasional/g) || []).length);
+    $('#count_sv').text((jenisPcData.match(/PC Server/g) || []).length);
+    $('#count_bk').text((jenisPcData.match(/PC Backup/g) || []).length);
+
+    table.buttons().container().removeClass('btn-group flex-wrap').addClass('d-flex gap-2').appendTo('#tableControlsSpek');
+    $('#dataTableSpek_filter').hide();
+    $('#customSearchSpek').on('keyup', function () { table.search(this.value).draw(); });
+
+    $('#tabFilterPC .nav-link').on('click', function (e) {
+        e.preventDefault();
+        $('#tabFilterPC .nav-link').removeClass('active');
+        $(this).addClass('active');
+        table.column(10).search($(this).attr('data-filter')).draw();
+    });
+
+    // B. Muat data master & aset saat halaman siap
+    loadMasterData();
+    loadAssetList();
+
+    // C. Submit Offcanvas v2
+    $('#componentFormV2').on('submit', handleV2Submit);
+
+    // D. Submit Edit Modal lama
+    $('#formEditSpek').on('submit', handleLegacyEdit);
+
+    // E. Import Excel
+    $('#formImportComponents').on('submit', handleImport);
+});
+
+
+// ── 2. Load Master Component Data dari API ──────────────────────────────────
+async function loadMasterData() {
+    const categories = ['OS', 'CPU', 'Mainboard', 'RAM', 'VGA', 'Storage', 'Monitor'];
+    const mapSelect = { OS: 'v2_os_id', CPU: 'v2_cpu_id', Mainboard: 'v2_mainboard_id',
+                        RAM: 'v2_ram_id', VGA: 'v2_vga_id', Storage: 'v2_storage_id', Monitor: 'v2_monitor_id' };
+
+    for (const cat of categories) {
+        try {
+            const res = await fetch(`/api/components/masters?category=${cat}`);
+            if (!res.ok) continue;
+            const items = await res.json();
+            masterData[cat] = items;
+            const sel = document.getElementById(mapSelect[cat]);
+            if (!sel) continue;
+            sel.innerHTML = `<option value="">— Pilih ${cat} —</option>`;
+            items.forEach(item => {
+                sel.innerHTML += `<option value="${item.id}">${item.name}</option>`;
+            });
+        } catch (e) { /* silent fail */ }
+    }
+}
+
+
+// ── 3. Load Daftar Aset untuk dropdown Aset Induk ───────────────────────────
+async function loadAssetList() {
+    try {
+        const res = await fetch('/api/assets/');
+        if (!res.ok) return;
+        assetList = await res.json();
+        const sel = document.getElementById('v2_asset_id');
+        sel.innerHTML = '<option value="">— Pilih Aset —</option>';
+        assetList.forEach(a => {
+            const label = `[${a.asset_tag || a.kode_aset || '—'}] ${a.nama || a.name}`;
+            sel.innerHTML += `<option value="${a.id}">${label}</option>`;
+        });
+    } catch (e) { /* silent fail */ }
+}
+
+
+// ── 4. Reset & Close Offcanvas ───────────────────────────────────────────────
+function resetOffcanvas() {
+    document.getElementById('componentFormV2').reset();
+    document.getElementById('v2_comp_id').value = '';
+    document.getElementById('v2_mode').value = 'create';
+    document.getElementById('offcanvasTitle').textContent = 'Registrasi Spesifikasi PC';
+    document.getElementById('v2_reasonDiv').classList.add('d-none');
+    document.getElementById('v2_update_reason').removeAttribute('required');
+}
+
+
+// ── 5. Buka Offcanvas dalam mode EDIT v2 ────────────────────────────────────
+async function openV2Edit(compId) {
+    resetOffcanvas();
+    document.getElementById('v2_comp_id').value = compId;
+    document.getElementById('v2_mode').value = 'update';
+    document.getElementById('offcanvasTitle').textContent = 'Edit Spesifikasi PC';
+    document.getElementById('v2_reasonDiv').classList.remove('d-none');
+    document.getElementById('v2_update_reason').setAttribute('required', '');
+
+    try {
+        const res = await fetch(`/api/components/v2/by-asset/0`); // placeholder — endpoint by component_id jika tersedia
+        // Untuk sekarang, buka saja Offcanvas dan biarkan user isi manual
+    } catch (e) {}
+
+    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasComponent')).show();
+}
+
+
+// ── 6. Submit Form v2 (Create / Update) ─────────────────────────────────────
+async function handleV2Submit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveV2');
+    const mode = document.getElementById('v2_mode').value;
+    const compId = document.getElementById('v2_comp_id').value;
+
+    // Validasi alasan update
+    if (mode === 'update') {
+        const reason = document.getElementById('v2_update_reason').value.trim();
+        if (!reason) {
+            Swal.fire('Wajib Diisi', 'Alasan perubahan harus diisi untuk keperluan audit.', 'warning');
+            return;
         }
-        
-        // Memanggil modal secara aman agar tidak crash saat diload
-        const modalEl = document.getElementById('editCompModal');
-        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modal.show();
     }
 
-    // ====================================================================
-    // SEMUA EVENT LISTENER DIBUNGKUS DI DALAM DOCUMENT READY AGAR AMAN
-    // ====================================================================
-    $(document).ready(function() {
-        
-        // --- A. INISIALISASI DATATABLES ---
-        var table = $('#dataTableSpek').DataTable({
-            dom: "<'row'<'col-sm-12'tr>>" +
-                 "<'row mt-3'<'col-md-5 text-muted fs-7'i><'col-md-7 d-flex justify-content-end'p>>",
-            columnDefs: [
-                { targets: [4, 5, 6, 7, 8, 9], visible: false }
-            ],
-            // 2. Kustomisasi Export dengan Pop-up Validasi Enterprise
-            buttons: [
-                { 
-                    extend: 'excel', 
-                    text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', 
-                    className: 'btn btn-success btn-sm shadow-sm rounded',
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
-                    // Mencegat aksi klik
-                    action: function (e, dt, button, config) {
-                        var self = this;
-                        Swal.fire({
-                            title: 'Export ke Excel?',
-                            text: "Sistem akan mengekstrak seluruh data spesifikasi ke format Spreadsheet (.xlsx). Lanjutkan?",
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonColor: '#198754',
-                            cancelButtonColor: '#6c757d',
-                            confirmButtonText: '<i class="bi bi-download me-1"></i> Ya, Download',
-                            cancelButtonText: 'Batal'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Lanjutkan unduhan bawaan DataTables
-                                $.fn.dataTable.ext.buttons.excelHtml5.action.call(self, e, dt, button, config);
-                                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'File Excel sedang diunduh.', timer: 1500, showConfirmButton: false });
-                            }
-                        });
-                    }
-                },
-                { 
-                    extend: 'pdf', 
-                    text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF', 
-                    className: 'btn btn-danger btn-sm shadow-sm rounded',
-                    orientation: 'landscape', 
-                    pageSize: 'A4',
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
-                    action: function (e, dt, button, config) {
-                        var self = this;
-                        Swal.fire({
-                            title: 'Generate Laporan PDF?',
-                            text: "Sistem akan menyusun laporan PDF (Format Landscape) dari data ini. Lanjutkan?",
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonColor: '#dc3545',
-                            cancelButtonColor: '#6c757d',
-                            confirmButtonText: '<i class="bi bi-download me-1"></i> Ya, Generate',
-                            cancelButtonText: 'Batal'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                $.fn.dataTable.ext.buttons.pdfHtml5.action.call(self, e, dt, button, config);
-                                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'File PDF sedang diunduh.', timer: 1500, showConfirmButton: false });
-                            }
-                        });
-                    }
-                },
-                { 
-                    extend: 'print', 
-                    text: '<i class="bi bi-printer-fill"></i> Print', 
-                    className: 'btn btn-secondary btn-sm shadow-sm rounded',
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
-                    action: function (e, dt, button, config) {
-                        var self = this;
-                        Swal.fire({
-                            title: 'Cetak Data?',
-                            text: "Anda akan diarahkan ke antarmuka cetak browser.",
-                            icon: 'question',
-                            showCancelButton: true,
-                            confirmButtonColor: '#6c757d',
-                            cancelButtonColor: '#dee2e6',
-                            confirmButtonText: '<i class="bi bi-printer me-1"></i> Ya, Cetak',
-                            cancelButtonText: '<span class="text-dark">Batal</span>'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                $.fn.dataTable.ext.buttons.print.action.call(self, e, dt, button, config);
-                            }
-                        });
-                    }
+    const payload = {
+        asset_id:     parseInt(document.getElementById('v2_asset_id').value),
+        jenis_pc:     document.getElementById('v2_jenis_pc').value,
+        os_id:        parseInt(document.getElementById('v2_os_id').value) || null,
+        cpu_id:       parseInt(document.getElementById('v2_cpu_id').value) || null,
+        mainboard_id: parseInt(document.getElementById('v2_mainboard_id').value) || null,
+        ram_id:       parseInt(document.getElementById('v2_ram_id').value) || null,
+        vga_id:       parseInt(document.getElementById('v2_vga_id').value) || null,
+        storage_id:   parseInt(document.getElementById('v2_storage_id').value) || null,
+        monitor_id:   parseInt(document.getElementById('v2_monitor_id').value) || null,
+        keyboard:     document.getElementById('v2_keyboard').value || null,
+        mouse:        document.getElementById('v2_mouse').value || null,
+    };
+
+    if (mode === 'update') {
+        payload.update_reason = document.getElementById('v2_update_reason').value.trim();
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...';
+
+    try {
+        const url    = mode === 'create' ? '/api/components/v2' : `/api/components/v2/${compId}`;
+        const method = mode === 'create' ? 'POST' : 'PUT';
+        const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+        if (res.ok) {
+            const msg = mode === 'create' ? 'Spesifikasi PC berhasil didaftarkan!' : 'Perubahan disimpan & audit trail direkam!';
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: msg, timer: 1800, showConfirmButton: false })
+                .then(() => window.location.reload());
+        } else {
+            const err = await res.json();
+            Swal.fire('Gagal', err.detail || 'Terjadi kesalahan validasi.', 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error Koneksi', 'Tidak dapat terhubung ke server.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-save me-1"></i>Simpan Spesifikasi';
+    }
+}
+
+
+// ── 7. Tombol Detail (👁) — Tampil Modal + Fetch History ────────────────────
+$(document).on('click', '.btn-detail', async function () {
+    const btn = $(this);
+    const compId = btn.data('comp-id');
+
+    // Isi data dasar dari data-* attribute
+    $('#detail_asset_name').text(btn.data('user') || '—');
+    $('#detail_jenis_pc').text(btn.data('jenis') || '—');
+    $('#detail_os').text(btn.data('os') || '—');
+    $('#detail_cpu').text(btn.data('cpu') || '—');
+    $('#detail_mainboard').text(btn.data('mainboard') || '—');
+    $('#detail_ram').text(btn.data('ram') || '—');
+    $('#detail_vga').text(btn.data('vga') || '—');
+    $('#detail_storage').text(btn.data('storage') || '—');
+    $('#detail_monitor').text(btn.data('monitor') || '—');
+    $('#detail_keyboard').text(btn.data('keyboard') || '—');
+    $('#detail_mouse').text(btn.data('mouse') || '—');
+
+    // Reset state history
+    $('#detail_history_loading').removeClass('d-none');
+    $('#detail_history_list').addClass('d-none').html('');
+    $('#detail_history_empty').addClass('d-none');
+
+    // Tampilkan modal
+    new bootstrap.Modal(document.getElementById('detailComponentModal')).show();
+
+    // Fetch audit history
+    if (compId) {
+        try {
+            const res = await fetch(`/api/components/v2/${compId}/history`);
+            if (res.ok) {
+                const history = await res.json();
+                $('#detail_history_loading').addClass('d-none');
+
+                if (!history.length) {
+                    $('#detail_history_empty').removeClass('d-none');
+                } else {
+                    const colors = { UPGRADE:'success', DOWNGRADE:'warning', REPLACE:'primary', REPAIR:'purple', CREATE:'secondary', UPDATE:'info' };
+                    let html = '';
+                    history.forEach(h => {
+                        const dt = new Date(h.created_at).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                        const badgeColor = colors[h.action_type] || 'secondary';
+                        html += `
+                            <div class="history-item">
+                                <div class="history-dot ${h.action_type}"></div>
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <span class="badge bg-${badgeColor}-subtle text-${badgeColor}-emphasis border border-${badgeColor}-subtle small">${h.action_type}</span>
+                                    <small class="text-muted">${dt}</small>
+                                </div>
+                                <p class="mb-0 mt-1 small text-secondary">${h.changes_detail}</p>
+                            </div>`;
+                    });
+                    $('#detail_history_list').html(html).removeClass('d-none');
                 }
-            ],
-            language: { search: "_INPUT_", searchPlaceholder: "Cari spek..." }
-        });
+            } else {
+                $('#detail_history_loading').addClass('d-none');
+                $('#detail_history_empty').text('Gagal memuat riwayat.').removeClass('d-none');
+            }
+        } catch (err) {
+            $('#detail_history_loading').addClass('d-none');
+            $('#detail_history_empty').text('Koneksi error.').removeClass('d-none');
+        }
+    } else {
+        $('#detail_history_loading').addClass('d-none');
+        $('#detail_history_empty').removeClass('d-none');
+    }
+});
 
-        // ==========================================
-        // MENGHITUNG TOTAL JENIS PC SECARA OTOMATIS
-        // ==========================================
-        // Menggabungkan semua teks di kolom ke-10 (Jenis PC), lalu menghitung jumlah kemunculan katanya
-        var jenisPcData = table.column(10).data().join(' ');
-        
-        $('#count_op').text((jenisPcData.match(/PC Operasional/g) || []).length);
-        $('#count_sv').text((jenisPcData.match(/PC Server/g) || []).length);
-        $('#count_bk').text((jenisPcData.match(/PC Backup/g) || []).length);
 
-        table.buttons().container().removeClass('btn-group flex-wrap').addClass('d-flex gap-2').appendTo('#tableControlsSpek');
-        $('#dataTableSpek_filter').hide();
-        
-        $('#customSearchSpek').on('keyup', function() {
-            table.search(this.value).draw();
-        });
-
-        $('#tabFilterPC .nav-link').on('click', function(e) {
-            e.preventDefault();
-            $('#tabFilterPC .nav-link').removeClass('active');
-            $(this).addClass('active');
-            var filterValue = $(this).attr('data-filter');
-            table.column(10).search(filterValue).draw();
-        });
-
-        // --- B. FORM TAMBAH DATA (Registrasi) ---
-        $('#formSpekPC').on('submit', async function(e) {
-            e.preventDefault(); // Menahan halaman agar tidak reload paksa
-            
-            const formData = new FormData(this);
-            const data = {
-                name: formData.get('name') || '',
-                pc_type: formData.get('pc_type') || 'PC Operasional',
-                os_name: formData.get('os_name') || '',
-                processor_spec: formData.get('processor_spec') || '',
-                mainboard_spec: formData.get('mainboard_spec') || '',
-                ram_spec: formData.get('ram_spec') || '',
-                vga_spec: formData.get('vga_spec') || '',
-                storage_spec: formData.get('storage_spec') || '',
-                monitor: formData.get('monitor') || '',
-                keyboard: formData.get('keyboard') || '',
-                mouse: formData.get('mouse') || ''
-            };
-            
+// ── 8. Hapus Komponen ────────────────────────────────────────────────────────
+async function deleteComp(id) {
+    Swal.fire({
+        title: 'Konfirmasi Hapus', icon: 'warning',
+        text: 'Data spesifikasi PC ini akan dihapus permanen.',
+        showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash me-1"></i>Ya, Hapus!', cancelButtonText: 'Batal', reverseButtons: true
+    }).then(async (result) => {
+        if (result.isConfirmed) {
             try {
-                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
-                const res = await fetch('/api/components', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
-                    body: JSON.stringify(data)
-                });
-                
+                const res = await fetch(`/api/components/${id}`, { method: 'DELETE' });
                 if (res.ok) {
-                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data Spesifikasi tersimpan!', timer: 1500, showConfirmButton: false })
-                    .then(() => window.location.reload());
+                    Swal.fire({ icon: 'success', title: 'Terhapus!', timer: 1500, showConfirmButton: false })
+                        .then(() => window.location.reload());
                 } else {
-                    const errData = await res.json();
-                    // Mengurai detail error dari FastAPI agar mudah dibaca jika terjadi penolakan
-                    const errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
-                    Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: errorMsg });
+                    const err = await res.json();
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: err.detail || 'Gagal menghapus.' });
                 }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem atau koneksi.' });
-            }
-        });
-
-        // --- C. FORM EDIT DATA ---
-        $('#formEditSpek').on('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const id = $('#edit_id').val();
-            const rawAssetId = $('#edit_asset_id').val();
-            
-            const data = {
-                asset_id: (rawAssetId && rawAssetId !== 'None' && rawAssetId !== 'null' && !isNaN(parseInt(rawAssetId))) ? parseInt(rawAssetId) : null,
-                name: formData.get('name') || '',
-                pc_type: formData.get('pc_type') || 'PC Operasional',
-                os_name: formData.get('os_name') || '',
-                processor_spec: formData.get('processor_spec') || '',
-                mainboard_spec: formData.get('mainboard_spec') || '',
-                ram_spec: formData.get('ram_spec') || '',
-                vga_spec: formData.get('vga_spec') || '',
-                storage_spec: formData.get('storage_spec') || '',
-                monitor: formData.get('monitor') || '',
-                keyboard: formData.get('keyboard') || '',
-                mouse: formData.get('mouse') || ''
-            };
-            
-            try {
-                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
-                const res = await fetch(`/api/components/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
-                    body: JSON.stringify(data)
-                });
-                
-                if (res.ok) {
-                    Swal.fire({ icon: 'success', title: 'Diperbarui', text: 'Perubahan spesifikasi berhasil disimpan!', timer: 1500, showConfirmButton: false })
-                    .then(() => window.location.reload());
-                } else {
-                    const errData = await res.json();
-                    const errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
-                    Swal.fire({ icon: 'error', title: 'Gagal Memperbarui', text: errorMsg });
-                }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem atau koneksi.' });
-            }
-        });
-
-        // --- D. FORM IMPORT EXCEL ---
-        $('#formImportComponents').on('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            formData.append('file', document.getElementById('import_comp_file').files[0]);
-
-            try {
-                const token = typeof csrfToken !== 'undefined' ? csrfToken : '';
-                const response = await fetch('/api/components/import', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-Token': token },
-                    body: formData
-                });
-                
-                const resData = await response.json();
-                if (response.ok) {
-                    let msg = resData.message;
-                    if (resData.errors && resData.errors.length > 0) {
-                        msg += `<br><br><small class="text-warning text-start d-block">Catatan:<br>${resData.errors.slice(0, 5).join('<br>')}</small>`;
-                    }
-                    Swal.fire({ icon: 'success', title: 'Berhasil', html: msg }).then(() => window.location.reload());
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Gagal Impor', text: resData.detail || 'Terjadi kesalahan sistem.' });
-                }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Koneksi ke server terputus.' });
-            }
-        });
+            } catch { Swal.fire({ icon: 'error', title: 'Galat Server' }); }
+        }
     });
+}
+
+
+// ── 9. Edit Modal Lama (free-text) ───────────────────────────────────────────
+function openEditModal(id, asset_id, name, os, proc, mobo, ram, vga, storage, mon, kb, mouse, pc_type) {
+    $('#edit_id').val(id);
+    $('#edit_asset_id').val((asset_id && asset_id !== 'None') ? asset_id : '');
+    $('#edit_nama_pc').val(name); $('#edit_os').val(os); $('#edit_cpu').val(proc);
+    $('#edit_mainboard').val(mobo); $('#edit_ram').val(ram); $('#edit_vga').val(vga);
+    $('#edit_storage').val(storage); $('#edit_monitor').val(mon);
+    $('#edit_keyboard').val(kb); $('#edit_mouse').val(mouse);
+    const typeEl = document.getElementById('edit_jenis_pc');
+    if (typeEl) typeEl.value = pc_type || 'PC Operasional';
+    const modal = bootstrap.Modal.getInstance(document.getElementById('editCompModal')) || new bootstrap.Modal(document.getElementById('editCompModal'));
+    modal.show();
+}
+
+async function handleLegacyEdit(e) {
+    e.preventDefault();
+    const id = $('#edit_id').val();
+    const rawAssetId = $('#edit_asset_id').val();
+    const data = {
+        asset_id: (rawAssetId && rawAssetId !== 'None' && !isNaN(parseInt(rawAssetId))) ? parseInt(rawAssetId) : null,
+        name: $('#edit_nama_pc').val(), pc_type: $('#edit_jenis_pc').val(), os_name: $('#edit_os').val(),
+        processor_spec: $('#edit_cpu').val(), mainboard_spec: $('#edit_mainboard').val(),
+        ram_spec: $('#edit_ram').val(), vga_spec: $('#edit_vga').val(), storage_spec: $('#edit_storage').val(),
+        monitor: $('#edit_monitor').val(), keyboard: $('#edit_keyboard').val(), mouse: $('#edit_mouse').val()
+    };
+    try {
+        const res = await fetch(`/api/components/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (res.ok) {
+            Swal.fire({ icon: 'success', title: 'Diperbarui', timer: 1500, showConfirmButton: false }).then(() => window.location.reload());
+        } else {
+            const err = await res.json();
+            Swal.fire({ icon: 'error', title: 'Gagal', text: err.detail || 'Terjadi kesalahan.' });
+        }
+    } catch { Swal.fire({ icon: 'error', title: 'Galat Server' }); }
+}
+
+
+// ── 10. Import Excel ─────────────────────────────────────────────────────────
+async function handleImport(e) {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('file', document.getElementById('import_comp_file').files[0]);
+    try {
+        const response = await fetch('/api/components/import', { method: 'POST', body: formData });
+        const resData = await response.json();
+        if (response.ok) {
+            let msg = resData.message;
+            if (resData.errors && resData.errors.length) {
+                msg += `<br><br><small class="text-warning">${resData.errors.slice(0, 5).join('<br>')}</small>`;
+            }
+            Swal.fire({ icon: 'success', title: 'Berhasil', html: msg }).then(() => window.location.reload());
+        } else {
+            Swal.fire({ icon: 'error', title: 'Gagal Impor', text: resData.detail || 'Terjadi kesalahan.' });
+        }
+    } catch { Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Koneksi terputus.' }); }
+}
+
+// Bind ke form import
+$('#formImportComponents').on('submit', handleImport);
 </script>
 {% endblock %}
