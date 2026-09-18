@@ -1,154 +1,456 @@
 {% extends "base.html" %}
 
 {% block title %}Riwayat Pembelian - ITAM Pro{% endblock %}
-{% block breadcrumb %}Inventory & Vault{% endblock %}
+
+{% block breadcrumb %}Pembelian{% endblock %}
 {% block page_title %}Riwayat Pembelian Aset{% endblock %}
 
 {% block content %}
+<style>
+    /* CLEAN STANDARD STYLES */
+    .vault-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); background: #ffffff; }
+    .btn-itam-primary { background: linear-gradient(135deg, #1DB5E5, #0A6BA8); color: white; border: none; border-radius: 8px; font-weight: 600; }
 
-<div class="card-custom border-top border-success border-4">
-    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-file-earmark-plus-fill text-success me-2"></i>Input Data Pembelian Baru</h6>
-    <form id="formPurchase" autocomplete="off" enctype="multipart/form-data">
-        <div class="row g-3 mb-3">
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">Aset Terkait (Opsional)</label>
-                <select id="asset_id" class="form-select">
-                    <option value="">-- Hubungkan ke Aset --</option>
-                    {% for a in assets %}
-                    <option value="{{ a.id }}">{{ a.asset_tag }} - {{ a.name }}</option>
-                    {% endfor %}
-                </select>
+    /* Drag & Drop Zone Styles */
+    .drop-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        background-color: #f8fafc;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .drop-zone.dragover {
+        border-color: #0A6BA8;
+        background-color: #e0f2fe;
+    }
+    .drop-zone-icon { font-size: 2.5rem; color: #94a3b8; margin-bottom: 10px; }
+    .drop-zone-text { color: #64748b; font-size: 0.9rem; font-weight: 500; }
+
+    .table-valign-middle td { vertical-align: middle; }
+</style>
+
+<div class="card vault-card">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <div>
+                <h5 class="fw-bold text-dark mb-1"><i class="bi bi-cart-check-fill text-primary me-2"></i>Riwayat Transaksi</h5>
+                <p class="text-muted small mb-0">Catatan pembelian perangkat keras, lunak, dan layanan IT.</p>
             </div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Nama Barang / Aset</label><input type="text" id="item_name" class="form-control" placeholder="Cth: MacBook Pro M2" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Vendor / Toko</label><input type="text" id="vendor" class="form-control" placeholder="Cth: Tokopedia / Ibox" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Harga Satuan (Rp)</label><input type="number" id="price" class="form-control" placeholder="Cth: 15000000" required></div>
+            {% if current_user.role == 'Super Admin' %}
+            <button class="btn btn-itam-primary px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddPurchase">
+                <i class="bi bi-plus-lg me-2"></i>Tambah Pembelian
+            </button>
+            {% endif %}
         </div>
-        <div class="row g-3">
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Jumlah (Qty)</label><input type="number" id="quantity" class="form-control" value="1" min="1" required></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Tanggal Beli</label><input type="date" id="purchase_date" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Dibeli Oleh</label><input type="text" id="buyer_name" class="form-control" placeholder="Nama Pembeli / Tim" required></div>
-            <div class="col-md-2"><label class="form-label small fw-bold text-muted">Link Nota Online</label><input type="url" id="invoice_link" class="form-control" placeholder="https://..."></div>
-            <div class="col-md-3"><label class="form-label small fw-bold text-muted">Upload File Nota</label><input type="file" id="nota_file" class="form-control" accept="image/*,.pdf"></div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-valign-middle w-100" id="tablePurchases">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="fw-bold">TANGGAL</th>
+                        <th class="fw-bold">NAMA BARANG</th>
+                        <th class="fw-bold">VENDOR</th>
+                        <th class="fw-bold">KATEGORI</th>
+                        <th class="fw-bold text-end">HARGA SATUAN</th>
+                        <th class="fw-bold text-center">QTY</th>
+                        <th class="fw-bold text-end">TOTAL BIAYA</th>
+                        <th class="fw-bold text-center">BUKTI NOTA</th>
+                        <th class="fw-bold text-end">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody id="purchasesTableBody"></tbody>
+            </table>
         </div>
-        <div class="text-end mt-4">
-            <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm"><i class="bi bi-save-fill me-2"></i>Simpan Data Pembelian</button>
-        </div>
-    </form>
+    </div>
 </div>
 
-<div class="card-custom">
-    <div class="table-responsive">
-        <table id="tabelPembelian" class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <th>Nama Barang / Aset</th>
-                    <th>Vendor</th>
-                    <th>Tanggal</th>
-                    <th>Harga Satuan</th>
-                    <th>Qty</th>
-                    <th>Total Biaya</th>
-                    <th>Pembeli</th>
-                    <th>Bukti Nota</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in purchases %}
-                <tr>
-                    <td class="fw-bold text-dark">
-                        {{ p.item_name or (p.asset.name if p.asset else 'Aset Tanpa Nama') }}
-                        {% if p.asset %}
-                        <br><span class="badge bg-light text-muted border border-light small">{{ p.asset.asset_tag }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ p.vendor or '-' }}</td>
-                    <td>{{ p.purchase_date or '-' }}</td>
-                    <td class="text-secondary fw-bold">Rp {{ "{:,.0f}".format(p.price_per_item or p.cost or 0) }}</td>
-                    <td><span class="badge bg-light text-dark border">{{ p.quantity or 1 }}</span></td>
-                    <td class="text-success fw-bold">Rp {{ "{:,.0f}".format(p.total_price or ((p.price_per_item or p.cost or 0) * (p.quantity or 1))) }}</td>
-                    <td><i class="bi bi-person-fill text-muted me-1"></i> {{ p.buyer_name or '-' }}</td>
-                    <td>
-                        {% if p.invoice_link or p.nota_file %}
-                            <a href="{{ p.invoice_link or p.nota_file }}" target="_blank" class="btn btn-sm btn-light text-success border border-light"><i class="bi bi-file-earmark-check-fill me-1"></i>Lihat Nota</a>
-                        {% else %}
-                            <span class="text-muted small">Tidak ada nota</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-light text-danger" onclick="deletePurchase({{ p.id }})"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<!-- MODAL TAMBAH PEMBELIAN (ERP LOGIC) -->
+{% if current_user.role == 'Super Admin' %}
+<div class="modal fade" id="modalAddPurchase" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content vault-card">
+            <div class="modal-header bg-light border-0 px-4 pt-4">
+                <h5 class="fw-bold text-dark"><i class="bi bi-bag-plus-fill text-primary me-2"></i> Input Data Pembelian Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="resetForm()"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <form id="formAddPurchase">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-muted">Nama Barang / Aset</label>
+                            <input type="text" class="form-control bg-light" id="inpItemName" placeholder="Cth: MacBook Pro M2 14-inch" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Kategori</label>
+                            <select class="form-select bg-light" id="inpCategory">
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="Perangkat Keras">Perangkat Keras</option>
+                                <option value="Perangkat Lunak">Perangkat Lunak (Lisensi)</option>
+                                <option value="Jaringan">Jaringan & Infrastruktur</option>
+                                <option value="Aksesori">Aksesori & Peripheral</option>
+                                <option value="Jasa">Jasa & Layanan</option>
+                                <option value="Lain-lain">Lain-lain</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-muted">Harga Satuan (Rp)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">Rp</span>
+                                <input type="text" class="form-control bg-light border-start-0" id="inpUnitPrice" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-muted">Qty</label>
+                            <input type="number" class="form-control bg-light text-center" id="inpQty" value="1" min="1" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-primary">Total Biaya (Auto)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary-subtle text-primary border-primary-subtle border-end-0">Rp</span>
+                                <input type="text" class="form-control bg-primary-subtle text-primary border-primary-subtle border-start-0 fw-bold" id="inpTotalCost" value="0" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-muted">Tanggal Pembelian</label>
+                            <input type="date" class="form-control bg-light" id="inpDate" required>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold text-muted">Vendor / Toko</label>
+                            <input type="text" class="form-control bg-light" id="inpVendor" placeholder="Cth: iBox, Bhinneka, Tokopedia">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Catatan / Keterangan (Opsional)</label>
+                        <textarea class="form-control bg-light" id="inpDescription" rows="2" placeholder="Cth: Pengganti unit rusak, No. PO: 001/IT/2026, dll."></textarea>
+                    </div>
+
+                    <!-- Drag & Drop Zone -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">Upload Bukti Nota / Invoice</label>
+                        <div class="drop-zone" id="dropZone">
+                            <i class="bi bi-cloud-arrow-up-fill drop-zone-icon"></i>
+                            <div class="drop-zone-text" id="dropZoneText">
+                                Tarik & Lepas file nota di sini<br>
+                                atau klik untuk mencari file <span class="text-muted">(Maks 5MB. PDF/JPG/PNG)</span>
+                            </div>
+                            <input type="file" id="inpInvoiceFile" class="d-none" accept=".pdf,.jpg,.jpeg,.png">
+                        </div>
+                    </div>
+
+                    <!-- ERP Smart Bridge Toggle -->
+                    <div class="mb-4 p-3 bg-info-subtle border border-info-subtle rounded-3 d-flex align-items-start gap-3">
+                        <div class="form-check form-switch fs-5 mt-1 flex-shrink-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="inpAutoAsset" checked>
+                        </div>
+                        <div>
+                            <span class="d-block fw-bold text-dark">Otomatis daftarkan sebagai Aset Baru</span>
+                            <small class="text-muted">Sistem akan menyalin barang ini ke menu Inventory dengan status <strong>Tersedia</strong>. Jika Qty = 3, maka 3 aset terpisah akan dibuat.</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-itam-primary w-100 py-3" id="btnSavePurchase">
+                        <i class="bi bi-save2-fill me-2"></i>Simpan Data Transaksi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- LIGHTBOX MODAL PREVIEW NOTA -->
+<div class="modal fade" id="modalPreviewInvoice" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pb-0 justify-content-end">
+                <button type="button" class="btn-close btn-close-white fs-4" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+            </div>
+            <div class="modal-body text-center p-0" id="previewContainer">
+                <!-- Konten disuntik JavaScript -->
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<!-- Cleave.js untuk format Rupiah -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
-    $(document).ready(function() {
-        $('#tabelPembelian').DataTable({
-            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-            buttons: [
-                { extend: 'excelHtml5', className: 'btn btn-sm btn-success', text: '<i class="bi bi-file-earmark-excel"></i> Excel', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
-                { extend: 'pdfHtml5', className: 'btn btn-sm btn-danger ms-2', text: '<i class="bi bi-file-earmark-pdf"></i> PDF', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } },
-                { extend: 'print', className: 'btn btn-sm btn-secondary ms-2', text: '<i class="bi bi-printer"></i> Print', exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] } }
-            ], language: { search: "_INPUT_", searchPlaceholder: "Cari riwayat beli..." }
+    const currentUserRole = "{{ current_user.role }}";
+    let selectedFile = null;
+
+    $(document).ready(function () {
+        // Set tanggal default hari ini
+        document.getElementById('inpDate').valueAsDate = new Date();
+        loadPurchases();
+
+        // Inisialisasi Cleave.js — format angka Rupiah otomatis
+        new Cleave('#inpUnitPrice', {
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            delimiter: '.',
+            numeralDecimalMark: ',', // Memberitahu bahwa desimal pakai koma, bukan titik
+            numeralDecimalScale: 0   // Mematikan desimal agar input Rupiah tidak terpotong
         });
+
+        // Kalkulasi Total live
+        $('#inpUnitPrice, #inpQty').on('input', calculateTotal);
+
+        // Setup Drag & Drop
+        setupDragAndDrop();
     });
 
-    document.getElementById('formPurchase').addEventListener('submit', async (e) => {
+    // ── 1. Kalkulator Real-time ─────────────────────────────────────────────
+    function calculateTotal() {
+        let rawPrice = $('#inpUnitPrice').val().replace(/\./g, '');
+        let price = parseFloat(rawPrice) || 0;
+        let qty = parseInt($('#inpQty').val()) || 0;
+        let total = price * qty;
+        $('#inpTotalCost').val(new Intl.NumberFormat('id-ID').format(total));
+    }
+
+    // ── 2. Load Data & Render Tabel ─────────────────────────────────────────
+    async function loadPurchases() {
+        try {
+            const res = await fetch('/api/purchases/');
+            if (res.ok) {
+                renderTable(await res.json());
+            }
+        } catch (err) { console.error("Koneksi gagal:", err); }
+    }
+
+    function renderTable(data) {
+        if ($.fn.DataTable.isDataTable('#tablePurchases')) {
+            $('#tablePurchases').DataTable().destroy();
+        }
+        const tbody = $('#purchasesTableBody');
+        tbody.empty();
+
+        const idr = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 });
+
+        data.forEach(p => {
+            // Format tanggal
+            let dateStr = '-';
+            if (p.purchase_date) {
+                let d = new Date(p.purchase_date + 'T00:00:00');
+                dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+
+            // Tombol Preview Nota — menggunakan file_path (field model kita)
+            let invoiceBtn = '<span class="text-muted small fst-italic">Tidak ada nota</span>';
+            if (p.file_path) {
+                invoiceBtn = `
+                    <button class="btn btn-sm btn-info-subtle text-info-emphasis border border-info-subtle shadow-sm"
+                            onclick="openPreview('${p.file_path}')" title="Lihat Nota">
+                        <i class="bi bi-eye-fill"></i> Preview
+                    </button>`;
+            }
+
+            // Tombol Hapus (Super Admin)
+            let actionBtn = '<span class="text-muted">-</span>';
+            if (currentUserRole === 'Super Admin') {
+                actionBtn = `
+                    <button class="btn btn-sm btn-light text-danger border shadow-sm"
+                            onclick="deletePurchase(${p.id})" title="Hapus Data">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>`;
+            }
+
+            // Badge kategori
+            let categoryBadge = p.category
+                ? `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">${p.category}</span>`
+                : '<span class="text-muted small">-</span>';
+
+            tbody.append(`
+                <tr>
+                    <td class="text-nowrap">
+                        <span class="badge bg-light text-dark border">${dateStr}</span>
+                    </td>
+                    <td>
+                        <span class="fw-bold text-dark d-block">${p.item_name}</span>
+                        ${p.description ? `<small class="text-muted">${p.description}</small>` : ''}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                            ${p.vendor || '-'}
+                        </span>
+                    </td>
+                    <td>${categoryBadge}</td>
+                    <td class="text-end font-monospace small">${idr.format(p.unit_price)}</td>
+                    <td class="text-center fw-bold">${p.quantity}</td>
+                    <td class="text-end font-monospace fw-bold text-primary">${idr.format(p.total_price)}</td>
+                    <td class="text-center text-nowrap">${invoiceBtn}</td>
+                    <td class="text-end">${actionBtn}</td>
+                </tr>
+            `);
+        });
+
+        $('#tablePurchases').DataTable({
+            language: { search: "_INPUT_", searchPlaceholder: "Cari transaksi..." },
+            pageLength: 10,
+            lengthChange: false,
+            order: [[0, 'desc']]
+        });
+    }
+
+    // ── 3. Drag & Drop File ─────────────────────────────────────────────────
+    function setupDragAndDrop() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('inpInvoiceFile');
+        const dropText = document.getElementById('dropZoneText');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            if (!fileInput.files.length) return;
+            const file = fileInput.files[0];
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (!['pdf', 'jpg', 'jpeg', 'png'].includes(ext)) {
+                Swal.fire('Format Ditolak', 'Hanya diperbolehkan file PDF, JPG, atau PNG.', 'error');
+                resetFileInput();
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('Terlalu Besar', 'Maksimal ukuran file adalah 5MB.', 'warning');
+                resetFileInput();
+                return;
+            }
+
+            selectedFile = file;
+            dropText.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-file-earmark-check-fill fs-5 me-1"></i>${file.name}</span><br><small class="text-muted">Klik untuk mengganti file</small>`;
+            dropZone.style.borderColor = '#198754';
+            dropZone.style.backgroundColor = '#f0fdf4';
+        }
+    }
+
+    function resetFileInput() {
+        selectedFile = null;
+        document.getElementById('inpInvoiceFile').value = '';
+        document.getElementById('dropZoneText').innerHTML = 'Tarik & Lepas file nota di sini<br>atau klik untuk mencari file <span class="text-muted">(Maks 5MB. PDF/JPG/PNG)</span>';
+        const dz = document.getElementById('dropZone');
+        dz.style.borderColor = '';
+        dz.style.backgroundColor = '';
+    }
+
+    function resetForm() {
+        $('#formAddPurchase')[0].reset();
+        document.getElementById('inpDate').valueAsDate = new Date();
+        $('#inpTotalCost').val('0');
+        resetFileInput();
+    }
+
+    // ── 4. Submit Form (Multipart/Form-Data) ────────────────────────────────
+    $('#formAddPurchase').on('submit', async function (e) {
         e.preventDefault();
-        const formData = new FormData();
-        const assetIdVal = document.getElementById('asset_id').value;
-        if (assetIdVal) formData.append('asset_id', assetIdVal);
+        const btn = $('#btnSavePurchase');
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
 
-        formData.append('item_name', document.getElementById('item_name').value);
-        formData.append('vendor', document.getElementById('vendor').value);
-        formData.append('price_per_item', document.getElementById('price').value);
-        formData.append('quantity', document.getElementById('quantity').value);
-        formData.append('purchase_date', document.getElementById('purchase_date').value);
-        formData.append('buyer_name', document.getElementById('buyer_name').value);
-        formData.append('invoice_link', document.getElementById('invoice_link').value);
+        // Bersihkan format Rupiah ke angka murni
+        let rawPrice = $('#inpUnitPrice').val().replace(/\./g, '');
 
-        const fileInput = document.getElementById('nota_file');
-        if (fileInput.files.length > 0) {
-            formData.append('nota_file', fileInput.files[0]);
+        let formData = new FormData();
+        formData.append('item_name',     $('#inpItemName').val());
+        formData.append('vendor',        $('#inpVendor').val());
+        formData.append('unit_price',    rawPrice);
+        formData.append('quantity',      $('#inpQty').val());
+        formData.append('purchase_date', $('#inpDate').val());
+        formData.append('category',      $('#inpCategory').val());
+        formData.append('description',   $('#inpDescription').val());
+        formData.append('auto_add_asset', $('#inpAutoAsset').is(':checked'));
+
+        if (selectedFile) {
+            formData.append('invoice_file', selectedFile);
         }
 
         try {
-            const res = await fetch('/api/purchases', {
-                method: 'POST',
-                headers: { 'X-CSRF-Token': csrfToken },
-                body: formData
-            });
-            if (res.ok) window.location.reload();
-            else {
-                const errData = await res.json();
-                Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menyimpan data pembelian.' });
+            const res = await fetch('/api/purchases/', { method: 'POST', body: formData });
+
+            if (res.ok) {
+                const msg = $('#inpAutoAsset').is(':checked')
+                    ? 'Transaksi dicatat & Aset berhasil didaftarkan ke Inventaris!'
+                    : 'Transaksi berhasil dicatat!';
+                Swal.fire('Berhasil!', msg, 'success').then(() => window.location.reload());
+            } else {
+                const data = await res.json();
+                Swal.fire('Gagal Menyimpan', data.detail || 'Terjadi kesalahan validasi.', 'error');
             }
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
+            Swal.fire('Error Koneksi', 'Tidak dapat terhubung ke server.', 'error');
+        } finally {
+            btn.prop('disabled', false).html('<i class="bi bi-save2-fill me-2"></i>Simpan Data Transaksi');
         }
     });
 
-    async function deletePurchase(id) {
-        if (confirm("Yakin ingin menghapus riwayat pembelian ini?")) {
-            try {
-                const res = await fetch(`/api/purchases/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
-                });
-                if (res.ok) window.location.reload();
-                else {
-                    const errData = await res.json();
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: errData.detail || 'Gagal menghapus data.' });
+    // ── 5. Preview Nota (Lightbox) ───────────────────────────────────────────
+    function openPreview(url) {
+        const ext = url.split('.').pop().toLowerCase();
+        let html = ext === 'pdf'
+            ? `<iframe src="${url}" style="width:100%;height:85vh;border-radius:12px;" frameborder="0"></iframe>`
+            : `<img src="${url}" class="img-fluid" style="max-height:85vh;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">`;
+
+        $('#previewContainer').html(html);
+        new bootstrap.Modal(document.getElementById('modalPreviewInvoice')).show();
+    }
+
+    // ── 6. Hapus Pembelian ───────────────────────────────────────────────────
+    function deletePurchase(id) {
+        Swal.fire({
+            title: 'Hapus Transaksi?',
+            text: 'Data dan file nota fisik di server akan dihancurkan secara permanen!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Hancurkan!',
+            cancelButtonText: 'Batal'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/purchases/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        Swal.fire('Dihapus!', 'Data transaksi dan file nota telah dibersihkan.', 'success')
+                            .then(() => window.location.reload());
+                    } else {
+                        const data = await res.json();
+                        Swal.fire('Gagal', data.detail || 'Terjadi kesalahan.', 'error');
+                    }
+                } catch (e) {
+                    Swal.fire('Error', 'Koneksi ke server gagal.', 'error');
                 }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Galat Server', text: 'Terjadi kesalahan sistem.' });
             }
-        }
+        });
     }
 </script>
 {% endblock %}
