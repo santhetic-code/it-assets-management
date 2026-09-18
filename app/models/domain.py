@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, JSON, Numeric, String, Text
 from sqlalchemy.orm import relationship, synonym
 
 # Mengambil Base dari konfigurasi database inti kita
@@ -326,3 +326,31 @@ class VaultRequest(Base):
     user = relationship("User", foreign_keys=[user_id])
     responder = relationship("User", foreign_keys=[responded_by])
 
+
+# ==========================================
+# PURCHASE / PENGADAAN BARANG
+# ==========================================
+class Purchase(Base):
+    __tablename__ = "purchases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_name = Column(String(255), nullable=False)
+    vendor = Column(String(255), nullable=True)
+
+    # DECIMAL presisi tinggi untuk data keuangan (15 digit, 2 angka di belakang koma)
+    unit_price = Column(Numeric(15, 2), nullable=False, default=0)
+    quantity = Column(Integer, nullable=False, default=1)
+    total_price = Column(Numeric(15, 2), nullable=False, default=0)
+
+    purchase_date = Column(Date, nullable=False)
+    category = Column(String(100), nullable=True)     # Perangkat Keras, Lisensi, dll.
+    description = Column(Text, nullable=True)
+
+    # Lokasi file nota/invoice yang di-upload (relatif ke static/)
+    file_path = Column(String(500), nullable=True)
+
+    created_at = Column(DateTime, default=get_utc_now)
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    # Relasi ke user pembuat
+    creator = relationship("User", foreign_keys=[created_by])

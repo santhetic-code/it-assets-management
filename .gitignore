@@ -1,1 +1,14 @@
+# Environment
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Uploaded files (keep folder structure via .gitkeep)
+static/uploads/*
+!static/uploads/.gitkeep

@@ -1,41 +1,40 @@
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Optional
 from pydantic import BaseModel
 
 
 class PurchaseBase(BaseModel):
-    asset_id: Optional[int] = None
-    item_name: Optional[str] = None
+    item_name: str
     vendor: Optional[str] = None
-    purchase_date: Optional[date] = None
-    price_per_item: float = 0.0
+    unit_price: Decimal
     quantity: int = 1
-    cost: float = 0.0
-    total_price: float = 0.0
-    buyer_name: Optional[str] = None
-    invoice_link: Optional[str] = None
-    nota_file: Optional[str] = None
+    total_price: Decimal
+    purchase_date: date
+    category: Optional[str] = None
+    description: Optional[str] = None
 
 
 class PurchaseCreate(PurchaseBase):
-    pass
+    pass  # file_path di-handle terpisah oleh endpoint upload
 
 
 class PurchaseUpdate(BaseModel):
-    asset_id: Optional[int] = None
     item_name: Optional[str] = None
     vendor: Optional[str] = None
-    purchase_date: Optional[date] = None
-    price_per_item: Optional[float] = None
+    unit_price: Optional[Decimal] = None
     quantity: Optional[int] = None
-    cost: Optional[float] = None
-    total_price: Optional[float] = None
-    buyer_name: Optional[str] = None
-    invoice_link: Optional[str] = None
-    nota_file: Optional[str] = None
+    total_price: Optional[Decimal] = None
+    purchase_date: Optional[date] = None
+    category: Optional[str] = None
+    description: Optional[str] = None
+    file_path: Optional[str] = None
 
 
 class PurchaseResponse(PurchaseBase):
     id: int
+    file_path: Optional[str] = None
+    created_at: Optional[datetime] = None
+    created_by: Optional[int] = None
 
     model_config = {"from_attributes": True}
