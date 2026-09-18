@@ -80,6 +80,18 @@ class Asset(Base):
     location = synonym("lokasi")
 
 
+# ==========================================
+# MASTER DATA KOMPONEN (Dropdown Reference)
+# ==========================================
+class MasterComponent(Base):
+    __tablename__ = "master_components"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String(50), index=True)         # CPU, RAM, OS, VGA, Storage, Monitor
+    name = Column(String(150), unique=True, index=True) # Cth: 'Intel Core i7-13700F'
+    description = Column(String(255), nullable=True)
+
+
 class Component(Base):
     __tablename__ = "components"
 
@@ -101,11 +113,30 @@ class Component(Base):
     psu = Column(String(255), nullable=True)
     casing = Column(String(255), nullable=True)
 
+    # FK ke MasterComponent (nullable agar kompatibel dengan data free-text lama)
+    os_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
+    cpu_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
+    mainboard_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
+    ram_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
+    vga_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
+    storage_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
+    monitor_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
+
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
-    # Relationship back to Asset
+    # Relationships
     asset = relationship("Asset", back_populates="components")
+    history = relationship("ComponentHistory", back_populates="component", cascade="all, delete-orphan")
+
+    # Master Component Relationships (untuk eager-load nama tanpa join manual)
+    os_ref       = relationship("MasterComponent", foreign_keys=[os_id])
+    cpu_ref      = relationship("MasterComponent", foreign_keys=[cpu_id])
+    mainboard_ref= relationship("MasterComponent", foreign_keys=[mainboard_id])
+    ram_ref      = relationship("MasterComponent", foreign_keys=[ram_id])
+    vga_ref      = relationship("MasterComponent", foreign_keys=[vga_id])
+    storage_ref  = relationship("MasterComponent", foreign_keys=[storage_id])
+    monitor_ref  = relationship("MasterComponent", foreign_keys=[monitor_id])
 
     @property
     def user_pc(self):
@@ -150,6 +181,24 @@ class Component(Base):
             months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
             return f"{dt.day} {months[dt.month - 1]} {dt.year}"
         return "11 Sep 2026"
+
+
+# ==========================================
+# RIWAYAT PERUBAHAN KOMPONEN (Audit Trail)
+# ==========================================
+class ComponentHistory(Base):
+    __tablename__ = "component_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    component_id = Column(Integer, ForeignKey("components.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    action_type = Column(String(50), nullable=False)  # UPGRADE, REPLACE, DOWNGRADE, REPAIR
+    changes_detail = Column(Text, nullable=False)     # Cth: 'RAM diubah dari 8GB ke 16GB'
+    created_at = Column(DateTime, default=get_utc_now)
+
+    # Relationships
+    component = relationship("Component", back_populates="history")
+    user = relationship("User", foreign_keys=[user_id])
 
 
 class NetworkIP(Base):
