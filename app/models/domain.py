@@ -139,16 +139,32 @@ class Component(Base):
     monitor_ref  = relationship("MasterComponent", foreign_keys=[monitor_id])
 
     @property
+    def identitas_pc(self):
+        return self.user_pc
+
+    @identitas_pc.setter
+    def identitas_pc(self, value):
+        self.name = value
+
+    @property
     def user_pc(self):
+        if self.name:
+            return self.name
         if self.asset and self.asset.nama:
             return self.asset.nama
-        return self.name or "-"
+        return "-"
 
     @property
     def os(self):
+        if self.os_name:
+            return self.os_name
         if self.os_ref:
             return self.os_ref.name
-        return self.os_name or "-"
+        return "-"
+
+    @os.setter
+    def os(self, value):
+        self.os_name = value
 
     @property
     def jenis_pc(self):
@@ -158,41 +174,77 @@ class Component(Base):
             return self.pc_type
         return f"PC {self.pc_type}"
 
+    @jenis_pc.setter
+    def jenis_pc(self, value):
+        self.pc_type = value
+
     @property
     def cpu(self):
+        if self.processor_spec:
+            return self.processor_spec
         if self.cpu_ref:
             return self.cpu_ref.name
-        return self.processor_spec or "-"
+        return "-"
+
+    @cpu.setter
+    def cpu(self, value):
+        self.processor_spec = value
 
     @property
     def mainboard(self):
+        if self.mainboard_spec:
+            return self.mainboard_spec
         if self.mainboard_ref:
             return self.mainboard_ref.name
-        return self.mainboard_spec or "-"
+        return "-"
+
+    @mainboard.setter
+    def mainboard(self, value):
+        self.mainboard_spec = value
 
     @property
     def ram(self):
+        if self.ram_spec:
+            return self.ram_spec
         if self.ram_ref:
             return self.ram_ref.name
-        return self.ram_spec or "-"
+        return "-"
+
+    @ram.setter
+    def ram(self, value):
+        self.ram_spec = value
 
     @property
     def vga(self):
+        if self.vga_spec:
+            return self.vga_spec
         if self.vga_ref:
             return self.vga_ref.name
-        return self.vga_spec or "-"
+        return "-"
+
+    @vga.setter
+    def vga(self, value):
+        self.vga_spec = value
 
     @property
     def storage(self):
+        if self.storage_spec:
+            return self.storage_spec
         if self.storage_ref:
             return self.storage_ref.name
-        return self.storage_spec or "-"
+        return "-"
+
+    @storage.setter
+    def storage(self, value):
+        self.storage_spec = value
 
     @property
     def monitor_display(self):
+        if self.monitor:
+            return self.monitor
         if self.monitor_ref:
             return self.monitor_ref.name
-        return self.monitor or "-"
+        return "-"
 
     @property
     def last_update(self):

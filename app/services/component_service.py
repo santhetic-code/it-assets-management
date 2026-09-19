@@ -29,40 +29,53 @@ def _get_master_name(db: Session, master_id: int | None) -> str:
     return master.name if master else "Tidak Ditetapkan"
 
 
-# Peta field FK → label yang lebih ramah pengguna untuk log audit
-_FIELD_LABELS: dict[str, str] = {
-    "os_id":        "OS",
-    "cpu_id":       "CPU",
-    "mainboard_id": "Mainboard",
-    "ram_id":       "RAM",
-    "vga_id":       "VGA/GPU",
-    "storage_id":   "Storage",
-    "monitor_id":   "Monitor",
+# Peta field spesifikasi teks → label ramah pengguna untuk Audit Trail
+_TEXT_FIELD_LABELS: dict[str, str] = {
+    "identitas_pc": "Identitas PC",
+    "jenis_pc":     "Kategori PC",
+    "cpu":          "Processor (CPU)",
+    "mainboard":    "Mainboard",
+    "ram":          "Kapasitas RAM",
+    "storage":      "Penyimpanan (Storage)",
+    "vga":          "Kartu Grafis (VGA)",
+    "os":           "Sistem Operasi (OS)",
 }
 
 
-def _detect_changes(db: Session, old: Component, new_data: ComponentUpdateV2) -> list[str]:
+def _detect_changes(old: Component, new_data: ComponentUpdateV2) -> list[str]:
     """
-    Bandingkan nilai lama dan baharu untuk setiap field FK.
-    Kembalikan senarai perubahan dalam format manusiawi.
-
-    Cth: ["RAM: [8GB DDR4 3200MHz] -> [16GB DDR4 3200MHz]"]
+    Bandingkan nilai teks lama dan baharu untuk setiap spesifikasi.
+    Kembalikan senarai perubahan manusiawi.
     """
     changes: list[str] = []
 
-    for field, label in _FIELD_LABELS.items():
-        old_id = getattr(old, field)
-        new_id = getattr(new_data, field, None)
+    field_mapping = {
+        "identitas_pc": (old.user_pc, new_data.identitas_pc or new_data.name),
+        "jenis_pc":     (old.jenis_pc, new_data.jenis_pc or new_data.pc_type),
+        "cpu":          (old.cpu, new_data.cpu or new_data.processor_spec),
+        "mainboard":    (old.mainboard, new_data.mainboard or new_data.mainboard_spec),
+        "ram":          (old.ram, new_data.ram or new_data.ram_spec),
+        "storage":      (old.storage, new_data.storage or new_data.storage_spec),
+        "vga":          (old.vga, new_data.vga or new_data.vga_spec),
+        "os":           (old.os, new_data.os or new_data.os_name),
+    }
 
-        if old_id != new_id:
-            old_name = _get_master_name(db, old_id)
-            new_name = _get_master_name(db, new_id)
-            changes.append(f"{label}: [{old_name}] -> [{new_name}]")
+    for key, label in _TEXT_FIELD_LABELS.items():
+        old_val, new_val = field_mapping.get(key, (None, None))
+        if new_val is not None:
+            clean_old = (old_val or "").strip()
+            if clean_old == "-":
+                clean_old = ""
+            clean_new = new_val.strip()
+            if clean_old != clean_new:
+                from_str = clean_old if clean_old else "Kosong"
+                to_str = clean_new if clean_new else "Dikosongkan"
+                changes.append(f"{label}: [{from_str}] -> [{to_str}]")
 
-    # Bandingkan field free-text (keyboard & mouse)
-    if old.keyboard != new_data.keyboard:
+    # Bandingkan field keyboard & mouse jika dibekalkan
+    if new_data.keyboard is not None and (old.keyboard or "").strip() != new_data.keyboard.strip():
         changes.append(f"Keyboard: [{old.keyboard or '-'}] -> [{new_data.keyboard or '-'}]")
-    if old.mouse != new_data.mouse:
+    if new_data.mouse is not None and (old.mouse or "").strip() != new_data.mouse.strip():
         changes.append(f"Mouse: [{old.mouse or '-'}] -> [{new_data.mouse or '-'}]")
 
     return changes
@@ -119,7 +132,7 @@ def delete_master(db: Session, master_id: int) -> dict:
 
 
 # ==========================================
-# COMPONENT v2 CRUD (dengan Auto-Diff)
+# COMPONENT v2 CRUD (Input Manual Bebas String)
 # ==========================================
 
 def get_component_by_asset(db: Session, asset_id: int) -> Component | None:
@@ -137,59 +150,39 @@ def get_component_history(db: Session, component_id: int) -> list[ComponentHisto
     )
 
 
-def _get_master_text(db: Session, master_id: int | None) -> str | None:
-    if not master_id:
-        return None
-    master = db.query(MasterComponent).filter(MasterComponent.id == master_id).first()
-    return master.name if master else None
-
-
 def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> Component:
-    # Pastikan aset induk wujud
-    asset = db.query(Asset).filter(Asset.id == data.asset_id).first()
-    if not asset:
-        raise HTTPException(status_code=404, detail="Aset induk tidak dijumpai.")
+    """
+    Daftarkan spesifikasi PC baru dengan teks mentah tanpa kekangan Aset Induk atau Master FK.
+    """
+    pc_name = (data.identitas_pc or data.name or "").strip()
+    if not pc_name:
+        raise HTTPException(status_code=400, detail="Identitas PC (User / Nama PC) wajib diisi.")
 
-    # Tolak pendaftaran ganda pada aset yang sama
-    existing = db.query(Component).filter(Component.asset_id == data.asset_id).first()
-    if existing:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Aset ID {data.asset_id} sudah memiliki spesifikasi PC. Gunakan fungsi Edit untuk mengubahnya.",
-        )
-
-    pc_name = (asset.nama or f"PC {asset.kode_aset or data.asset_id}")[:100]
+    pc_type = data.jenis_pc or data.pc_type or "PC Operasional"
 
     db_comp = Component(
-        asset_id=data.asset_id,
         name=pc_name,
-        pc_type=data.jenis_pc,
-        os_id=data.os_id,
-        cpu_id=data.cpu_id,
-        mainboard_id=data.mainboard_id,
-        ram_id=data.ram_id,
-        vga_id=data.vga_id,
-        storage_id=data.storage_id,
-        monitor_id=data.monitor_id,
-        os_name=_get_master_text(db, data.os_id),
-        processor_spec=_get_master_text(db, data.cpu_id),
-        mainboard_spec=_get_master_text(db, data.mainboard_id),
-        ram_spec=_get_master_text(db, data.ram_id),
-        vga_spec=_get_master_text(db, data.vga_id),
-        storage_spec=_get_master_text(db, data.storage_id),
-        monitor=_get_master_text(db, data.monitor_id),
+        pc_type=pc_type,
+        processor_spec=data.cpu or data.processor_spec,
+        mainboard_spec=data.mainboard or data.mainboard_spec,
+        ram_spec=data.ram or data.ram_spec,
+        storage_spec=data.storage or data.storage_spec,
+        vga_spec=data.vga or data.vga_spec,
+        os_name=data.os or data.os_name,
+        monitor=data.monitor,
         keyboard=data.keyboard,
         mouse=data.mouse,
+        asset_id=data.asset_id,
     )
     db.add(db_comp)
-    db.flush()  # Dapatkan ID sebelum commit penuh
+    db.flush()
 
     # Rekodkan ciptaan awal di audit trail
     history = ComponentHistory(
         component_id=db_comp.id,
         user_id=user_id,
         action_type="CREATE",
-        changes_detail=f"Pendaftaran awal spesifikasi PC untuk aset '{pc_name}'.",
+        changes_detail=f"Pendaftaran awal spesifikasi PC '{pc_name}' ({pc_type}).",
     )
     db.add(history)
     db.commit()
@@ -200,35 +193,55 @@ def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> C
 def update_component_v2(
     db: Session, component_id: int, data: ComponentUpdateV2, user_id: int
 ) -> Component:
+    """
+    Kemaskini spesifikasi PC dengan teks mentah dan enjin Auto-Diff audit trail.
+    """
     db_comp = db.query(Component).filter(Component.id == component_id).first()
     if not db_comp:
         raise HTTPException(status_code=404, detail="Spesifikasi PC tidak dijumpai.")
 
     # ── AUTO-DIFF ENGINE ─────────────────────────────────────────────────────
-    changes = _detect_changes(db, db_comp, data)
+    changes = _detect_changes(db_comp, data)
 
     # Terapkan perubahan ke ORM object
-    for field in _FIELD_LABELS:
-        setattr(db_comp, field, getattr(data, field, None))
+    pc_name = (data.identitas_pc or data.name or "").strip()
+    if pc_name:
+        db_comp.name = pc_name
 
-    # Sinkronisasi ke kolom free-text
-    db_comp.os_name = _get_master_text(db, data.os_id) or db_comp.os_name
-    db_comp.processor_spec = _get_master_text(db, data.cpu_id) or db_comp.processor_spec
-    db_comp.mainboard_spec = _get_master_text(db, data.mainboard_id) or db_comp.mainboard_spec
-    db_comp.ram_spec = _get_master_text(db, data.ram_id) or db_comp.ram_spec
-    db_comp.vga_spec = _get_master_text(db, data.vga_id) or db_comp.vga_spec
-    db_comp.storage_spec = _get_master_text(db, data.storage_id) or db_comp.storage_spec
-    if data.monitor_id:
-        db_comp.monitor = _get_master_text(db, data.monitor_id)
+    pc_type = data.jenis_pc or data.pc_type
+    if pc_type:
+        db_comp.pc_type = pc_type
 
-    db_comp.pc_type   = data.jenis_pc
-    db_comp.keyboard  = data.keyboard
-    db_comp.mouse     = data.mouse
+    if data.cpu is not None or data.processor_spec is not None:
+        db_comp.processor_spec = data.cpu or data.processor_spec
+    if data.mainboard is not None or data.mainboard_spec is not None:
+        db_comp.mainboard_spec = data.mainboard or data.mainboard_spec
+    if data.ram is not None or data.ram_spec is not None:
+        db_comp.ram_spec = data.ram or data.ram_spec
+    if data.storage is not None or data.storage_spec is not None:
+        db_comp.storage_spec = data.storage or data.storage_spec
+    if data.vga is not None or data.vga_spec is not None:
+        db_comp.vga_spec = data.vga or data.vga_spec
+    if data.os is not None or data.os_name is not None:
+        db_comp.os_name = data.os or data.os_name
 
-    # Simpan ke ComponentHistory hanya jika ada perubahan sebenar
-    if changes:
-        action_type = _classify_action(data.update_reason, changes)
-        detail_log = f"Alasan: {data.update_reason} | " + " | ".join(changes)
+    if data.keyboard is not None:
+        db_comp.keyboard = data.keyboard
+    if data.mouse is not None:
+        db_comp.mouse = data.mouse
+    if data.monitor is not None:
+        db_comp.monitor = data.monitor
+
+    # Simpan ke ComponentHistory jika ada perubahan atau alasan diberikan
+    reason = (data.update_reason or "").strip()
+    if not reason and changes:
+        reason = "Kemas kini spesifikasi PC"
+
+    if reason or changes:
+        action_type = _classify_action(reason, changes)
+        detail_log = f"Alasan: {reason}" if reason else "Kemas kini spesifikasi"
+        if changes:
+            detail_log += " | " + " | ".join(changes)
 
         history = ComponentHistory(
             component_id=db_comp.id,
