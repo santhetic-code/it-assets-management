@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy import func
 
 from app.core.deps import CurrentUser, DbSession, get_audit_logger, require_staff_or_admin
 from app.models import domain
@@ -41,6 +42,68 @@ def read_master_components_grouped(
             for m in masters
         ]
     }
+
+
+# ==========================================
+# ENDPOINT AUTOCOMPLETE SUGGESTIONS
+# ==========================================
+
+@router.get("/suggestions")
+def get_component_suggestions(
+    field: str,
+    db: DbSession,
+    current_user: CurrentUser,
+):
+    """
+    Mengambil daftar unik saran autocomplete (datalist) untuk satu jenis field komponen
+    (cpu, mainboard, ram, storage, vga, os, monitor, keyboard, mouse)
+    berdasarkan data historis komponen dan master components.
+    """
+    field_lower = field.lower().strip()
+    field_map = {
+        "cpu": (domain.Component.processor_spec, "CPU"),
+        "mainboard": (domain.Component.mainboard_spec, "Mainboard"),
+        "ram": (domain.Component.ram_spec, "RAM"),
+        "storage": (domain.Component.storage_spec, "Storage"),
+        "vga": (domain.Component.vga_spec, "VGA"),
+        "os": (domain.Component.os_name, "OS"),
+        "monitor": (domain.Component.monitor, "Monitor"),
+        "keyboard": (domain.Component.keyboard, "Keyboard"),
+        "mouse": (domain.Component.mouse, "Mouse"),
+    }
+
+    if field_lower not in field_map:
+        return {"data": []}
+
+    col, cat = field_map[field_lower]
+
+    # Ambil nilai distinct dari tabel components
+    comp_rows = (
+        db.query(col)
+        .filter(col.isnot(None), col != "", col != "-")
+        .distinct()
+        .all()
+    )
+    comp_vals = [r[0] for r in comp_rows if r[0]]
+
+    # Ambil nilai dari master_components jika kategorinya ada
+    master_vals = []
+    if cat:
+        master_rows = (
+            db.query(domain.MasterComponent.name)
+            .filter(func.lower(domain.MasterComponent.category) == func.lower(cat))
+            .all()
+        )
+        master_vals = [r[0] for r in master_rows if r[0]]
+
+    # Gabung dan bersihkan duplikat
+    combined = set()
+    for item in comp_vals + master_vals:
+        clean = (item or "").strip()
+        if clean and clean != "-":
+            combined.add(clean)
+
+    return {"data": sorted(list(combined))}
 
 
 # ==========================================

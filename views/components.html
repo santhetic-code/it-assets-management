@@ -508,7 +508,47 @@ $(document).ready(function() {
     });
 
 
-    // ── 2. Reset Modal saat Tambah PC Baru ─────────────────────────────────────
+    // 1. Fungsi untuk Memuat Saran Autocomplete (Datalist)
+    // Fungsi ini akan mengambil daftar unik komponen yang sudah pernah diinput sebelumnya
+    function loadDatalistSuggestions(field_name, list_id) {
+        $.ajax({
+            url: `/api/components/suggestions?field=${field_name}`,
+            type: 'GET',
+            success: function(response) {
+                let options = '';
+                if (response && response.data) {
+                    response.data.forEach(item => {
+                        if (item) options += `<option value="${item}">`;
+                    });
+                }
+                $(`#${list_id}`).html(options);
+            }
+        });
+    }
+
+    // 2. Trigger saat Modal Tambah/Edit Dibuka
+    $('#formComponentModal').on('show.bs.modal', function () {
+        // Muat data saran untuk masing-masing datalist
+        loadDatalistSuggestions('cpu', 'cpu_list');
+        loadDatalistSuggestions('mainboard', 'mainboard_list');
+        loadDatalistSuggestions('ram', 'ram_list');
+        loadDatalistSuggestions('storage', 'storage_list');
+        loadDatalistSuggestions('vga', 'vga_list');
+        loadDatalistSuggestions('os', 'os_list');
+        loadDatalistSuggestions('monitor', 'monitor_list');
+        loadDatalistSuggestions('keyboard', 'keyboard_list');
+        loadDatalistSuggestions('mouse', 'mouse_list');
+
+        // Reset seluruh isian form jika ini mode Tambah Baru (bukan sedang Edit)
+        if (!$('#component_id').val()) {
+            $('#componentForm')[0].reset();
+            $('#component_id').val('');
+            $('#formComponentModalLabel').html('<i class="bi bi-pc-display me-2"></i>Registrasi Spesifikasi PC');
+            $('#updateReasonDiv').addClass('d-none');
+            $('#update_reason').removeAttr('required').val('');
+        }
+    });
+
     $('[data-bs-target="#formComponentModal"]').on('click', function() {
         $('#componentForm')[0].reset();
         $('#component_id').val('');
@@ -518,12 +558,14 @@ $(document).ready(function() {
     });
 
 
-    // ── 3. Submit Form Tambah / Edit PC (AJAX) ────────────────────────────────
+    // 3. Logika Submit Data (Create & Update)
     $('#componentForm').on('submit', function(e) {
         e.preventDefault();
 
         const id = $('#component_id').val();
         const isUpdate = id !== '' && id !== null && id !== undefined;
+
+        // Tentukan URL dan HTTP Method
         const url = isUpdate ? `/api/components/${id}` : '/api/components';
         const method = isUpdate ? 'PUT' : 'POST';
 
@@ -540,7 +582,8 @@ $(document).ready(function() {
             return;
         }
 
-        const payload = {
+        // Kumpulkan data payload, kirim null jika field dibiarkan kosong
+        let payload = {
             identitas_pc: identitasPc,
             jenis_pc: $('#jenis_pc').val(),
             cpu: $('#cpu').val().trim() || null,
@@ -554,14 +597,17 @@ $(document).ready(function() {
             mouse: $('#mouse').val().trim() || null,
         };
 
+        // Jika ini proses Update, wajibkan field alasan
         if (isUpdate) {
             payload.update_reason = $('#update_reason').val().trim();
         }
 
-        const submitBtn = $('button[type="submit"][form="componentForm"]');
-        const origHtml = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
+        // Tampilkan loading state pada tombol
+        const btnSubmit = $('button[type="submit"][form="componentForm"], #componentForm button[type="submit"]');
+        const originalText = btnSubmit.html();
+        btnSubmit.html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...').prop('disabled', true);
 
+        // Eksekusi AJAX
         $.ajax({
             url: url,
             type: method,
@@ -570,9 +616,9 @@ $(document).ready(function() {
             success: function(res) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berjaya!',
-                    text: isUpdate ? 'Data spesifikasi PC berjaya dikemaskini.' : 'Data spesifikasi PC berjaya disimpan.',
-                    timer: 1500,
+                    title: 'Berhasil',
+                    text: 'Data spesifikasi PC berhasil disimpan.',
+                    timer: 2000,
                     showConfirmButton: false
                 }).then(() => {
                     location.reload();
@@ -580,22 +626,23 @@ $(document).ready(function() {
                 $('#formComponentModal').modal('hide');
             },
             error: function(err) {
-                let msg = 'Gagal menyimpan data.';
+                let msg = 'Terjadi kesalahan saat menyimpan data.';
                 if (err.responseJSON && err.responseJSON.detail) {
                     msg = typeof err.responseJSON.detail === 'string'
                         ? err.responseJSON.detail
                         : JSON.stringify(err.responseJSON.detail);
                 }
-                Swal.fire('Ralat!', msg, 'error');
+                Swal.fire('Gagal!', msg, 'error');
             },
             complete: function() {
-                submitBtn.prop('disabled', false).html(origHtml);
+                // Kembalikan status tombol seperti semula
+                btnSubmit.html(originalText).prop('disabled', false);
             }
         });
     });
 
 
-    // ── 4. Klik Edit PC (Prefill ke Centered Modal) ───────────────────────────
+    // 4. Klik Edit PC (Prefill ke Centered Modal)
     $(document).on('click', '.btn-edit-component', function() {
         const id = $(this).data('id');
 
@@ -606,7 +653,7 @@ $(document).ready(function() {
         $('#update_reason').attr('required', 'required').val('');
 
         $.ajax({
-            url: `/api/components/${id}/detail`,
+            url: `/api/components/${id}`,
             type: 'GET',
             success: function(response) {
                 const d = response.data;
@@ -629,34 +676,6 @@ $(document).ready(function() {
             }
         });
     });
-
-    // ── 4b. Muat Autocomplete Datalist dari Master Components ─────────────────
-    function loadComponentDatalists() {
-        $.ajax({
-            url: '/api/master-components',
-            type: 'GET',
-            success: function(res) {
-                if (!res || !res.data) return;
-                const mapping = {
-                    'CPU': '#cpu_list',
-                    'Mainboard': '#mainboard_list',
-                    'RAM': '#ram_list',
-                    'Storage': '#storage_list',
-                    'VGA': '#vga_list',
-                    'OS': '#os_list',
-                    'Monitor': '#monitor_list'
-                };
-                Object.values(mapping).forEach(id => $(id).empty());
-                res.data.forEach(item => {
-                    const selector = mapping[item.category];
-                    if (selector) {
-                        $(selector).append(`<option value="${item.name}">`);
-                    }
-                });
-            }
-        });
-    }
-    loadComponentDatalists();
 
 
     // ── 5. Logika View Modal Profil & Conditional (Null Handling) ───────────
