@@ -140,10 +140,14 @@ class Component(Base):
 
     @property
     def user_pc(self):
-        return self.name
+        if self.asset and self.asset.nama:
+            return self.asset.nama
+        return self.name or "-"
 
     @property
     def os(self):
+        if self.os_ref:
+            return self.os_ref.name
         return self.os_name or "-"
 
     @property
@@ -156,23 +160,39 @@ class Component(Base):
 
     @property
     def cpu(self):
+        if self.cpu_ref:
+            return self.cpu_ref.name
         return self.processor_spec or "-"
 
     @property
     def mainboard(self):
+        if self.mainboard_ref:
+            return self.mainboard_ref.name
         return self.mainboard_spec or "-"
 
     @property
     def ram(self):
+        if self.ram_ref:
+            return self.ram_ref.name
         return self.ram_spec or "-"
 
     @property
     def vga(self):
+        if self.vga_ref:
+            return self.vga_ref.name
         return self.vga_spec or "-"
 
     @property
     def storage(self):
+        if self.storage_ref:
+            return self.storage_ref.name
         return self.storage_spec or "-"
+
+    @property
+    def monitor_display(self):
+        if self.monitor_ref:
+            return self.monitor_ref.name
+        return self.monitor or "-"
 
     @property
     def last_update(self):

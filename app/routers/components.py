@@ -1,7 +1,8 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from typing import Any, Dict, List, Optional, Union
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from app.core.deps import CurrentUser, DbSession, get_audit_logger, require_staff_or_admin
+from app.models import domain
 from app.models.schemas.component import (
     ComponentCreate,
     ComponentResponse,
@@ -17,10 +18,33 @@ from app.services import asset_service
 from app.services import component_service
 
 router = APIRouter(prefix="/api/components", tags=["Components"])
+master_router = APIRouter(prefix="/api/master-components", tags=["Master Components"])
+
+
+@master_router.get("")
+@master_router.get("/")
+def read_master_components_grouped(
+    db: DbSession,
+    current_user: CurrentUser,
+    category: Optional[str] = None,
+):
+    """Endpoint untuk pemanggilan AJAX Master Components yang mengembalikan envelope { data: [...] }."""
+    masters = component_service.get_all_masters(db, category=category)
+    return {
+        "data": [
+            {
+                "id": m.id,
+                "name": m.name,
+                "category": m.category,
+                "description": m.description,
+            }
+            for m in masters
+        ]
+    }
 
 
 # ==========================================
-# ENDPOINT LAMA (DIPERTAHANKAN — free-text)
+# ENDPOINT LAMA & HYBRID (DIPERTAHANKAN)
 # ==========================================
 
 @router.get("/", response_model=List[ComponentResponse])
@@ -33,26 +57,36 @@ def read_components(
 
 @router.post(
     "",
-    response_model=ComponentResponse,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_staff_or_admin), Depends(get_audit_logger)],
 )
 @router.post(
     "/",
-    response_model=ComponentResponse,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_staff_or_admin), Depends(get_audit_logger)],
 )
-def create_component(data: ComponentCreate, db: DbSession):
+def create_component(
+    data: Union[ComponentCreateV2, ComponentCreate],
+    db: DbSession,
+    current_user: CurrentUser,
+):
+    if isinstance(data, ComponentCreateV2):
+        return component_service.create_component_v2(db, data, user_id=current_user.id)
     return asset_service.create_component(db, data)
 
 
 @router.put(
     "/{component_id}",
-    response_model=ComponentResponse,
     dependencies=[Depends(require_staff_or_admin), Depends(get_audit_logger)],
 )
-def update_component(component_id: int, data: ComponentUpdate, db: DbSession):
+def update_component(
+    component_id: int,
+    data: Union[ComponentUpdateV2, ComponentUpdate],
+    db: DbSession,
+    current_user: CurrentUser,
+):
+    if isinstance(data, ComponentUpdateV2):
+        return component_service.update_component_v2(db, component_id, data, user_id=current_user.id)
     return asset_service.update_component(db, component_id, data)
 
 
@@ -175,3 +209,57 @@ def get_component_history(
 ):
     """Ambil audit trail lengkap untuk satu rekod spesifikasi PC."""
     return component_service.get_component_history(db, component_id)
+
+
+@router.get(
+    "/{component_id}/detail",
+    tags=["Components"],
+)
+def get_component_detail(
+    component_id: int, db: DbSession, current_user: CurrentUser
+):
+    """
+    Ambil butiran penuh satu komponen PC beserta riwayat perubahannya (Audit History).
+    Digunakan oleh Modal Detail dan Prefill Form Edit Offcanvas.
+    """
+    comp = db.query(domain.Component).filter(domain.Component.id == component_id).first()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Spesifikasi PC tidak ditemukan.")
+
+    asset_name = comp.asset.nama if comp.asset else comp.name
+    history = component_service.get_component_history(db, component_id)
+
+    return {
+        "data": {
+            "id": comp.id,
+            "asset_id": comp.asset_id,
+            "asset_name": asset_name,
+            "jenis_pc": comp.jenis_pc,
+            "cpu_id": comp.cpu_id,
+            "cpu_name": comp.cpu,
+            "ram_id": comp.ram_id,
+            "ram_name": comp.ram,
+            "vga_id": comp.vga_id,
+            "vga_name": comp.vga,
+            "storage_id": comp.storage_id,
+            "storage_name": comp.storage,
+            "os_id": comp.os_id,
+            "os_name": comp.os,
+            "mainboard_id": comp.mainboard_id,
+            "mainboard_name": comp.mainboard,
+            "monitor_id": comp.monitor_id,
+            "monitor": comp.monitor_display if hasattr(comp, "monitor_display") else (comp.monitor or "-"),
+            "keyboard": comp.keyboard or "-",
+            "mouse": comp.mouse or "-",
+        },
+        "history": [
+            {
+                "id": h.id,
+                "action_type": h.action_type,
+                "user_name": (h.user.full_name or h.user.username) if h.user else "Sistem",
+                "created_at": h.created_at.strftime("%d %b %Y %H:%M") if h.created_at else "-",
+                "changes_detail": h.changes_detail,
+            }
+            for h in history
+        ],
+    }

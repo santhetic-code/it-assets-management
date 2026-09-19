@@ -137,6 +137,13 @@ def get_component_history(db: Session, component_id: int) -> list[ComponentHisto
     )
 
 
+def _get_master_text(db: Session, master_id: int | None) -> str | None:
+    if not master_id:
+        return None
+    master = db.query(MasterComponent).filter(MasterComponent.id == master_id).first()
+    return master.name if master else None
+
+
 def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> Component:
     # Pastikan aset induk wujud
     asset = db.query(Asset).filter(Asset.id == data.asset_id).first()
@@ -148,11 +155,14 @@ def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> C
     if existing:
         raise HTTPException(
             status_code=409,
-            detail=f"Aset ID {data.asset_id} sudah memiliki spesifikasi PC. Gunakan endpoint PUT untuk mengubahnya.",
+            detail=f"Aset ID {data.asset_id} sudah memiliki spesifikasi PC. Gunakan fungsi Edit untuk mengubahnya.",
         )
+
+    pc_name = (asset.nama or f"PC {asset.kode_aset or data.asset_id}")[:100]
 
     db_comp = Component(
         asset_id=data.asset_id,
+        name=pc_name,
         pc_type=data.jenis_pc,
         os_id=data.os_id,
         cpu_id=data.cpu_id,
@@ -161,6 +171,13 @@ def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> C
         vga_id=data.vga_id,
         storage_id=data.storage_id,
         monitor_id=data.monitor_id,
+        os_name=_get_master_text(db, data.os_id),
+        processor_spec=_get_master_text(db, data.cpu_id),
+        mainboard_spec=_get_master_text(db, data.mainboard_id),
+        ram_spec=_get_master_text(db, data.ram_id),
+        vga_spec=_get_master_text(db, data.vga_id),
+        storage_spec=_get_master_text(db, data.storage_id),
+        monitor=_get_master_text(db, data.monitor_id),
         keyboard=data.keyboard,
         mouse=data.mouse,
     )
@@ -172,7 +189,7 @@ def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> C
         component_id=db_comp.id,
         user_id=user_id,
         action_type="CREATE",
-        changes_detail="Pendaftaran awal spesifikasi PC.",
+        changes_detail=f"Pendaftaran awal spesifikasi PC untuk aset '{pc_name}'.",
     )
     db.add(history)
     db.commit()
@@ -193,6 +210,16 @@ def update_component_v2(
     # Terapkan perubahan ke ORM object
     for field in _FIELD_LABELS:
         setattr(db_comp, field, getattr(data, field, None))
+
+    # Sinkronisasi ke kolom free-text
+    db_comp.os_name = _get_master_text(db, data.os_id) or db_comp.os_name
+    db_comp.processor_spec = _get_master_text(db, data.cpu_id) or db_comp.processor_spec
+    db_comp.mainboard_spec = _get_master_text(db, data.mainboard_id) or db_comp.mainboard_spec
+    db_comp.ram_spec = _get_master_text(db, data.ram_id) or db_comp.ram_spec
+    db_comp.vga_spec = _get_master_text(db, data.vga_id) or db_comp.vga_spec
+    db_comp.storage_spec = _get_master_text(db, data.storage_id) or db_comp.storage_spec
+    if data.monitor_id:
+        db_comp.monitor = _get_master_text(db, data.monitor_id)
 
     db_comp.pc_type   = data.jenis_pc
     db_comp.keyboard  = data.keyboard
