@@ -152,85 +152,143 @@
 <!-- ════════════════════════════════════════════════════════════════════════
      MODAL TAMBAH / EDIT PC (TENGAH) & INPUT MANUAL
      ════════════════════════════════════════════════════════════════════════ -->
-<div class="modal fade" id="formComponentModal" tabindex="-1" aria-labelledby="formComponentModalLabel" aria-hidden="true">
+<!-- Modal Tambah/Edit PC -->
+<div class="modal fade" id="formComponentModal" tabindex="-1" aria-labelledby="formComponentModalLabel" aria-hidden="true" style="transition: opacity 0.3s ease-in-out;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-dark text-white pe-4">
                 <h5 class="modal-title fw-bold" id="formComponentModalLabel">
-                    <i class="bi bi-pc-display me-2"></i>Formulir Spesifikasi PC
+                    <i class="bi bi-pc-display me-2"></i>Registrasi Spesifikasi PC
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4 p-md-5 bg-light">
+            <div class="modal-body p-4 bg-white">
                 <form id="componentForm">
                     <input type="hidden" id="component_id">
 
-                    <!-- Baris 1: Identiti Asas (Tanpa Aset Induk) -->
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-8">
-                            <label for="identitas_pc" class="form-label fw-bold text-dark">Identitas PC (User / Nama PC) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-lg border-primary" id="identitas_pc" name="identitas_pc" placeholder="Cth: OTOMAX GERAI / PC - ACCOUNTING 1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="jenis_pc" class="form-label fw-bold text-dark">Kategori PC <span class="text-danger">*</span></label>
-                            <select class="form-select form-control-lg" id="jenis_pc" name="jenis_pc" required>
-                                <option value="PC Operasional">PC Operasional</option>
-                                <option value="PC Server">PC Server</option>
-                                <option value="PC Backup">PC Backup</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Rincian Perangkat Keras (Input Manual)</h6>
-
-                    <!-- Baris 2: CPU & Motherboard -->
-                    <div class="row g-4 mb-3">
-                        <div class="col-md-6">
-                            <label for="cpu" class="form-label fw-semibold">Processor (CPU)</label>
-                            <input type="text" class="form-control" id="cpu" name="cpu" placeholder="Cth: AMD Ryzen 7 3800X atau Intel i7-13700F">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="mainboard" class="form-label fw-semibold">Mainboard / Motherboard</label>
-                            <input type="text" class="form-control" id="mainboard" name="mainboard" placeholder="Cth: Gigabyte B550M AORUS PRO">
+                    <!-- BAGIAN 1: Identitas Aset -->
+                    <div class="card mb-4 border-0 bg-light shadow-sm">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.85rem;">1. Identitas Aset</h6>
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control fw-bold text-primary border-primary" id="identitas_pc" name="identitas_pc" placeholder="Identitas PC" required>
+                                        <label for="identitas_pc">Identitas PC (User / Nama PC) <span class="text-danger">*</span></label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <select class="form-select border-primary" id="jenis_pc" name="jenis_pc" aria-label="Kategori PC" required>
+                                            <option value="PC Operasional">PC Operasional</option>
+                                            <option value="PC Server">PC Server</option>
+                                            <option value="PC Backup">PC Backup</option>
+                                        </select>
+                                        <label for="jenis_pc">Kategori PC <span class="text-danger">*</span></label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Baris 3: RAM & Storage -->
-                    <div class="row g-4 mb-3">
-                        <div class="col-md-6">
-                            <label for="ram" class="form-label fw-semibold">Kapasitas RAM</label>
-                            <input type="text" class="form-control" id="ram" name="ram" placeholder="Cth: 32 GB DDR4 3200MHz">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="storage" class="form-label fw-semibold">Penyimpanan (SSD/HDD)</label>
-                            <input type="text" class="form-control" id="storage" name="storage" placeholder="Cth: 1TB NVMe Samsung 970 Evo Plus">
+                    <!-- BAGIAN 2: Komponen Teras -->
+                    <div class="card mb-4 border-0 bg-light shadow-sm">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.85rem;">2. Komponen Teras</h6>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="cpu" name="cpu" list="cpu_list" placeholder="Processor">
+                                        <label for="cpu">Processor (CPU)</label>
+                                        <datalist id="cpu_list"></datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="mainboard" name="mainboard" list="mainboard_list" placeholder="Mainboard">
+                                        <label for="mainboard">Mainboard / Motherboard</label>
+                                        <datalist id="mainboard_list"></datalist>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="ram" name="ram" list="ram_list" placeholder="RAM">
+                                        <label for="ram">Kapasitas RAM</label>
+                                        <datalist id="ram_list"></datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="storage" name="storage" list="storage_list" placeholder="Storage">
+                                        <label for="storage">Penyimpanan (SSD/HDD)</label>
+                                        <datalist id="storage_list"></datalist>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="vga" name="vga" list="vga_list" placeholder="VGA">
+                                        <label for="vga">Kartu Grafis (VGA/GPU)</label>
+                                        <datalist id="vga_list"></datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="os" name="os" list="os_list" placeholder="Sistem Operasi">
+                                        <label for="os">Sistem Operasi (OS)</label>
+                                        <datalist id="os_list"></datalist>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Baris 4: VGA & OS -->
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-6">
-                            <label for="vga" class="form-label fw-semibold">Kartu Grafis (VGA/GPU)</label>
-                            <input type="text" class="form-control" id="vga" name="vga" placeholder="Cth: NVIDIA GeForce RTX 3060 12GB">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="os" class="form-label fw-semibold">Sistem Operasi (OS)</label>
-                            <input type="text" class="form-control" id="os" name="os" placeholder="Cth: Windows 11 Professional (x64)">
+                    <!-- BAGIAN 3: Periferal Eksternal -->
+                    <div class="card mb-4 border-0 bg-light shadow-sm">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.85rem;">3. Periferal Eksternal</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="monitor" name="monitor" list="monitor_list" placeholder="Monitor">
+                                        <label for="monitor">Monitor</label>
+                                        <datalist id="monitor_list"></datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="keyboard" name="keyboard" list="keyboard_list" placeholder="Keyboard">
+                                        <label for="keyboard">Keyboard</label>
+                                        <datalist id="keyboard_list"></datalist>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="mouse" name="mouse" list="mouse_list" placeholder="Mouse">
+                                        <label for="mouse">Mouse</label>
+                                        <datalist id="mouse_list"></datalist>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Input Alasan Perubahan (Hanya untuk Update) -->
+                    <!-- Input Alasan Perubahan -->
                     <div class="mb-3 p-3 bg-warning bg-opacity-10 border border-warning rounded d-none" id="updateReasonDiv">
-                        <label for="update_reason" class="form-label fw-bold text-dark">Alasan Perubahan Spesifikasi <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="update_reason" name="update_reason" placeholder="Cth: Upgrade RAM dari 16GB ke 32GB karena kebutuhan server">
-                        <div class="form-text text-muted">Wajib diisi untuk dicatat dalam Audit Trail.</div>
+                        <div class="form-floating">
+                            <input type="text" class="form-control border-warning bg-white" id="update_reason" name="update_reason" placeholder="Alasan">
+                            <label for="update_reason" class="text-dark fw-bold">Alasan Perubahan Spesifikasi <span class="text-danger">*</span></label>
+                        </div>
+                        <div class="form-text text-muted mt-2"><i class="bi bi-info-circle"></i> Wajib diisi untuk dicatat dalam Audit Trail.</div>
                     </div>
-
                 </form>
             </div>
-            <div class="modal-footer bg-white border-top p-3">
-                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" form="componentForm" class="btn btn-primary px-4 fw-bold">
+            <div class="modal-footer bg-light border-top p-3">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" form="componentForm" class="btn btn-primary px-4 fw-bold shadow-sm" style="transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     <i class="bi bi-save me-2"></i> Simpan Data PC
                 </button>
             </div>
@@ -263,7 +321,7 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
+                            <div class="card-body detail-text-container">
                                 <h6 class="text-muted border-bottom pb-2 mb-3"><i class="bi bi-cpu me-1"></i>Komponen Teras</h6>
                                 <p class="mb-1 small text-secondary">Processor (CPU)</p>
                                 <p id="detail_cpu" class="fw-bold mb-3">—</p>
@@ -276,7 +334,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
+                            <div class="card-body detail-text-container">
                                 <h6 class="text-muted border-bottom pb-2 mb-3"><i class="bi bi-gpu-card me-1"></i>Sistem & Grafik</h6>
                                 <p class="mb-1 small text-secondary">Sistem Operasi</p>
                                 <p id="detail_os" class="fw-bold mb-3">—</p>
@@ -289,7 +347,7 @@
                     </div>
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-body py-3">
+                            <div class="card-body py-3 detail-text-container">
                                 <div class="row">
                                     <div class="col-4">
                                         <p class="mb-1 small text-secondary"><i class="bi bi-display me-1"></i>Monitor</p>
@@ -454,7 +512,7 @@ $(document).ready(function() {
     $('[data-bs-target="#formComponentModal"]').on('click', function() {
         $('#componentForm')[0].reset();
         $('#component_id').val('');
-        $('#formComponentModalLabel').html('<i class="bi bi-pc-display me-2"></i>Formulir Spesifikasi PC');
+        $('#formComponentModalLabel').html('<i class="bi bi-pc-display me-2"></i>Registrasi Spesifikasi PC');
         $('#updateReasonDiv').addClass('d-none');
         $('#update_reason').removeAttr('required').val('');
     });
@@ -491,6 +549,9 @@ $(document).ready(function() {
             storage: $('#storage').val().trim() || null,
             vga: $('#vga').val().trim() || null,
             os: $('#os').val().trim() || null,
+            monitor: $('#monitor').val().trim() || null,
+            keyboard: $('#keyboard').val().trim() || null,
+            mouse: $('#mouse').val().trim() || null,
         };
 
         if (isUpdate) {
@@ -557,6 +618,9 @@ $(document).ready(function() {
                 $('#storage').val(d.storage || (d.storage_name !== '-' ? d.storage_name : '') || '');
                 $('#vga').val(d.vga || (d.vga_name !== '-' ? d.vga_name : '') || '');
                 $('#os').val(d.os || (d.os_name !== '-' ? d.os_name : '') || '');
+                $('#monitor').val(d.monitor && d.monitor !== '-' ? d.monitor : '');
+                $('#keyboard').val(d.keyboard && d.keyboard !== '-' ? d.keyboard : '');
+                $('#mouse').val(d.mouse && d.mouse !== '-' ? d.mouse : '');
 
                 $('#formComponentModal').modal('show');
             },
@@ -566,37 +630,70 @@ $(document).ready(function() {
         });
     });
 
-
-    // ── 5. Klik Detail View (Modal Detail + Riwayat Audit) ───────────────────
-    $(document).on('click', '.btn-view-component', function() {
-        const id = $(this).data('id');
-
+    // ── 4b. Muat Autocomplete Datalist dari Master Components ─────────────────
+    function loadComponentDatalists() {
         $.ajax({
-            url: `/api/components/${id}/detail`,
+            url: '/api/master-components',
+            type: 'GET',
+            success: function(res) {
+                if (!res || !res.data) return;
+                const mapping = {
+                    'CPU': '#cpu_list',
+                    'Mainboard': '#mainboard_list',
+                    'RAM': '#ram_list',
+                    'Storage': '#storage_list',
+                    'VGA': '#vga_list',
+                    'OS': '#os_list',
+                    'Monitor': '#monitor_list'
+                };
+                Object.values(mapping).forEach(id => $(id).empty());
+                res.data.forEach(item => {
+                    const selector = mapping[item.category];
+                    if (selector) {
+                        $(selector).append(`<option value="${item.name}">`);
+                    }
+                });
+            }
+        });
+    }
+    loadComponentDatalists();
+
+
+    // ── 5. Logika View Modal Profil & Conditional (Null Handling) ───────────
+    window.viewComponent = function(id) {
+        $.ajax({
+            url: `/api/components/${id}`,
             type: 'GET',
             beforeSend: function() {
                 $('#detail_asset_name').text('Memuat...');
                 $('#detail_history_list').html('<li class="text-muted small py-2"><span class="spinner-border spinner-border-sm me-1"></span>Memuat riwayat perubahan...</li>');
-                $('#detailComponentModal').modal('show');
             },
-            success: function(response) {
-                const d = response.data;
-                $('#detail_asset_name').text(d.identitas_pc || d.asset_name || '-');
-                $('#detail_jenis_pc').text(d.jenis_pc || '-');
+            success: function(res) {
+                const data = res.data || {};
+                const placeholder = '<span class="text-muted fst-italic fw-normal" style="opacity: 0.6;">Tidak ada periferal terpasang</span>';
 
-                $('#detail_cpu').text(d.cpu || d.cpu_name || '-');
-                $('#detail_ram').text(d.ram || d.ram_name || '-');
-                $('#detail_vga').text(d.vga || d.vga_name || '-');
-                $('#detail_storage').text(d.storage || d.storage_name || '-');
-                $('#detail_os').text(d.os || d.os_name || '-');
-                $('#detail_mainboard').text(d.mainboard || d.mainboard_name || '-');
-                $('#detail_monitor').text(d.monitor || '-');
-                $('#detail_keyboard').text(d.keyboard || '-');
-                $('#detail_mouse').text(d.mouse || '-');
+                $('#detail_asset_name').text(data.identitas_pc || data.asset_name || data.name || '-');
+                $('#detail_jenis_pc').text(data.jenis_pc || '-');
+
+                // Komponen Teras (Gunakan kelas fw-bolder untuk ketebalan teks)
+                $('#detail_cpu').html(data.cpu ? `<span class="fw-bolder fs-6 text-dark">${data.cpu}</span>` : placeholder);
+                $('#detail_ram').html(data.ram ? `<span class="fw-bolder fs-6 text-dark">${data.ram}</span>` : placeholder);
+                $('#detail_mainboard').html(data.mainboard ? `<span class="fw-bolder fs-6 text-dark">${data.mainboard}</span>` : placeholder);
+                $('#detail_storage').html(data.storage ? `<span class="fw-bolder fs-6 text-dark">${data.storage}</span>` : placeholder);
+                $('#detail_vga').html(data.vga ? `<span class="fw-bolder fs-6 text-dark">${data.vga}</span>` : placeholder);
+                $('#detail_os').html(data.os ? `<span class="fw-bolder fs-6 text-dark">${data.os}</span>` : placeholder);
+
+                // Periferal Eksternal
+                $('#detail_monitor').html(data.monitor ? `<span class="fw-bolder fs-6 text-dark">${data.monitor}</span>` : placeholder);
+                $('#detail_keyboard').html(data.keyboard ? `<span class="fw-bolder fs-6 text-dark">${data.keyboard}</span>` : placeholder);
+                $('#detail_mouse').html(data.mouse ? `<span class="fw-bolder fs-6 text-dark">${data.mouse}</span>` : placeholder);
+                
+                // Atur line-height pada parent container modal profil Anda
+                $('.detail-text-container').css('line-height', '1.8');
 
                 let historyHtml = '';
-                if (response.history && response.history.length > 0) {
-                    response.history.forEach(log => {
+                if (res.history && res.history.length > 0) {
+                    res.history.forEach(log => {
                         const badgeClass = log.action_type === 'UPGRADE' ? 'bg-success' :
                                            log.action_type === 'DOWNGRADE' ? 'bg-warning text-dark' :
                                            log.action_type === 'REPLACE' ? 'bg-primary' :
@@ -623,6 +720,11 @@ $(document).ready(function() {
                 $('#detailComponentModal').modal('hide');
             }
         });
+    };
+
+    $(document).on('click', '.btn-view-component', function() {
+        const id = $(this).data('id');
+        window.viewComponent(id);
     });
 
 

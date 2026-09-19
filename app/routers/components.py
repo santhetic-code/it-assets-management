@@ -212,6 +212,10 @@ def get_component_history(
 
 
 @router.get(
+    "/{component_id}",
+    tags=["Components"],
+)
+@router.get(
     "/{component_id}/detail",
     tags=["Components"],
 )
@@ -228,6 +232,10 @@ def get_component_detail(
 
     asset_name = comp.asset.nama if comp.asset else comp.name
     history = component_service.get_component_history(db, component_id)
+
+    raw_monitor = comp.monitor if comp.monitor and comp.monitor != "-" else (comp.monitor_ref.name if comp.monitor_ref else None)
+    raw_keyboard = comp.keyboard if comp.keyboard and comp.keyboard != "-" else None
+    raw_mouse = comp.mouse if comp.mouse and comp.mouse != "-" else None
 
     return {
         "data": {
@@ -256,9 +264,9 @@ def get_component_detail(
             "mainboard_id": comp.mainboard_id,
             "mainboard_name": comp.mainboard,
             "monitor_id": comp.monitor_id,
-            "monitor": comp.monitor_display if hasattr(comp, "monitor_display") else (comp.monitor or "-"),
-            "keyboard": comp.keyboard or "-",
-            "mouse": comp.mouse or "-",
+            "monitor": raw_monitor,
+            "keyboard": raw_keyboard,
+            "mouse": raw_mouse,
         },
         "history": [
             {

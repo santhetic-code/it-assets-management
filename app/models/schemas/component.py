@@ -33,20 +33,32 @@ class MasterComponentResponse(MasterComponentBase):
 
 
 # ==========================================
-# COMPONENT SCHEMAS (Free-text — lama, dipertahankan)
+# COMPONENT SCHEMAS (Free-text — diperbarui dengan periferal & kompatibilitas)
 # ==========================================
 class ComponentBase(BaseModel):
+    identitas_pc: Optional[str] = None
+    jenis_pc: Optional[str] = "PC Operasional"
+    cpu: Optional[str] = None
+    mainboard: Optional[str] = None
+    ram: Optional[str] = None
+    storage: Optional[str] = None
+    vga: Optional[str] = None
+    os: Optional[str] = None
+
+    # Tambahan 3 Field Periferal (Wajib Sinkron dengan Modal)
+    monitor: Optional[str] = None
+    keyboard: Optional[str] = None
+    mouse: Optional[str] = None
+
+    # Kompatibilitas model lama & ORM
+    name: Optional[str] = None
     asset_id: Optional[int] = None
-    name: str
     os_name: Optional[str] = None
     ram_spec: Optional[str] = None
     vga_spec: Optional[str] = None
     processor_spec: Optional[str] = None
     mainboard_spec: Optional[str] = None
     storage_spec: Optional[str] = None
-    monitor: Optional[str] = None
-    keyboard: Optional[str] = None
-    mouse: Optional[str] = None
     pc_type: Optional[Union[JenisPC, str]] = "Operasional"
 
 
