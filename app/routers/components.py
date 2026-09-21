@@ -110,12 +110,18 @@ def get_component_suggestions(
 # ENDPOINT LAMA & HYBRID (DIPERTAHANKAN)
 # ==========================================
 
-@router.get("/", response_model=List[ComponentResponse])
-@router.get("", response_model=List[ComponentResponse])
+@router.get("/", response_model=Dict[str, Any])
+@router.get("", response_model=Dict[str, Any])
 def read_components(
     db: DbSession, current_user: CurrentUser, pc_type: Optional[str] = None
 ):
-    return asset_service.get_components(db, pc_type=pc_type)
+    comps = asset_service.get_components(db, pc_type=pc_type)
+    return {
+        "data": [
+            ComponentResponse.model_validate(c).model_dump()
+            for c in comps
+        ]
+    }
 
 
 @router.post(
