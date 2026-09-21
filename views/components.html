@@ -6,135 +6,264 @@
 
 {% block content %}
 
-<!-- ── KAD UTAMA (MIN-HEIGHT 75VH) ────────────────────────────────────────── -->
-<div class="card shadow-sm border-0" style="min-height: 75vh; border-radius: 10px;">
-    <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
-        <!-- Baris Tajuk & Butang Aksi -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0 fw-bold text-primary">
-                <i class="bi bi-pc-display me-2"></i>Daftar Komponen & Spesifikasi
-            </h5>
-            <div class="d-flex align-items-center gap-2">
-                <div id="tableControlsSpek" class="d-flex gap-2 align-items-center"></div>
+<style>
+    /* Styling UI/UX Modern untuk Form */
+    .form-control-solid {
+        background-color: #f4f6f9 !important;
+        border: 2px solid transparent !important;
+        font-weight: 400 !important;
+        color: #333 !important;
+        transition: all 0.2s ease;
+    }
+    .form-control-solid:focus {
+        border-color: #0d6efd !important;
+        background-color: #fff !important;
+        box-shadow: none !important;
+    }
 
-                <!-- Tombol Import Spreadsheet -->
-                <button class="btn btn-sm btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#importMassalCompModal">
-                    <i class="bi bi-file-earmark-excel-fill me-1"></i>Import Excel
+    /* Styling Card Utama */
+    .card-solid-modern {
+        min-height: 82vh;
+        border-radius: 1rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.04);
+    }
+
+    /* ── Tabel Clean (Tanpa Garis Vertikal) ── */
+    .table-clean {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .table-clean thead th {
+        background-color: #ffffff !important;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #f1f5f9 !important;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        padding: 1.1rem 1rem;
+    }
+    .table-clean tbody td {
+        padding: 1.1rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+    }
+    .table-clean tbody tr {
+        transition: background-color 0.15s ease;
+    }
+    .table-clean tbody tr:hover {
+        background-color: #f8faff;
+    }
+    .table-clean tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* ── Avatar Pastel Icon Box ── */
+    .avatar-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .avatar-operasional { background-color: #eff6ff; color: #3b82f6; }
+    .avatar-server      { background-color: #fff1f2; color: #ef4444; }
+    .avatar-backup      { background-color: #fffbeb; color: #f59e0b; }
+
+    /* ── Two-line cell text ── */
+    .text-main {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #1e293b;
+        line-height: 1.3;
+    }
+    .text-sub {
+        font-size: 0.775rem;
+        color: #94a3b8;
+        line-height: 1.3;
+        margin-top: 2px;
+    }
+
+    /* ── Tombol Aksi Hover ── */
+    .btn-action {
+        border: none;
+        background: transparent;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        transition: background-color 0.15s ease, color 0.15s ease;
+        cursor: pointer;
+    }
+    .btn-action.view  { color: #64748b; }
+    .btn-action.edit  { color: #64748b; }
+    .btn-action.del   { color: #64748b; }
+    .btn-action.view:hover { background-color: #eff6ff; color: #3b82f6; }
+    .btn-action.edit:hover { background-color: #fefce8; color: #ca8a04; }
+    .btn-action.del:hover  { background-color: #fff1f2; color: #ef4444; }
+</style>
+
+<!-- Main Card Container -->
+<div class="card border-0 card-solid-modern bg-white">
+    
+    <!-- HEADER: Judul & Tombol Aksi -->
+    <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-pc-display fs-5"></i>
+            </div>
+            Daftar Spesifikasi PC
+        </h5>
+        
+        <div class="d-flex gap-2 align-items-center">
+            <!-- Group Ekspor Dibuat Netral Agar Clean -->
+            <div class="btn-group shadow-sm">
+                <button type="button" class="btn btn-light border text-secondary fw-semibold btn-sm px-3" id="btnExportExcel">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Excel
                 </button>
-
-                <!-- Butang Tambah PC Baru (Memicu Modal Tengah) -->
-                <button class="btn btn-primary shadow-sm" type="button" data-bs-toggle="modal" data-bs-target="#formComponentModal">
-                    <i class="bi bi-plus-lg me-1"></i> Tambah PC Baru
+                <button type="button" class="btn btn-light border text-secondary fw-semibold btn-sm px-3" id="btnExportPdf">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                </button>
+                <button type="button" class="btn btn-light border text-secondary fw-semibold btn-sm px-3" id="btnExportPrint">
+                    <i class="bi bi-printer me-1"></i> Print
                 </button>
             </div>
-        </div>
 
-        <!-- Baris Filter Kategori, Lencana & Kotak Carian -->
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top">
-            <!-- KIRI: Tabs Kategori PC & Ringkasan -->
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-                <ul class="nav nav-pills" id="tabFilterPC" role="tablist">
-                    <li class="nav-item"><a class="nav-link active fw-semibold" data-filter="" style="cursor:pointer;">Semua Data</a></li>
-                    <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Operasional" style="cursor:pointer;"><i class="bi bi-pc-display me-1"></i>PC Operasional</a></li>
-                    <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Server" style="cursor:pointer;"><i class="bi bi-server me-1"></i>PC Server</a></li>
-                    <li class="nav-item"><a class="nav-link fw-semibold" data-filter="PC Backup" style="cursor:pointer;"><i class="bi bi-hdd-network me-1"></i>PC Backup</a></li>
-                </ul>
-                <div class="vr text-secondary d-none d-md-block" style="height:24px;"></div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted fw-semibold" style="font-size:.85rem;">Operasional:</span>
-                    <span class="badge bg-primary rounded-pill px-2" id="count_op">0</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted fw-semibold" style="font-size:.85rem;">Server:</span>
-                    <span class="badge bg-danger rounded-pill px-2" id="count_sv">0</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted fw-semibold" style="font-size:.85rem;">Backup:</span>
-                    <span class="badge bg-warning text-dark rounded-pill px-2" id="count_bk">0</span>
-                </div>
-            </div>
+            <!-- Tombol Import Excel -->
+            <button class="btn btn-sm btn-light border text-secondary fw-semibold px-3 shadow-sm" type="button" data-bs-toggle="modal" data-bs-target="#importMassalCompModal">
+                <i class="bi bi-file-earmark-excel-fill text-success me-1"></i> Import
+            </button>
 
-            <!-- KANAN: Pencarian Custom -->
-            <div class="input-group input-group-sm" style="width:240px;">
-                <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" id="customSearchSpek" class="form-control border-start-0 ps-0" placeholder="Cari Spesifikasi...">
-            </div>
+            <!-- Container Tersembunyi untuk DataTables Buttons Bridge -->
+            <div id="tableControlsSpek" class="d-none"></div>
+
+            <!-- Tombol Tambah Tetap Menonjol Sebagai Primary Action -->
+            <button class="btn btn-primary shadow-sm fw-bold btn-sm px-4 ms-2" type="button" data-bs-toggle="modal" data-bs-target="#formComponentModal">
+                <i class="bi bi-plus-lg me-1"></i> Tambah PC Baru
+            </button>
         </div>
     </div>
 
-    <!-- ── TABEL DATA ──────────────────────────────────────────────────────── -->
-    <div class="card-body p-4">
+    <!-- SUB-HEADER: Filter Tab & Pencarian -->
+    <div class="card-body px-4 py-2 border-bottom">
+        <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
+            
+            <!-- Filter Tabs Modern -->
+            <div class="d-flex gap-3 align-items-center" id="tabFilterPC">
+                <button type="button" class="btn btn-outline-primary border-0 border-bottom border-2 border-primary rounded-0 fw-bold px-1 pb-2 filter-tab-btn active" data-filter="">Semua Data</button>
+                <button type="button" class="btn btn-link text-secondary text-decoration-none fw-semibold px-1 pb-2 filter-tab-btn" data-filter="PC Operasional">PC Operasional <span class="badge bg-primary rounded-pill ms-1" id="count_op">0</span></button>
+                <button type="button" class="btn btn-link text-secondary text-decoration-none fw-semibold px-1 pb-2 filter-tab-btn" data-filter="PC Server">PC Server <span class="badge bg-danger rounded-pill ms-1" id="count_sv">0</span></button>
+                <button type="button" class="btn btn-link text-secondary text-decoration-none fw-semibold px-1 pb-2 filter-tab-btn" data-filter="PC Backup">PC Backup <span class="badge bg-warning text-dark rounded-pill ms-1" id="count_bk">0</span></button>
+            </div>
+
+            <!-- Search Box DataTables Modern -->
+            <div class="input-group input-group-sm mb-2" style="max-width: 250px;">
+                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" id="customSearchSpek" class="form-control bg-light border-start-0" placeholder="Cari Spesifikasi...">
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- TABEL DATA -->
+    <div class="card-body px-4 pt-3 pb-4">
         <div class="table-responsive">
-            <table class="table table-hover align-middle" id="componentsTable">
-                <thead class="table-light">
+            <table class="table table-clean align-middle w-100" id="componentsTable">
+                <thead>
                     <tr>
-                        <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">IDENTITAS PC (USER)</th>
-                        <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">SISTEM OPERASI</th>
-                        <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">PROCESSOR (CPU)</th>
-                        <th class="fw-semibold text-muted text-uppercase" style="font-size:.8rem;">MAINBOARD</th>
-                        <!-- Kolom tersembunyi UI, tetap untuk Export -->
+                        <th style="width:220px;">Identitas PC</th>
+                        <th>CPU &amp; Mainboard</th>
+                        <th>RAM &amp; Storage</th>
+                        <th>OS &amp; VGA</th>
+                        <!-- Kolom tersembunyi UI, tetap untuk Export DataTables -->
                         <th>KAPASITAS RAM</th>
                         <th>KARTU GRAFIS (VGA)</th>
                         <th>STORAGE HDD/SSD</th>
                         <th>MONITOR</th>
                         <th>KEYBOARD</th>
                         <th>MOUSE</th>
-                        <th class="fw-semibold text-muted text-uppercase text-center" style="font-size:.8rem;">JENIS PC</th>
-                        <th class="fw-semibold text-muted text-uppercase text-end" style="font-size:.8rem;">AKSI</th>
+                        <th class="text-center">Kategori</th>
+                        <th class="text-end" style="width:110px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for comp in components %}
                     <tr>
+                        <!-- Kolom Identitas PC dengan Avatar -->
                         <td>
-                            <div class="fw-semibold text-dark"><i class="bi bi-pc-display text-secondary me-2"></i>{{ comp.user_pc }}</div>
+                            <div class="d-flex align-items-center gap-3">
+                                {% if comp.pc_type == 'PC Server' or comp.pc_type == 'Server' %}
+                                <div class="avatar-box avatar-server"><i class="bi bi-server"></i></div>
+                                {% elif comp.pc_type == 'PC Backup' or comp.pc_type == 'Backup' %}
+                                <div class="avatar-box avatar-backup"><i class="bi bi-hdd-network"></i></div>
+                                {% else %}
+                                <div class="avatar-box avatar-operasional"><i class="bi bi-pc-display"></i></div>
+                                {% endif %}
+                                <div>
+                                    <div class="text-main">{{ comp.user_pc }}</div>
+                                    <div class="text-sub">{{ comp.pc_type or 'PC Operasional' }}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td title="{{ comp.os }}">
-                            <div class="text-secondary fw-medium text-truncate" style="max-width:220px;font-size:.85rem;">{{ comp.os }}</div>
+                        <!-- CPU & Mainboard (dua baris) -->
+                        <td>
+                            <div class="text-main" title="{{ comp.cpu }}">{{ (comp.cpu or '—')[:30] }}{% if comp.cpu and comp.cpu|length > 30 %}…{% endif %}</div>
+                            <div class="text-sub" title="{{ comp.mainboard }}">{{ (comp.mainboard or '—')[:28] }}{% if comp.mainboard and comp.mainboard|length > 28 %}…{% endif %}</div>
                         </td>
-                        <td title="{{ comp.cpu }}">
-                            <div class="text-secondary fw-medium text-truncate" style="max-width:220px;font-size:.85rem;">{{ comp.cpu }}</div>
+                        <!-- RAM & Storage (dua baris) -->
+                        <td>
+                            <div class="text-main" title="{{ comp.ram }}">{{ comp.ram or '—' }}</div>
+                            <div class="text-sub" title="{{ comp.storage }}">{{ comp.storage or '—' }}</div>
                         </td>
-                        <td title="{{ comp.mainboard }}">
-                            <div class="text-secondary fw-medium text-truncate" style="max-width:200px;font-size:.85rem;">{{ comp.mainboard }}</div>
+                        <!-- OS & VGA (dua baris) -->
+                        <td>
+                            <div class="text-main" title="{{ comp.os }}">{{ (comp.os or '—')[:28] }}{% if comp.os and comp.os|length > 28 %}…{% endif %}</div>
+                            <div class="text-sub" title="{{ comp.vga }}">{{ (comp.vga or '—')[:28] }}{% if comp.vga and comp.vga|length > 28 %}…{% endif %}</div>
                         </td>
-                        <!-- Data Export tersembunyi -->
+                        <!-- Data Export tersembunyi (tetap ada untuk DataTables Export) -->
                         <td>{{ comp.ram }}</td>
                         <td>{{ comp.vga }}</td>
                         <td>{{ comp.storage }}</td>
                         <td>{{ comp.monitor }}</td>
                         <td>{{ comp.keyboard }}</td>
                         <td>{{ comp.mouse }}</td>
-                        <!-- Jenis PC Badge -->
+                        <!-- Kategori Badge -->
                         <td class="text-center text-nowrap">
                             {% if comp.pc_type == 'PC Server' or comp.pc_type == 'Server' %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">
-                                    <i class="bi bi-server me-1"></i>PC Server
+                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-semibold" style="font-size:0.75rem;">
+                                    PC Server
                                 </span>
                             {% elif comp.pc_type == 'PC Backup' or comp.pc_type == 'Backup' %}
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3">
-                                    <i class="bi bi-hdd-network me-1"></i>PC Backup
+                                <span class="badge bg-warning bg-opacity-10 text-warning-emphasis px-3 py-2 rounded-pill fw-semibold" style="font-size:0.75rem;">
+                                    PC Backup
                                 </span>
                             {% else %}
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
-                                    <i class="bi bi-pc-display me-1"></i>PC Operasional
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold" style="font-size:0.75rem;">
+                                    Operasional
                                 </span>
                             {% endif %}
                         </td>
-                        <!-- Aksi -->
+                        <!-- Tombol Aksi Modern -->
                         <td class="text-end text-nowrap">
-                            <!-- Tombol Detail (View) -->
-                            <button class="btn btn-sm btn-outline-info me-1 btn-view-component" title="Lihat Detail"
-                                data-id="{{ comp.id }}">
-                                <i class="bi bi-eye-fill"></i>
+                            <button class="btn-action view btn-view-component" title="Lihat Detail" data-id="{{ comp.id }}">
+                                <i class="bi bi-eye"></i>
                             </button>
-                            <!-- Tombol Edit Spesifikasi -->
-                            <button class="btn btn-sm btn-outline-primary me-1 btn-edit-component" title="Edit Spesifikasi"
-                                data-id="{{ comp.id }}">
-                                <i class="bi bi-pencil-square"></i>
+                            <button class="btn-action edit btn-edit-component" title="Edit Spesifikasi" data-id="{{ comp.id }}">
+                                <i class="bi bi-pencil"></i>
                             </button>
-                            <!-- Tombol Hapus -->
-                            <button class="btn btn-sm btn-outline-danger" title="Hapus" onclick="deleteComp({{ comp.id }})">
+                            <button class="btn-action del" title="Hapus" onclick="deleteComp({{ comp.id }})">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>
@@ -152,146 +281,126 @@
 <!-- ════════════════════════════════════════════════════════════════════════
      MODAL TAMBAH / EDIT PC (TENGAH) & INPUT MANUAL
      ════════════════════════════════════════════════════════════════════════ -->
-<!-- Modal Tambah/Edit PC -->
-<div class="modal fade" id="formComponentModal" tabindex="-1" aria-labelledby="formComponentModalLabel" aria-hidden="true" style="transition: opacity 0.3s ease-in-out;">
+<!-- Modal Registrasi PC (Modern & Clean UI) -->
+<div class="modal fade" id="formComponentModal" tabindex="-1" aria-labelledby="formComponentModalLabel" aria-hidden="true" style="transition: opacity 0.2s ease-in-out;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white pe-4">
-                <h5 class="modal-title fw-bold" id="formComponentModalLabel">
-                    <i class="bi bi-pc-display me-2"></i>Registrasi Spesifikasi PC
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            
+            <div class="modal-header bg-white border-bottom p-4">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center" id="formComponentModalLabel">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3" id="formComponentModalIcon">
+                        <i class="bi bi-pc-display fs-5"></i>
+                    </div>
+                    <span id="formComponentModalTitle">Registrasi Spesifikasi PC</span>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4 bg-white">
-                <form id="componentForm">
+
+            <div class="modal-body p-4 p-md-5 bg-light bg-opacity-50">
+                <form id="componentForm" autocomplete="off">
                     <input type="hidden" id="component_id">
 
                     <!-- BAGIAN 1: Identitas Aset -->
-                    <div class="card mb-4 border-0 bg-light shadow-sm">
-                        <div class="card-body p-4">
-                            <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.85rem;">1. Identitas Aset</h6>
-                            <div class="row g-3">
+                    <div class="card mb-4 border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4 p-md-5">
+                            <h6 class="fw-bold text-primary mb-4 text-uppercase" style="letter-spacing: 0.5px; font-size: 0.8rem;">
+                                1. Identitas Aset
+                            </h6>
+                            <div class="row g-4">
                                 <div class="col-md-8">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control fw-bold text-primary border-primary" id="identitas_pc" name="identitas_pc" placeholder="Identitas PC" required>
-                                        <label for="identitas_pc">Identitas PC (User / Nama PC) <span class="text-danger">*</span></label>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Identitas PC (User / Nama PC) <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="identitas_pc" name="identitas_pc" placeholder="Cth: PC - ACCOUNTING 1" autocomplete="off" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <select class="form-select border-primary" id="jenis_pc" name="jenis_pc" aria-label="Kategori PC" required>
-                                            <option value="PC Operasional">PC Operasional</option>
-                                            <option value="PC Server">PC Server</option>
-                                            <option value="PC Backup">PC Backup</option>
-                                        </select>
-                                        <label for="jenis_pc">Kategori PC <span class="text-danger">*</span></label>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Kategori PC <span class="text-danger">*</span></label>
+                                    <select class="form-select form-select-lg form-control-solid fs-6" id="jenis_pc" name="jenis_pc" required>
+                                        <option value="PC Operasional">PC Operasional</option>
+                                        <option value="PC Server">PC Server</option>
+                                        <option value="PC Backup">PC Backup</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- BAGIAN 2: Komponen Teras -->
-                    <div class="card mb-4 border-0 bg-light shadow-sm">
-                        <div class="card-body p-4">
-                            <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.85rem;">2. Komponen Teras</h6>
-                            <div class="row g-3 mb-3">
+                    <div class="card mb-4 border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4 p-md-5">
+                            <h6 class="fw-bold text-primary mb-4 text-uppercase" style="letter-spacing: 0.5px; font-size: 0.8rem;">
+                                2. Komponen Teras
+                            </h6>
+                            <div class="row g-4 mb-4">
                                 <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="cpu" name="cpu" list="cpu_list" placeholder="Processor">
-                                        <label for="cpu">Processor (CPU)</label>
-                                        <datalist id="cpu_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Processor (CPU)</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="cpu" name="cpu" placeholder="Ketik spesifikasi manual..." autocomplete="off">
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="mainboard" name="mainboard" list="mainboard_list" placeholder="Mainboard">
-                                        <label for="mainboard">Mainboard / Motherboard</label>
-                                        <datalist id="mainboard_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Mainboard / Motherboard</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="mainboard" name="mainboard" placeholder="Ketik spesifikasi manual..." autocomplete="off">
                                 </div>
                             </div>
-                            <div class="row g-3 mb-3">
+                            <div class="row g-4 mb-4">
                                 <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="ram" name="ram" list="ram_list" placeholder="RAM">
-                                        <label for="ram">Kapasitas RAM</label>
-                                        <datalist id="ram_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Kapasitas RAM</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="ram" name="ram" placeholder="Ketik spesifikasi manual..." autocomplete="off">
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="storage" name="storage" list="storage_list" placeholder="Storage">
-                                        <label for="storage">Penyimpanan (SSD/HDD)</label>
-                                        <datalist id="storage_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Penyimpanan (SSD/HDD)</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="storage" name="storage" placeholder="Ketik spesifikasi manual..." autocomplete="off">
                                 </div>
                             </div>
-                            <div class="row g-3">
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="vga" name="vga" list="vga_list" placeholder="VGA">
-                                        <label for="vga">Kartu Grafis (VGA/GPU)</label>
-                                        <datalist id="vga_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Kartu Grafis (VGA/GPU)</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="vga" name="vga" placeholder="Ketik spesifikasi manual..." autocomplete="off">
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="os" name="os" list="os_list" placeholder="Sistem Operasi">
-                                        <label for="os">Sistem Operasi (OS)</label>
-                                        <datalist id="os_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Sistem Operasi (OS)</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="os" name="os" placeholder="Ketik spesifikasi manual..." autocomplete="off">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- BAGIAN 3: Periferal Eksternal -->
-                    <div class="card mb-4 border-0 bg-light shadow-sm">
-                        <div class="card-body p-4">
-                            <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.85rem;">3. Periferal Eksternal</h6>
-                            <div class="row g-3">
+                    <div class="card mb-4 border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4 p-md-5">
+                            <h6 class="fw-bold text-primary mb-4 text-uppercase" style="letter-spacing: 0.5px; font-size: 0.8rem;">
+                                3. Periferal Eksternal
+                            </h6>
+                            <div class="row g-4">
                                 <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="monitor" name="monitor" list="monitor_list" placeholder="Monitor">
-                                        <label for="monitor">Monitor</label>
-                                        <datalist id="monitor_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Monitor</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="monitor" name="monitor" placeholder="Ketik spesifikasi..." autocomplete="off">
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="keyboard" name="keyboard" list="keyboard_list" placeholder="Keyboard">
-                                        <label for="keyboard">Keyboard</label>
-                                        <datalist id="keyboard_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Keyboard</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="keyboard" name="keyboard" placeholder="Ketik spesifikasi..." autocomplete="off">
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="mouse" name="mouse" list="mouse_list" placeholder="Mouse">
-                                        <label for="mouse">Mouse</label>
-                                        <datalist id="mouse_list"></datalist>
-                                    </div>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Mouse</label>
+                                    <input type="text" class="form-control form-control-lg form-control-solid fs-6" id="mouse" name="mouse" placeholder="Ketik spesifikasi..." autocomplete="off">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Input Alasan Perubahan -->
-                    <div class="mb-3 p-3 bg-warning bg-opacity-10 border border-warning rounded d-none" id="updateReasonDiv">
-                        <div class="form-floating">
-                            <input type="text" class="form-control border-warning bg-white" id="update_reason" name="update_reason" placeholder="Alasan">
-                            <label for="update_reason" class="text-dark fw-bold">Alasan Perubahan Spesifikasi <span class="text-danger">*</span></label>
-                        </div>
-                        <div class="form-text text-muted mt-2"><i class="bi bi-info-circle"></i> Wajib diisi untuk dicatat dalam Audit Trail.</div>
+                    <div class="mb-3 p-4 bg-warning bg-opacity-10 border border-warning border-opacity-50 rounded-4 d-none" id="updateReasonDiv">
+                        <label class="form-label text-dark fw-bold">Alasan Perubahan Spesifikasi <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg form-control-solid bg-white border-warning" id="update_reason" name="update_reason" placeholder="Berikan alasan yang jelas...">
+                        <div class="form-text text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Wajib diisi untuk dicatat dalam Audit Trail.</div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer bg-light border-top p-3">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" form="componentForm" class="btn btn-primary px-4 fw-bold shadow-sm" style="transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            
+            <div class="modal-footer bg-white border-top p-4 rounded-bottom-4">
+                <button type="button" class="btn btn-light px-4 border text-dark fw-semibold" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" form="componentForm" class="btn btn-primary px-5 fw-bold shadow-sm rounded-3">
                     <i class="bi bi-save me-2"></i> Simpan Data PC
                 </button>
             </div>
+
         </div>
     </div>
 </div>
@@ -491,70 +600,58 @@ $(document).ready(function() {
         language: { search: '_INPUT_', searchPlaceholder: 'Cari spek...' }
     });
 
-    // Counter badge jenis PC
+    // Counter badge jenis PC (Kolom 10 = Kategori)
     var jenisPcData = table.column(10).data().join(' ');
-    $('#count_op').text((jenisPcData.match(/PC Operasional/g) || []).length);
+    $('#count_op').text((jenisPcData.match(/Operasional/g) || []).length);
     $('#count_sv').text((jenisPcData.match(/PC Server/g) || []).length);
     $('#count_bk').text((jenisPcData.match(/PC Backup/g) || []).length);
 
-    table.buttons().container().removeClass('btn-group flex-wrap').addClass('d-flex gap-2').appendTo('#tableControlsSpek');
+    table.buttons().container().hide().appendTo('#tableControlsSpek');
+    $('#btnExportExcel').on('click', function() { table.button('.buttons-excel').trigger(); });
+    $('#btnExportPdf').on('click', function() { table.button('.buttons-pdf').trigger(); });
+    $('#btnExportPrint').on('click', function() { table.button('.buttons-print').trigger(); });
+
     $('#componentsTable_filter').hide();
     $('#customSearchSpek').on('keyup', function() { table.search(this.value).draw(); });
-    $('#tabFilterPC .nav-link').on('click', function(e) {
+    $('#tabFilterPC .filter-tab-btn').on('click', function(e) {
         e.preventDefault();
-        $('#tabFilterPC .nav-link').removeClass('active');
-        $(this).addClass('active');
+        $('#tabFilterPC .filter-tab-btn')
+            .removeClass('btn-outline-primary border-0 border-bottom border-2 border-primary rounded-0 fw-bold active')
+            .addClass('btn-link text-secondary text-decoration-none fw-semibold');
+        $(this)
+            .removeClass('btn-link text-secondary text-decoration-none fw-semibold')
+            .addClass('btn-outline-primary border-0 border-bottom border-2 border-primary rounded-0 fw-bold active');
         table.column(10).search($(this).attr('data-filter')).draw();
     });
 
 
-    // 1. Fungsi untuk Memuat Saran Autocomplete (Datalist)
-    // Fungsi ini akan mengambil daftar unik komponen yang sudah pernah diinput sebelumnya
-    function loadDatalistSuggestions(field_name, list_id) {
-        $.ajax({
-            url: `/api/components/suggestions?field=${field_name}`,
-            type: 'GET',
-            success: function(response) {
-                let options = '';
-                if (response && response.data) {
-                    response.data.forEach(item => {
-                        if (item) options += `<option value="${item}">`;
-                    });
-                }
-                $(`#${list_id}`).html(options);
-            }
-        });
-    }
-
-    // 2. Trigger saat Modal Tambah/Edit Dibuka
+    // Trigger saat Modal dibuka
     $('#formComponentModal').on('show.bs.modal', function () {
-        // Muat data saran untuk masing-masing datalist
-        loadDatalistSuggestions('cpu', 'cpu_list');
-        loadDatalistSuggestions('mainboard', 'mainboard_list');
-        loadDatalistSuggestions('ram', 'ram_list');
-        loadDatalistSuggestions('storage', 'storage_list');
-        loadDatalistSuggestions('vga', 'vga_list');
-        loadDatalistSuggestions('os', 'os_list');
-        loadDatalistSuggestions('monitor', 'monitor_list');
-        loadDatalistSuggestions('keyboard', 'keyboard_list');
-        loadDatalistSuggestions('mouse', 'mouse_list');
-
-        // Reset seluruh isian form jika ini mode Tambah Baru (bukan sedang Edit)
         if (!$('#component_id').val()) {
+            // Reset seluruh isian form input teks setiap kali modal dibuka (mode Tambah Baru)
             $('#componentForm')[0].reset();
             $('#component_id').val('');
-            $('#formComponentModalLabel').html('<i class="bi bi-pc-display me-2"></i>Registrasi Spesifikasi PC');
+            $('#formComponentModalIcon').html('<i class="bi bi-pc-display fs-5"></i>');
+            $('#formComponentModalTitle').text('Registrasi Spesifikasi PC');
+            
+            // Sembunyikan field Alasan Perubahan untuk mode Tambah Baru
             $('#updateReasonDiv').addClass('d-none');
             $('#update_reason').removeAttr('required').val('');
         }
     });
 
     $('[data-bs-target="#formComponentModal"]').on('click', function() {
-        $('#componentForm')[0].reset();
         $('#component_id').val('');
-        $('#formComponentModalLabel').html('<i class="bi bi-pc-display me-2"></i>Registrasi Spesifikasi PC');
+        $('#componentForm')[0].reset();
+        $('#formComponentModalIcon').html('<i class="bi bi-pc-display fs-5"></i>');
+        $('#formComponentModalTitle').text('Registrasi Spesifikasi PC');
         $('#updateReasonDiv').addClass('d-none');
         $('#update_reason').removeAttr('required').val('');
+    });
+
+    $('#formComponentModal').on('hidden.bs.modal', function () {
+        $('#component_id').val('');
+        $('#componentForm')[0].reset();
     });
 
 
@@ -582,19 +679,24 @@ $(document).ready(function() {
             return;
         }
 
+        const getFieldVal = field => {
+            const v = $(`#${field}`).val();
+            return (v && v.trim()) ? v.trim() : null;
+        };
+
         // Kumpulkan data payload, kirim null jika field dibiarkan kosong
         let payload = {
             identitas_pc: identitasPc,
             jenis_pc: $('#jenis_pc').val(),
-            cpu: $('#cpu').val().trim() || null,
-            mainboard: $('#mainboard').val().trim() || null,
-            ram: $('#ram').val().trim() || null,
-            storage: $('#storage').val().trim() || null,
-            vga: $('#vga').val().trim() || null,
-            os: $('#os').val().trim() || null,
-            monitor: $('#monitor').val().trim() || null,
-            keyboard: $('#keyboard').val().trim() || null,
-            mouse: $('#mouse').val().trim() || null,
+            cpu: getFieldVal('cpu'),
+            mainboard: getFieldVal('mainboard'),
+            ram: getFieldVal('ram'),
+            storage: getFieldVal('storage'),
+            vga: getFieldVal('vga'),
+            os: getFieldVal('os'),
+            monitor: getFieldVal('monitor'),
+            keyboard: getFieldVal('keyboard'),
+            mouse: getFieldVal('mouse'),
         };
 
         // Jika ini proses Update, wajibkan field alasan
@@ -648,7 +750,8 @@ $(document).ready(function() {
 
         $('#componentForm')[0].reset();
         $('#component_id').val(id);
-        $('#formComponentModalLabel').html('<i class="bi bi-pencil-square me-2"></i>Edit Spesifikasi PC');
+        $('#formComponentModalIcon').html('<i class="bi bi-pencil-square fs-5"></i>');
+        $('#formComponentModalTitle').text('Edit Spesifikasi PC');
         $('#updateReasonDiv').removeClass('d-none');
         $('#update_reason').attr('required', 'required').val('');
 
