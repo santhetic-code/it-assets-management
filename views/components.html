@@ -21,134 +21,111 @@
         box-shadow: none !important;
     }
 
-    /* Struktur Tabel Clean & Modern (Tinggi Baris Konsisten) */
-    .table-clean {
+    /* Styling Tabel Identik dengan Catatan IT */
+    .table-standard {
         border-collapse: collapse;
         width: 100%;
-        table-layout: fixed; /* Memaksa kolom patuh pada persentase lebar */
+        white-space: nowrap; /* Mencegah teks turun ke bawah, memicu scroll horizontal */
     }
-    .table-clean thead th {
-        background-color: #ffffff !important;
-        color: #94a3b8;
+    .table-standard thead th {
+        background-color: #f8f9fa !important;
+        color: #495057;
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         letter-spacing: 0.5px;
-        border-bottom: 2px solid #f1f5f9 !important;
-        border-top: none; border-left: none; border-right: none;
-        padding: 1rem 0.75rem; /* Padding header dirampingkan */
+        border-bottom: 2px solid #dee2e6 !important;
+        padding: 1rem;
     }
-    .table-clean tbody td {
-        padding: 0.75rem; /* Whitespace dirampingkan agar tidak terlalu memakan space vertikal */
+    .table-standard tbody td {
+        padding: 1rem;
         vertical-align: middle;
-        border-bottom: 1px solid #f1f5f9;
-        border-top: none; border-left: none; border-right: none;
+        color: #212529;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-bottom: 1px solid #dee2e6;
     }
 
-    /* Two-Line Data Cell dengan Efek Pemotongan (Truncation) */
-    .text-main {
-        font-weight: 600;
-        color: #334155;
-        display: block;
-        font-size: 0.85rem;
-        white-space: nowrap; /* Mencegah teks turun ke baris baru */
-        overflow: hidden; /* Menyembunyikan teks yang kelebihan */
-        text-overflow: ellipsis; /* Menambahkan titik-titik (...) */
-    }
-    .text-sub {
-        font-size: 0.75rem;
-        color: #94a3b8;
-        display: block;
-        margin-top: 0.15rem;
-        white-space: nowrap;
+    /* Membatasi lebar maksimum sel teks agar tidak terlalu panjang */
+    .truncate-cell {
+        max-width: 250px;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    /* Avatar Icon Box Pastel */
-    .avatar-box {
-        width: 38px; height: 38px;
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; flex-shrink: 0;
+    /* Tombol Aksi Outlined Identik dengan Catatan IT */
+    .btn-action-outline {
+        background: transparent;
+        border: 1px solid;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        margin: 0 2px;
     }
-    .avatar-operasional { background-color: #eff6ff; color: #3b82f6; }
-    .avatar-server { background-color: #fef2f2; color: #ef4444; }
-    .avatar-backup { background-color: #fefce8; color: #eab308; }
+    .btn-action-outline.view { border-color: #0dcaf0; color: #0dcaf0; }
+    .btn-action-outline.view:hover { background-color: #0dcaf0; color: white; }
+    .btn-action-outline.edit { border-color: #ffc107; color: #ffc107; }
+    .btn-action-outline.edit:hover { background-color: #ffc107; color: white; }
+    .btn-action-outline.delete { border-color: #dc3545; color: #dc3545; }
+    .btn-action-outline.delete:hover { background-color: #dc3545; color: white; }
 
-    /* Tombol Aksi Borderless & Hover Effect */
-    .btn-action {
-        background: transparent; border: none; 
-        color: #cbd5e1; /* Abu-abu pudar */
-        padding: 0.4rem 0.5rem; border-radius: 6px; 
-        transition: all 0.2s ease;
+    /* Badge Kategori Identik dengan Catatan IT */
+    .badge-kategori {
+        font-weight: 500;
+        padding: 0.4em 0.8em;
+        border-radius: 50rem;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        background-color: white;
     }
-    .btn-action:hover { transform: translateY(-2px); }
-    .btn-action.view:hover { color: #3b82f6; background-color: #eff6ff; }
-    .btn-action.edit:hover { color: #f59e0b; background-color: #fffbeb; }
-    .btn-action.delete:hover { color: #ef4444; background-color: #fef2f2; }
 </style>
 
-<!-- Container Utama -->
-<div class="card border-0 shadow-sm bg-white" style="border-radius: 1rem; min-height: 80vh;">
+<!-- Main Container -->
+<div class="card border-0 shadow-sm rounded-3 bg-white mb-4">
     
-    <!-- HEADER: Toolbar -->
-    <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
-            <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                <i class="bi bi-pc-display fs-5"></i>
-            </div>
-            Daftar Spesifikasi PC
-        </h5>
-        
-        <div class="d-flex gap-3 align-items-center">
-            <!-- Dropdown Ekspor Sederhana -->
-            <div class="dropdown">
-                <button class="btn btn-light border text-secondary fw-semibold px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-download me-1"></i> Ekspor
-                </button>
-                <ul class="dropdown-menu shadow border-0 rounded-3">
-                    <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnExportExcel"><i class="bi bi-file-earmark-excel text-success me-2"></i>Excel</a></li>
-                    <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnExportPdf"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>PDF</a></li>
-                    <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnExportPrint"><i class="bi bi-printer text-secondary me-2"></i>Print</a></li>
-                </ul>
-            </div>
-            
-            <button class="btn btn-primary shadow-sm fw-bold px-4" type="button" data-bs-toggle="modal" data-bs-target="#formComponentModal">
-                <i class="bi bi-plus-lg me-1"></i> Tambah PC Baru
-            </button>
+    <!-- HEADER: Ekspor & Tambah (Seperti Catatan IT) -->
+    <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success btn-sm fw-semibold px-3" id="btnExportExcel"><i class="bi bi-file-earmark-excel me-1"></i> Excel</button>
+            <button type="button" class="btn btn-danger btn-sm fw-semibold px-3" id="btnExportPdf"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</button>
+            <button type="button" class="btn btn-secondary btn-sm fw-semibold px-3" id="btnExportPrint"><i class="bi bi-printer me-1"></i> Print</button>
         </div>
+        
+        <button class="btn btn-info text-white shadow-sm fw-bold px-4" type="button" data-bs-toggle="modal" data-bs-target="#formComponentModal">
+            <i class="bi bi-plus-lg me-1"></i> Tambah PC Baru
+        </button>
     </div>
 
-    <!-- FILTER TABS & SEARCH -->
-    <div class="card-body px-4 py-0 border-bottom d-flex justify-content-between align-items-end flex-wrap gap-3">
-        <div class="d-flex gap-4" id="tableTabs">
-            <button class="btn p-0 border-0 border-bottom border-3 border-primary rounded-0 fw-bold text-primary pb-2 filter-tab" data-filter="">Semua Data</button>
-            <button class="btn p-0 border-0 text-muted fw-semibold pb-2 filter-tab" data-filter="PC Operasional">PC Operasional</button>
-            <button class="btn p-0 border-0 text-muted fw-semibold pb-2 filter-tab" data-filter="PC Server">PC Server</button>
-            <button class="btn p-0 border-0 text-muted fw-semibold pb-2 filter-tab" data-filter="PC Backup">PC Backup</button>
+    <!-- FILTER & SEARCH BAR -->
+    <div class="card-body px-4 py-2 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <!-- Dropdown Filter Identik Catatan IT -->
+        <div class="d-flex align-items-center bg-light border rounded px-3 py-2" style="width: 280px;">
+            <i class="bi bi-funnel-fill text-primary me-2"></i>
+            <select class="form-select form-select-sm border-0 bg-transparent shadow-none fw-semibold filter-select" id="filterKategori">
+                <option value="">Semua Kategori PC</option>
+                <option value="PC Operasional">PC Operasional</option>
+                <option value="PC Server">PC Server</option>
+                <option value="PC Backup">PC Backup</option>
+            </select>
         </div>
-        
-        <div class="mb-2">
-            <div class="input-group search-clean">
-                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control bg-light border-start-0" id="customSearch" placeholder="Cari Spesifikasi..." style="width: 250px;">
-            </div>
-        </div>
+
+        <!-- Length Menu (Show entries) & Search DataTables akan di-inject otomatis oleh DataTables di area ini, kita siapkan containernya di Javascript -->
     </div>
 
     <!-- TABEL DATA -->
     <div class="card-body px-4 pt-0">
-        <div class="table-responsive">
-            <table class="table table-clean w-100" id="componentsTable">
+        <div class="table-responsive overflow-hidden"> <!-- overflow-hidden agar rapi & proporsional -->
+            <table class="table table-standard w-100" id="componentsTable">
                 <thead>
                     <tr>
                         <th style="width: 20%;">Identitas PC</th>
-                        <th style="width: 22%;">CPU & Mainboard</th>
-                        <th style="width: 28%;">RAM & Storage</th>
-                        <th style="width: 18%;">OS & VGA</th>
-                        <th style="width: 7%;">Kategori</th>
-                        <th class="text-end" style="width: 5%;">Aksi</th>
+                        <th style="width: 25%;">Processor (CPU)</th>
+                        <th style="width: 15%;">Kapasitas RAM</th>
+                        <th style="width: 20%;">Penyimpanan</th>
+                        <th class="text-center" style="width: 10%;">Kategori</th>
+                        <th class="text-center" style="width: 10%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -416,11 +393,15 @@ $(document).ready(function () {
     // ── 1. Inisialisasi DataTables ───────────────────────────────────────────
     let table = $('#componentsTable').DataTable({
         ajax: {
-            url: "/api/components/", // Pastikan endpoint ini sesuai dengan route backend Anda
+            url: "/api/components/", 
             dataSrc: "data"
         },
-        dom: 'rt<"d-flex justify-content-between align-items-center mt-3"ip>', // Sembunyikan default search & length menu
+        // Tata Letak Kontrol Tabel: Search Kanan Atas, Pagination Kanan Bawah
+        dom: "<'row mb-3 align-items-center'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         pageLength: 10,
+        autoWidth: false, // Penting: Matikan autoWidth agar persentase width dari HTML berfungsi
         buttons: [
             {
                 extend: 'excel',
@@ -438,107 +419,62 @@ $(document).ready(function () {
             }
         ],
         columns: [
-            {
-                data: null,
-                width: "20%", // Atur lebar spesifik
-                render: function (data, type, row) {
-                    let bgClass = 'avatar-operasional';
-                    let iconClass = 'bi-display';
-                    if (row.jenis_pc === 'PC Server') { bgClass = 'avatar-server'; iconClass = 'bi-hdd-network'; }
-                    else if (row.jenis_pc === 'PC Backup') { bgClass = 'avatar-backup'; iconClass = 'bi-device-hdd'; }
-                    
-                    let idPc = row.identitas_pc || '-';
-                    let jenis = row.jenis_pc || '-';
-                    
-                    return `
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-box ${bgClass} me-3"><i class="bi ${iconClass}"></i></div>
-                        <div style="min-width: 0;"> <!-- min-width 0 penting agar truncate bekerja di dalam flex -->
-                            <span class="text-main" title="${idPc}">${idPc}</span>
-                            <span class="text-sub" title="${jenis}">${jenis}</span>
-                        </div>
-                    </div>`;
+            { 
+                data: "identitas_pc",
+                render: function(data) { 
+                    return `<span class="fw-bold text-dark">${data || '-'}</span>`; 
                 }
             },
-            {
-                data: null,
-                width: "22%",
-                render: function (data, type, row) {
-                    let cpu = row.cpu || '-';
-                    let mb = row.mainboard || '-';
-                    return `
-                    <span class="text-main" title="${cpu}">${cpu}</span>
-                    <span class="text-sub" title="${mb}">${mb}</span>`;
+            { 
+                data: "cpu",
+                render: function(data) { 
+                    return `<div class="truncate-cell" style="max-width: 200px;" title="${data || ''}">${data || '-'}</div>`; 
                 }
             },
-            {
-                data: null,
-                width: "28%", // Diberikan ruang lebih besar karena data RAM & Storage paling panjang
-                render: function (data, type, row) {
-                    let ram = row.ram || '-';
-                    let storage = row.storage || '-';
-                    return `
-                    <span class="text-main" title="${ram}">${ram}</span>
-                    <span class="text-sub" title="${storage}">${storage}</span>`;
+            { 
+                data: "ram",
+                render: function(data) { 
+                    return `<div class="truncate-cell" style="max-width: 150px;" title="${data || ''}">${data || '-'}</div>`; 
                 }
             },
-            {
-                data: null,
-                width: "18%",
-                render: function (data, type, row) {
-                    let os = row.os || '-';
-                    let vga = row.vga || '-';
-                    return `
-                    <span class="text-main" title="${os}">${os}</span>
-                    <span class="text-sub" title="${vga}">${vga}</span>`;
+            { 
+                data: "storage",
+                render: function(data) { 
+                    return `<div class="truncate-cell" style="max-width: 200px;" title="${data || ''}">${data || '-'}</div>`; 
                 }
             },
             {
                 data: "jenis_pc",
-                width: "7%",
+                className: "text-center",
                 render: function (data, type, row) {
                     if (type === 'filter') {
                         return `${data || ''} ${data ? data.replace('PC ', '') : ''}`;
                     }
-                    let badgeClass = 'bg-primary bg-opacity-10 text-primary border-primary';
-                    if (data === 'PC Server' || data === 'Server') badgeClass = 'bg-danger bg-opacity-10 text-danger border-danger';
-                    if (data === 'PC Backup' || data === 'Backup') badgeClass = 'bg-warning bg-opacity-10 text-warning border-warning';
-                    
                     let shortName = data ? data.replace('PC ', '') : '-';
-                    return `<span class="badge ${badgeClass} border border-opacity-25 px-2 py-1 rounded-pill" style="font-size: 0.7rem;">${shortName}</span>`;
+                    return `<span class="badge-kategori shadow-sm">${shortName}</span>`;
                 }
             },
             {
                 data: "id",
-                width: "5%",
-                className: "text-end",
+                className: "text-center",
                 orderable: false,
                 render: function (data) {
                     return `
-                    <div class="d-flex justify-content-end gap-1">
-                        <button class="btn-action view" onclick="viewComponent('${data}')" title="Lihat"><i class="bi bi-eye-fill"></i></button>
-                        <button class="btn-action edit" onclick="editComponent('${data}')" title="Edit"><i class="bi bi-pencil-fill"></i></button>
-                        <button class="btn-action delete" onclick="deleteComponent('${data}')" title="Hapus"><i class="bi bi-trash3-fill"></i></button>
+                    <div class="d-flex justify-content-center">
+                        <button class="btn-action-outline view" onclick="viewComponent('${data}')" title="Lihat Detail"><i class="bi bi-eye"></i></button>
+                        <button class="btn-action-outline edit" onclick="editComponent('${data}')" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn-action-outline delete" onclick="deleteComponent('${data}')" title="Hapus"><i class="bi bi-trash"></i></button>
                     </div>`;
                 }
             }
         ]
     });
 
-    // Custom Search Bar UI Tying to DataTables
-    $('#customSearch').on('keyup', function () {
-        table.search(this.value).draw();
-    });
-
-    // BUG FIXING: Filter Tabs Logic (Mencari di indeks kolom ke-4 yaitu 'Kategori')
-    $('.filter-tab').on('click', function () {
-        // Manipulasi UI Tabs aktif
-        $('.filter-tab').removeClass('border-bottom border-3 border-primary fw-bold text-primary').addClass('text-muted fw-semibold');
-        $(this).removeClass('text-muted fw-semibold').addClass('border-bottom border-3 border-primary fw-bold text-primary');
-
-        // Melakukan filter pada kolom ke-4 (Kategori)
-        let filterValue = $(this).attr('data-filter');
-        table.column(4).search(filterValue).draw();
+    // Logika Filter Dropdown Kategori
+    $('#filterKategori').on('change', function () {
+        let filterValue = $(this).val();
+        // PERBAIKAN: Kategori sekarang berada di Index ke-4 (0=Identitas, 1=CPU, 2=RAM, 3=Storage, 4=Kategori, 5=Aksi)
+        table.column(4).search(filterValue).draw(); 
     });
 
     // Export Dropdown Handlers
