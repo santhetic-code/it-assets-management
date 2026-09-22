@@ -8,6 +8,14 @@
 {% block content %}
 
 <style>
+    /* Mengimpor Font 'Nunito' untuk tampilan yang luwes, lembut, dan tidak kaku */
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+    /* Menerapkan Font Global ke Tabel dan Elemen Kontrol */
+    .table-custom, .dataTables_wrapper, .card, .btn { 
+        font-family: 'Nunito', system-ui, -apple-system, sans-serif !important; 
+    }
+
     /* Styling UI/UX Modern untuk Form & Modal */
     .form-control-solid {
         background-color: #f4f6f9 !important;
@@ -22,59 +30,125 @@
         box-shadow: none !important;
     }
 
-    /* Styling Tabel Ala Fast Kasir (Clean & Compact) */
-    .table-kasir { border-collapse: collapse; width: 100%; font-family: 'Inter', 'Segoe UI', sans-serif; }
-    .table-kasir thead th {
-        background-color: #f0f9ff !important; color: #0284c7 !important;
-        font-weight: 700; text-transform: capitalize; font-size: 0.8rem;
-        border-bottom: 2px solid #e0f2fe !important; padding: 0.8rem 1rem; white-space: nowrap;
+    /* Styling Tabel Sesuai Desain */
+    .table-custom { 
+        border-collapse: separate; 
+        border-spacing: 0; 
+        width: 100%; 
     }
-    .table-kasir tbody td {
-        padding: 0.8rem 1rem; vertical-align: middle; color: #334155;
-        font-size: 0.85rem; border-bottom: 1px solid #f8fafc;
+    .table-custom thead tr th {
+        background-color: #bce0fd !important;
+        color: #0f172a !important;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 1rem;
+        border-top: 1px solid #93c5fd;
+        border-bottom: 2px solid #93c5fd !important;
+        white-space: nowrap;
     }
-    .truncate-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle;}
-    .badge-kategori { font-weight: 600; padding: 0.3em 0.8em; border-radius: 6px; font-size: 0.75rem; }
+
+    /* Border Radius Header Tabel */
+    .table-custom thead tr th:first-child { 
+        border-top-left-radius: 8px; border-left: 1px solid #93c5fd;
+    }
+    .table-custom thead tr th:last-child { 
+        border-top-right-radius: 8px; border-right: 1px solid #93c5fd;
+    }
+
+    .table-custom tbody td {
+        padding: 0.85rem 1rem; 
+        vertical-align: middle; 
+        color: #334155;
+        font-size: 0.85rem; 
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 500;
+    }
+
+    /* -------------------------------------------------------- */
+    /* FIX #1: MENGHILANGKAN SORTING ARROWS BAWAAN DATATABLES   */
+    /* -------------------------------------------------------- */
+    table.dataTable thead .sorting::before, 
+    table.dataTable thead .sorting::after, 
+    table.dataTable thead .sorting_asc::before, 
+    table.dataTable thead .sorting_asc::after, 
+    table.dataTable thead .sorting_desc::before, 
+    table.dataTable thead .sorting_desc::after {
+        display: none !important;
+        content: none !important;
+    }
+    /* Mengembalikan padding header yang sebelumnya termakan oleh panah */
+    table.dataTable thead th {
+        padding-right: 1rem !important;
+    }
+    /* -------------------------------------------------------- */
+
+    /* Pemotong Teks */
+    .truncate-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle;}
+
+    /* Desain Ikon Bulat Kategori di Identitas PC */
+    .icon-circle {
+        width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+        margin-right: 12px; font-size: 0.9rem; flex-shrink: 0;
+    }
+    .icon-operasional { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .icon-server { background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .icon-backup { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+
+    /* Badge Kategori */
+    .badge-kategori { font-weight: 600; padding: 0.35em 0.8em; border-radius: 6px; font-size: 0.75rem; }
+
+    /* Tombol Aksi & Hover Ekspor */
     .btn-aksi { padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 6px; margin: 0 2px; }
+    .btn-export { border-radius: 6px; font-size: 0.85rem; background-color: transparent; transition: all 0.2s ease-in-out; }
+    .btn-outline-success.btn-export:hover { background-color: #198754 !important; color: #ffffff !important; border-color: #198754 !important;}
+    .btn-outline-danger.btn-export:hover { background-color: #dc3545 !important; color: #ffffff !important; border-color: #dc3545 !important;}
+    .btn-outline-secondary.btn-export:hover { background-color: #6c757d !important; color: #ffffff !important; border-color: #6c757d !important;}
 
-    /* FIX #1: Tombol Export Tidak Hilang Teksnya Saat Hover */
-    .btn-export { border-radius: 6px; font-size: 0.85rem; padding: 0.35rem 0.75rem; background-color: #ffffff; transition: all 0.2s ease; }
-    .btn-outline-success.btn-export:hover { background-color: #198754; color: #ffffff !important; }
-    .btn-outline-danger.btn-export:hover { background-color: #dc3545; color: #ffffff !important; }
-    .btn-outline-secondary.btn-export:hover { background-color: #6c757d; color: #ffffff !important; }
-
-    /* FIX #2: Merapihkan "Show Entries" agar sejajar mendatar (inline) */
-    .dataTables_wrapper .dataTables_length { float: none; text-align: left; margin: 0; }
-    .dataTables_wrapper .dataTables_length label {
+    /* Menyusun Kontrol DataTables */
+    div.dataTables_wrapper div.dataTables_length { margin: 0 !important; }
+    div.dataTables_wrapper div.dataTables_length label {
         display: flex !important; flex-direction: row !important; align-items: center !important; 
-        margin-bottom: 0; font-weight: 500; color: #64748b; font-size: 0.85rem; gap: 0.5rem; white-space: nowrap;
+        margin-bottom: 0 !important; font-weight: 600 !important; color: #64748b !important; 
+        font-size: 0.85rem !important; gap: 0.5rem; white-space: nowrap !important;
     }
-    .dataTables_wrapper .dataTables_length select {
-        width: 70px !important; border: 1px solid #dee2e6; border-radius: 6px; padding: 0.25rem 0.5rem; outline: none; cursor: pointer;
+    div.dataTables_wrapper div.dataTables_length select {
+        width: auto !important; min-width: 70px; border: 1px solid #dee2e6; border-radius: 6px; padding: 0.25rem 0.5rem; cursor: pointer; outline: none;
     }
+    div.dataTables_wrapper div.dataTables_filter { margin: 0 !important; text-align: left; }
+    div.dataTables_wrapper div.dataTables_filter label {
+        display: flex !important; align-items: center !important; margin-bottom: 0 !important; font-weight: 600; color: #64748b; font-size: 0.85rem;
+    }
+    div.dataTables_wrapper div.dataTables_filter input {
+        border: 1px solid #dee2e6; border-radius: 6px; padding: 0.4rem 0.8rem; margin-left: 0.5rem; outline: none; width: 220px; transition: border-color 0.2s;
+    }
+    div.dataTables_wrapper div.dataTables_filter input:focus { border-color: #0dcaf0; }
 
-    /* Merapihkan Input Search */
-    .dataTables_wrapper .dataTables_filter { float: none; text-align: left; margin: 0; }
-    .dataTables_wrapper .dataTables_filter label {
-        margin-bottom: 0; font-weight: 500; color: #64748b; font-size: 0.85rem; display: flex; align-items: center;
-    }
-    .dataTables_wrapper .dataTables_filter input {
-        border: 1px solid #dee2e6; border-radius: 6px; padding: 0.35rem 0.75rem; margin-left: 0.5rem; outline: none; width: 220px;
-    }
-
-    /* FIX #5: Mencegah Kursor Berubah Menjadi Teks (I-Beam) */
+    /* Mencegah Kursor Berubah Menjadi Teks (I-Beam) */
     .no-select {
         user-select: none;
         -webkit-user-select: none;
         cursor: default;
     }
+
+    /* Efek Hover Interaktif untuk Stat Cards */
+    .card-hover-filter {
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .card-hover-filter:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -8px rgba(0,0,0,0.15) !important;
+    }
+
+    /* Memastikan teks tebal pada angka terlihat solid */
+    .fw-black { font-weight: 800; font-size: 1.8rem; }
 </style>
 
+<!-- Wrapper utama untuk memastikan layout menutupi layar bawah -->
 <div class="d-flex flex-column" style="min-height: 85vh;">
 
-    <!-- TOP BAR / HEADER -->
-    <!-- Menerapkan no-select agar kursor tetap berupa panah standar -->
-    <div class="card border-0 shadow-sm mb-4 no-select" style="border-radius: 12px;">
+    <!-- TOP BAR / HEADER (Kursor Default & Tidak Bisa Diseleksi) -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; user-select: none; cursor: default;">
         <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center">
                 <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
@@ -93,77 +167,116 @@
                         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
                 </div>
+                <!-- SINKRONISASI PROFIL BACKEND MENGGUNAKAN JINJA2 -->
                 <div class="d-flex align-items-center">
                     <div class="text-end me-3">
-                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">Developer ITAM PRO</div>
-                        <div class="text-primary fw-semibold" style="font-size: 0.75rem;">Super Admin</div>
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ current_user.nama_lengkap | default(current_user.full_name | default('Developer ITAM PRO')) }}</div>
+                        <div class="text-primary fw-semibold" style="font-size: 0.75rem;">{{ current_user.role | default('Super Admin') }}</div>
                     </div>
-                    <!-- FIX #3: Profil akun disesuaikan dengan Developer -->
                     <div class="rounded-circle overflow-hidden shadow-sm border" style="width: 45px; height: 45px;">
-                        <img src="/static/avatars/avatar_developer.png" alt="Profile" class="w-100 h-100" style="object-fit: cover;">
+                        <img src="{% if current_user.avatar and current_user.avatar.startswith('/') %}{{ current_user.avatar }}{% else %}/static/avatars/{{ current_user.avatar or 'default.png' }}{% endif %}" alt="Profile" class="w-100 h-100" style="object-fit: cover;">
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SUMMARY CARDS (Background Putih, Ukuran Diperbesar) -->
-    <div class="row mb-4 g-4 no-select">
-        <div class="col-12 col-md-4">
-            <div class="card border-0 border-start border-4 border-primary shadow-sm h-100 bg-white" style="border-radius: 12px; min-height: 120px;">
-                <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-secondary fw-semibold mb-2" style="font-size: 0.85rem; letter-spacing: 0.5px;">TOTAL PC OPERASIONAL</h6>
-                        <h2 class="mb-0 fw-bold text-primary" id="countOperasional">0</h2>
+    <!-- SUMMARY CARDS (Modern Dashboard Style) -->
+    <div class="row mb-4 g-3 no-select">
+        
+        <!-- Card 1: Total Seluruh PC (Dark/Secondary) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 border-start border-4 border-secondary shadow-sm h-100 bg-white card-hover-filter" onclick="filterFromCard('')" title="Tampilkan Semua PC">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <div class="position-relative z-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">TOTAL SEMUA PC</h6>
+                            <h3 class="mb-0 fw-black text-dark" id="countTotal">0</h3>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px; border-radius: 3px;">
+                            <div class="progress-bar bg-secondary" style="width: 100%;"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;">100% dari total inventaris</small>
                     </div>
-                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
-                        <i class="bi bi-pc-display text-primary fs-3"></i>
-                    </div>
+                    <!-- Watermark Icon -->
+                    <i class="bi bi-boxes position-absolute text-secondary" style="bottom: -15px; right: -10px; font-size: 5rem; opacity: 0.08; z-index: 0;"></i>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
-            <div class="card border-0 border-start border-4 border-danger shadow-sm h-100 bg-white" style="border-radius: 12px; min-height: 120px;">
-                <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-secondary fw-semibold mb-2" style="font-size: 0.85rem; letter-spacing: 0.5px;">TOTAL PC SERVER</h6>
-                        <h2 class="mb-0 fw-bold text-danger" id="countServer">0</h2>
+
+        <!-- Card 2: PC Operasional (Primary/Blue) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 border-start border-4 border-primary shadow-sm h-100 bg-white card-hover-filter" onclick="filterFromCard('PC Operasional')" title="Filter PC Operasional">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <div class="position-relative z-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">PC OPERASIONAL</h6>
+                            <h3 class="mb-0 fw-black text-primary" id="countOperasional">0</h3>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px; border-radius: 3px; background-color: #e0f2fe;">
+                            <div class="progress-bar bg-primary" id="barOperasional" style="width: 0%;"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textOperasional">0% dari total inventaris</small>
                     </div>
-                    <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
-                        <i class="bi bi-hdd-network text-danger fs-3"></i>
-                    </div>
+                    <i class="bi bi-pc-display position-absolute text-primary" style="bottom: -15px; right: -10px; font-size: 5rem; opacity: 0.08; z-index: 0;"></i>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
-            <div class="card border-0 border-start border-4 border-warning shadow-sm h-100 bg-white" style="border-radius: 12px; min-height: 120px;">
-                <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-secondary fw-semibold mb-2" style="font-size: 0.85rem; letter-spacing: 0.5px;">TOTAL PC BACKUP</h6>
-                        <h2 class="mb-0 fw-bold text-warning" id="countBackup">0</h2>
+
+        <!-- Card 3: PC Server (Danger/Red) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 border-start border-4 border-danger shadow-sm h-100 bg-white card-hover-filter" onclick="filterFromCard('PC Server')" title="Filter PC Server">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <div class="position-relative z-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">PC SERVER</h6>
+                            <h3 class="mb-0 fw-black text-danger" id="countServer">0</h3>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px; border-radius: 3px; background-color: #fee2e2;">
+                            <div class="progress-bar bg-danger" id="barServer" style="width: 0%;"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textServer">0% dari total inventaris</small>
                     </div>
-                    <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
-                        <i class="bi bi-device-hdd text-warning fs-3"></i>
+                    <i class="bi bi-hdd-network position-absolute text-danger" style="bottom: -15px; right: -10px; font-size: 5rem; opacity: 0.08; z-index: 0;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: PC Backup (Warning/Orange) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 border-start border-4 border-warning shadow-sm h-100 bg-white card-hover-filter" onclick="filterFromCard('PC Backup')" title="Filter PC Backup">
+                <div class="card-body p-4 position-relative overflow-hidden">
+                    <div class="position-relative z-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">PC BACKUP</h6>
+                            <h3 class="mb-0 fw-black text-warning" id="countBackup">0</h3>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px; border-radius: 3px; background-color: #fef3c7;">
+                            <div class="progress-bar bg-warning" id="barBackup" style="width: 0%;"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textBackup">0% dari total inventaris</small>
                     </div>
+                    <i class="bi bi-device-hdd position-absolute text-warning" style="bottom: -15px; right: -10px; font-size: 5rem; opacity: 0.08; z-index: 0;"></i>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- MAIN TABLE AREA -->
-    <div class="card border-0 shadow-sm bg-white flex-grow-1" style="border-radius: 12px;">
+    <!-- FIX #2: Mengubah border-radius menjadi 16px dan menambahkan overflow: hidden agar lebih halus -->
+    <div class="card border-0 shadow-sm bg-white flex-grow-1" style="border-radius: 16px; overflow: hidden;">
         
-        <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center no-select">
+        <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center" style="user-select: none; cursor: default;">
             <h5 class="fw-bold text-dark mb-0">Tabel Data PC</h5>
             <button class="btn btn-info text-white shadow-sm fw-bold px-4 py-2 rounded-3" type="button" data-bs-toggle="modal" data-bs-target="#formComponentModal">
                 <i class="bi bi-plus-lg me-1"></i> Add Data
             </button>
         </div>
 
-        <div class="card-body bg-light bg-opacity-50 border-bottom px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3 no-select">
+        <div class="card-body bg-light bg-opacity-50 border-bottom px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3" style="user-select: none; cursor: default;">
             
             <div class="d-flex align-items-center gap-3 flex-wrap">
-                <!-- FIX #1: Hapus bg-white agar CSS Button Outline bawaan tidak bentrok saat hover -->
+                <!-- Tombol Ekspor Tanpa Class bg-white Agar Hover Berjalan Normal -->
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-outline-success btn-export fw-semibold" onclick="confirmExport('Excel')"><i class="bi bi-file-earmark-excel me-1"></i> Excel</button>
                     <button type="button" class="btn btn-outline-danger btn-export fw-semibold" onclick="confirmExport('PDF')"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</button>
@@ -187,15 +300,16 @@
 
         <div class="card-body px-4 py-4">
             <div class="table-responsive overflow-hidden">
-                <table class="table table-kasir w-100" id="componentsTable">
+                <!-- Gunakan class table-custom -->
+                <table class="table table-custom w-100" id="componentsTable">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 5%;">No</th>
-                            <th style="width: 15%;">Identitas PC</th>
-                            <th style="width: 25%;">Processor (CPU)</th>
+                            <th style="width: 22%;">Identitas PC</th>
+                            <th style="width: 15%;">Processor PC</th>
                             <th style="width: 15%;">RAM</th>
-                            <th style="width: 20%;">Penyimpanan</th>
-                            <th class="text-center" style="width: 10%;">Kategori</th>
+                            <th style="width: 15%;">Penyimpanan</th>
+                            <th style="width: 15%;">Mainboard</th>
+                            <th style="width: 8%;">Kategori</th>
                             <th class="text-center" style="width: 10%;">Aksi</th>
                         </tr>
                     </thead>
@@ -461,6 +575,17 @@
      JAVASCRIPT
      ════════════════════════════════════════════════════════════════════════ -->
 <script>
+// --- FUNGSI JAM REAL-TIME ---
+function updateClock() {
+    const now = new Date();
+    const options = { timeZone: 'Asia/Jakarta', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    const timeString = new Intl.DateTimeFormat('id-ID', options).format(now);
+    const clockEl = document.getElementById('realTimeClock');
+    if (clockEl) clockEl.textContent = timeString.replace(/:/g, '.') + ' WIB';
+}
+setInterval(updateClock, 1000);
+updateClock(); // Jalankan seketika
+
 $(document).ready(function () {
 
     // ── 1. Inisialisasi DataTables ───────────────────────────────────────────
@@ -468,8 +593,8 @@ $(document).ready(function () {
         ajax: {
             url: "/api/components/", 
             dataSrc: function (json) {
-                // SINKRONISASI BACKEND: Menghitung Total Card dari Payload API DataTables
                 let totalOp = 0, totalSrv = 0, totalBkp = 0;
+                
                 if (json.data) {
                     json.data.forEach(item => {
                         if (item.jenis_pc === "PC Operasional") totalOp++;
@@ -477,15 +602,33 @@ $(document).ready(function () {
                         else if (item.jenis_pc === "PC Backup") totalBkp++;
                     });
                 }
-                // Update angka pada Summary Cards dengan animasi ringan
-                $('#countOperasional').hide().text(totalOp).fadeIn('slow');
-                $('#countServer').hide().text(totalSrv).fadeIn('slow');
-                $('#countBackup').hide().text(totalBkp).fadeIn('slow');
                 
+                let totalAll = totalOp + totalSrv + totalBkp;
+                
+                // Animasi update teks angka
+                $('#countTotal').text(totalAll);
+                $('#countOperasional').text(totalOp);
+                $('#countServer').text(totalSrv);
+                $('#countBackup').text(totalBkp);
+
+                // Kalkulasi Persentase Proporsi (Menghindari pembagian dengan 0)
+                let pctOp = totalAll ? Math.round((totalOp / totalAll) * 100) : 0;
+                let pctSrv = totalAll ? Math.round((totalSrv / totalAll) * 100) : 0;
+                let pctBkp = totalAll ? Math.round((totalBkp / totalAll) * 100) : 0;
+
+                // Update Progress Bar
+                $('#barOperasional').css('width', pctOp + '%');
+                $('#textOperasional').text(`${pctOp}% dari total inventaris`);
+                
+                $('#barServer').css('width', pctSrv + '%');
+                $('#textServer').text(`${pctSrv}% dari total inventaris`);
+                
+                $('#barBackup').css('width', pctBkp + '%');
+                $('#textBackup').text(`${pctBkp}% dari total inventaris`);
+
                 return json.data;
             }
         },
-        // Menyembunyikan Length & Filter dari DOM awal, karena akan dipindah via JS
         dom: "<'#hidden-dt-controls'lf>rt<'row mt-4'<'col-sm-12 col-md-5 text-muted'i><'col-sm-12 col-md-7'p>>",
         pageLength: 10,
         autoWidth: false,
@@ -505,49 +648,55 @@ $(document).ready(function () {
                 exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
             }
         ],
-        // UI/UX FIX: Memindahkan elemen bawaan DT ke desain Toolbar Kustom Anda
         initComplete: function () {
-            // Pindahkan "Show Entries" ke container khusus
+            // Memindahkan kontrol bawaan DataTables ke layout kita yang baru
             $('#componentsTable_length').detach().appendTo('#dt-length-container');
-            // Pindahkan "Search" ke container khusus, dan tambahkan placeholder
             let searchInput = $('#componentsTable_filter').detach().appendTo('#dt-search-container');
-            searchInput.find('input').attr('placeholder', '\uD83D\uDD0D Cari Spesifikasi...'); // Icon kaca pembesar Unicode
-            
-            $('#hidden-dt-controls').remove(); // Bersihkan sisa DOM
+            searchInput.find('input').attr('placeholder', '\uD83D\uDD0D Cari Spesifikasi...'); 
+            $('#hidden-dt-controls').remove(); 
         },
+        // SINKRONISASI KOLOM BACKEND
         columns: [
             { 
-                data: null, className: "text-center text-muted fw-semibold", orderable: false, searchable: false,
-                render: function (data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; }
+                data: "identitas_pc", 
+                render: function(data, type, row) { 
+                    // Menyatukan Ikon Kategori & Nama PC
+                    let iconClass = "icon-operasional";
+                    let iconBi = "bi-pc-display";
+                    
+                    if(row.jenis_pc === "PC Server") {
+                        iconClass = "icon-server";
+                        iconBi = "bi-hdd-network";
+                    } else if(row.jenis_pc === "PC Backup") {
+                        iconClass = "icon-backup";
+                        iconBi = "bi-device-hdd";
+                    }
+
+                    return `
+                    <div class="d-flex align-items-center">
+                        <span class="icon-circle ${iconClass}"><i class="bi ${iconBi}"></i></span>
+                        <!-- PERBAIKAN: Mengubah fw-semibold menjadi fw-bold agar teks lebih tebal -->
+                        <span class="fw-bold text-dark">${data || '-'}</span>
+                    </div>`; 
+                } 
             },
-            { 
-                data: "identitas_pc",
-                render: function(data) { return `<span class="fw-semibold text-dark">${data || '-'}</span>`; }
-            },
-            { 
-                data: "cpu",
-                render: function(data) { return `<span class="truncate-cell" title="${data || ''}">${data || '-'}</span>`; }
-            },
-            { 
-                data: "ram",
-                render: function(data) { return `<span class="truncate-cell" title="${data || ''}">${data || '-'}</span>`; }
-            },
-            { 
-                data: "storage",
-                render: function(data) { return `<span class="truncate-cell" title="${data || ''}">${data || '-'}</span>`; }
-            },
+            { data: "cpu", render: function(data) { return `<span class="truncate-cell" title="${data}">${data || '-'}</span>`; } },
+            { data: "ram", render: function(data) { return `<span class="truncate-cell" title="${data}">${data || '-'}</span>`; } },
+            { data: "storage", render: function(data) { return `<span class="truncate-cell" title="${data}">${data || '-'}</span>`; } },
+            { data: "mainboard", render: function(data) { return `<span class="truncate-cell" title="${data}">${data || '-'}</span>`; } },
             {
                 data: "jenis_pc",
                 className: "text-center",
                 render: function (data, type, row) {
-                    if (type === 'filter') {
+                    if (type === 'filter' || type === 'sort') {
                         return `${data || ''} ${data ? data.replace('PC ', '') : ''}`;
                     }
+                    // PERBAIKAN: Mengembalikan warna (coolors) pemisah untuk kategori
                     let badgeColor = "bg-light text-secondary border";
                     if(data === "PC Operasional") badgeColor = "bg-primary bg-opacity-10 text-primary border border-primary";
                     if(data === "PC Server") badgeColor = "bg-danger bg-opacity-10 text-danger border border-danger";
                     if(data === "PC Backup") badgeColor = "bg-warning bg-opacity-10 text-warning border border-warning";
-
+                    
                     let shortName = data ? data.replace('PC ', '') : '-';
                     return `<span class="badge-kategori ${badgeColor}">${shortName}</span>`;
                 }
@@ -568,8 +717,9 @@ $(document).ready(function () {
         ]
     });
 
-    // Menghubungkan dropdown kustom kita ke fungsi search DataTables
+    // Menghubungkan dropdown filter (Kategori sekarang ada di index ke-5)
     $('#filterKategori').on('change', function () {
+        // Index: 0=Identitas, 1=CPU, 2=RAM, 3=Storage, 4=Mainboard, 5=Kategori
         table.column(5).search($(this).val()).draw(); 
     });
 
@@ -884,7 +1034,7 @@ window.deleteComp = deleteComponent;
 function confirmExport(type) {
     Swal.fire({
         title: `Ekspor ${type}?`,
-        html: `Anda akan mengekspor seluruh data spesifikasi PC ke dalam format <b>${type}</b>.`,
+        html: `Anda akan mengekspor seluruh data spesifikasi PC ke format <b>${type}</b>.`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#0dcaf0',
@@ -893,23 +1043,9 @@ function confirmExport(type) {
         confirmButtonText: 'Ya, Ekspor Data'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Tampilkan state loading
-            Swal.fire({ 
-                title: 'Mempersiapkan Dokumen...', 
-                html: 'Mohon tunggu sebentar.', 
-                timer: 2000, 
-                timerProgressBar: true,
-                didOpen: () => { Swal.showLoading() }
-            }).then(() => {
-                // Tampilkan sukses
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: `File ${type} sedang diunduh.`,
-                    icon: 'success',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                
+            Swal.fire({ title: 'Memproses...', html: 'Menyiapkan dokumen...', timer: 1500, timerProgressBar: true, didOpen: () => Swal.showLoading() })
+            .then(() => {
+                Swal.fire({ title: 'Berhasil!', text: `File ${type} diunduh.`, icon: 'success', showConfirmButton: false, timer: 1500 });
                 if (typeof table !== 'undefined') {
                     if (type.toLowerCase() === 'excel') table.button('.buttons-excel').trigger();
                     else if (type.toLowerCase() === 'pdf') table.button('.buttons-pdf').trigger();
@@ -921,18 +1057,19 @@ function confirmExport(type) {
 }
 window.confirmExport = confirmExport;
 
-// ── 9. Fungsi Real Time Clock untuk Top Bar ──────────────────────────────────
-function updateClock() {
-    const now = new Date();
-    const options = { timeZone: 'Asia/Jakarta', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-    const timeString = new Intl.DateTimeFormat('id-ID', options).format(now);
-    const clockEl = document.getElementById('realTimeClock');
-    if (clockEl) {
-        // Mengubah separator titik dua menjadi titik sesuai format
-        clockEl.textContent = timeString.replace(/:/g, '.') + ' WIB';
+// Fungsi Filter Global saat Stat Card diklik
+window.filterFromCard = function(kategoriValue) {
+    // Ubah nilai dropdown agar sinkron secara visual
+    $('#filterKategori').val(kategoriValue);
+    
+    // Trigger pencarian pada DataTables (asumsi Kategori ada di Index 5)
+    $('#componentsTable').DataTable().column(5).search(kategoriValue).draw();
+    
+    // Animasi scroll halus ke tabel (opsional, bagus untuk UX layar kecil)
+    const tableEl = document.getElementById('componentsTable');
+    if (tableEl) {
+        tableEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-}
-setInterval(updateClock, 1000);
-updateClock(); // Inisialisasi awal
+};
 </script>
 {% endblock %}

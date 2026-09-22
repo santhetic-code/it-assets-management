@@ -41,6 +41,10 @@ class User(Base):
     def profile_picture(self):
         return self.avatar
 
+    @property
+    def nama_lengkap(self):
+        return self.full_name
+
 
 class Asset(Base):
     __tablename__ = "assets"
