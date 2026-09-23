@@ -15,12 +15,54 @@ from app.core.deps import (
     get_current_user,
     require_super_admin,
 )
-from app.core.security import create_access_token, get_password_hash, verify_jwt_token, verify_password
+from app.core.security import (
+    SECURE_COOKIES,
+    create_access_token,
+    get_password_hash,
+    verify_jwt_token,
+    verify_password,
+)
 from app.models.domain import User
 from app.models.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services import auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+def set_auth_cookies(response: Response, user: User):
+    """
+    Helper untuk men-generate JWT Token baru dan memperbarui cookie
+    agar data profil dan avatar tersinkronisasi di seluruh halaman.
+    """
+    nama_tampil = user.full_name if user.full_name else user.username
+    role_tampil = user.role if user.role else "Staff IT"
+    access_token = create_access_token(
+        data={
+            "sub": user.username,
+            "role": role_tampil,
+            "name": nama_tampil,
+            "avatar": user.avatar,
+        }
+    )
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=SECURE_COOKIES,
+        samesite="lax",
+        max_age=7200,
+        expires=7200,
+    )
+    response.set_cookie(
+        key="itam_session",
+        value=access_token,
+        httponly=True,
+        secure=SECURE_COOKIES,
+        samesite="lax",
+        max_age=7200,
+        expires=7200,
+    )
+    return access_token
 
 
 class LogoutRequest(BaseModel):
@@ -63,30 +105,10 @@ def login(request_data: LoginRequest, response: Response, db: Session = Depends(
     user.last_login = datetime.utcnow() + timedelta(hours=7)
     db.commit()
 
-    # 4. Buat Tiket JWT (Toleransi jika full_name kosong)
+    # 4. Buat Tiket JWT & Tanamkan ke Cookie Browser
+    set_auth_cookies(response, user)
     nama_tampil = user.full_name if user.full_name else user.username
     role_tampil = user.role if user.role else "Staff IT"
-
-    access_token = create_access_token(
-        data={"sub": user.username, "role": role_tampil, "name": nama_tampil}
-    )
-
-    # 5. Tanamkan Tiket ke Browser (HTTPOnly)
-    response.set_cookie(
-        key="access_token",
-        value=f"Bearer {access_token}",
-        httponly=True,
-        max_age=7200,
-        expires=7200,
-    )
-    # Dukungan backward-compatibility untuk itam_session
-    response.set_cookie(
-        key="itam_session",
-        value=access_token,
-        httponly=True,
-        max_age=7200,
-        expires=7200,
-    )
 
     return {"message": "Berhasil Login", "name": nama_tampil, "role": role_tampil}
 
@@ -167,6 +189,7 @@ def create_new_user(data: NewUserRequest, db: Session = Depends(get_db)):
 @router.put("/users/profile")
 def update_profile(
     data: UserUpdate,
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -176,6 +199,10 @@ def update_profile(
     current_user.department = data.department
 
     db.commit()
+
+    # Regenerasi JWT Token baru agar profil tersinkronisasi di seluruh halaman
+    set_auth_cookies(response, current_user)
+
     return {"message": "Profil berhasil diperbarui", "name": current_user.full_name}
 
 
@@ -234,7 +261,10 @@ def change_password(data: ChangePasswordRequest, db: Session = Depends(get_db)):
 # ==========================================
 @router.post("/users/{username}/avatar")
 def upload_avatar(
-    username: str, file: UploadFile = File(...), db: Session = Depends(get_db)
+    username: str,
+    response: Response,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.username == username).first()
     if not user:
@@ -255,5 +285,8 @@ def upload_avatar(
     # Simpan path gambar ke database (menggunakan forward slash untuk URL web yang valid)
     user.avatar = f"/static/avatars/{file_name}"
     db.commit()
+
+    # Regenerasi JWT Token baru agar avatar tersinkronisasi di seluruh halaman
+    set_auth_cookies(response, user)
 
     return {"message": "Foto profil berhasil diperbarui", "avatar_url": user.avatar}

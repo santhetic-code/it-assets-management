@@ -45,6 +45,14 @@ class User(Base):
     def nama_lengkap(self):
         return self.full_name
 
+    @property
+    def avatar_url(self):
+        if not self.avatar:
+            return "/static/avatars/default.png"
+        if self.avatar.startswith("/") or self.avatar.startswith("http"):
+            return self.avatar
+        return f"/static/avatars/{self.avatar}"
+
 
 class Asset(Base):
     __tablename__ = "assets"
