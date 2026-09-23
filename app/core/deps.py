@@ -41,10 +41,15 @@ def get_current_user(token: str = Depends(get_token_from_cookie), db: Session = 
 
 
 # 3. Satpam Khusus Super Admin (Gembok RBAC)
-def get_current_super_admin(current_user: User = Depends(get_current_user)):
+def require_super_admin(current_user: User = Depends(get_current_user)):
     if current_user.role != "Super Admin":
-        raise HTTPException(status_code=403, detail="Akses Ditolak! Tindakan ini hanya untuk Super Admin.")
+        raise HTTPException(
+            status_code=403,
+            detail="Akses Ditolak: Tindakan destruktif ini memerlukan izin Super Admin.",
+        )
     return current_user
+
+get_current_super_admin = require_super_admin
 
 
 # =========================================================================
@@ -52,14 +57,15 @@ def get_current_super_admin(current_user: User = Depends(get_current_user)):
 # =========================================================================
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
-require_super_admin = get_current_super_admin
 
 
-def require_staff_or_admin(current_user: CurrentUser):
-    if current_user.role not in ["Super Admin", "Staff IT"]:
+def require_staff_or_admin(current_user: User = Depends(get_current_user)):
+    # Sesuaikan persis dengan value yang ada di database Anda ("IT Support" atau "Staff IT")
+    allowed_roles = ["Super Admin", "Staff", "IT Support", "Staff IT"]
+    if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=403,
-            detail="Akses Ditolak: Hak akses Anda hanya untuk melihat data (Read-Only).",
+            detail="Akses Ditolak: Hak akses Anda hanya untuk Read-Only.",
         )
     return current_user
 

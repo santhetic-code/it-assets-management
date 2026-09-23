@@ -254,9 +254,11 @@
         
         <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center" style="user-select: none; cursor: default;">
             <h5 class="fw-bold text-dark mb-0">Tabel Data PC</h5>
+            {% if current_user and current_user.role in ['Super Admin', 'IT Support', 'Staff IT', 'Staff'] %}
             <button class="btn btn-info text-white shadow-sm fw-bold px-4 py-2 rounded-3" type="button" data-bs-toggle="modal" data-bs-target="#formComponentModal">
                 <i class="bi bi-plus-lg me-1"></i> Add Data
             </button>
+            {% endif %}
         </div>
 
         <div class="card-body bg-light bg-opacity-50 border-bottom px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3" style="user-select: none; cursor: default;">
@@ -561,6 +563,9 @@
      JAVASCRIPT
      ════════════════════════════════════════════════════════════════════════ -->
 <script>
+// Tangkap role user dari Jinja2 ke dalam variabel JS sebelum script DataTables berjalan
+const currentUserRole = "{{ current_user.role if current_user else '' }}";
+
 $(document).ready(function () {
 
     // ── 1. Inisialisasi DataTables ───────────────────────────────────────────
@@ -681,12 +686,21 @@ $(document).ready(function () {
                 className: "text-center",
                 orderable: false,
                 render: function (data) {
-                    return `
-                    <div class="d-flex justify-content-center gap-1">
-                        <button class="btn btn-outline-info btn-aksi" onclick="viewComponent('${data}')" title="Preview"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-outline-warning btn-aksi" onclick="editComponent('${data}')" title="Edit"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-outline-danger btn-aksi" onclick="deleteComponent('${data}')" title="Hapus"><i class="bi bi-trash"></i></button>
-                    </div>`;
+                    let actionButtons = `<div class="d-flex justify-content-center gap-1">
+                        <button class="btn btn-outline-info btn-aksi" onclick="viewComponent('${data}')" title="Preview"><i class="bi bi-eye"></i></button>`;
+                    
+                    // Hanya render tombol Edit jika user adalah Admin atau Staff IT
+                    if (["Super Admin", "IT Support", "Staff IT", "Staff"].includes(currentUserRole)) {
+                        actionButtons += `<button class="btn btn-outline-warning btn-aksi" onclick="editComponent('${data}')" title="Edit"><i class="bi bi-pencil"></i></button>`;
+                    }
+                    
+                    // HANYA render tombol Hapus jika user adalah Super Admin
+                    if (currentUserRole === "Super Admin") {
+                        actionButtons += `<button class="btn btn-outline-danger btn-aksi" onclick="deleteComponent('${data}')" title="Hapus"><i class="bi bi-trash"></i></button>`;
+                    }
+                    
+                    actionButtons += `</div>`;
+                    return actionButtons;
                 }
             }
         ]

@@ -2,7 +2,13 @@ from typing import Any, Dict, List, Optional, Union
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func
 
-from app.core.deps import CurrentUser, DbSession, get_audit_logger, require_staff_or_admin
+from app.core.deps import (
+    CurrentUser,
+    DbSession,
+    get_audit_logger,
+    require_staff_or_admin,
+    require_super_admin,
+)
 from app.models import domain
 from app.models.schemas.component import (
     ComponentCreate,
@@ -161,7 +167,7 @@ def update_component(
 
 @router.delete(
     "/{component_id}",
-    dependencies=[Depends(require_staff_or_admin), Depends(get_audit_logger)],
+    dependencies=[Depends(require_super_admin), Depends(get_audit_logger)],
 )
 def delete_component(component_id: int, db: DbSession):
     return asset_service.delete_component(db, component_id)
@@ -207,7 +213,7 @@ def create_master_component(data: MasterComponentCreate, db: DbSession):
 
 @router.delete(
     "/masters/{master_id}",
-    dependencies=[Depends(require_staff_or_admin)],
+    dependencies=[Depends(require_super_admin)],
     tags=["Master Data"],
 )
 def delete_master_component(master_id: int, db: DbSession):

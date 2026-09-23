@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import require_staff_or_admin, require_super_admin
 from app.models.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
 from app.services import asset_service
 
@@ -16,13 +17,13 @@ def read_assets(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db))
     return assets
 
 
-@router.post("/", response_model=AssetResponse)
-@router.post("", response_model=AssetResponse)
+@router.post("/", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin)])
+@router.post("", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin)])
 def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
     return asset_service.create_asset(db=db, asset=asset)
 
 
-@router.put("/{asset_id}", response_model=AssetResponse)
+@router.put("/{asset_id}", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin)])
 def update_asset(asset_id: int, asset: AssetUpdate, db: Session = Depends(get_db)):
     db_asset = asset_service.update_asset(db, asset_id, asset)
     if not db_asset:
@@ -30,7 +31,8 @@ def update_asset(asset_id: int, asset: AssetUpdate, db: Session = Depends(get_db
     return db_asset
 
 
-@router.delete("/{asset_id}")
+# HANYA SUPER ADMIN YANG BOLEH MENGHAPUS ASET
+@router.delete("/{asset_id}", dependencies=[Depends(require_super_admin)])
 def delete_asset(asset_id: int, db: Session = Depends(get_db)):
     success = asset_service.delete_asset(db, asset_id)
     if not success:
