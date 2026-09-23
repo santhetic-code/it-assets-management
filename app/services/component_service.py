@@ -7,7 +7,7 @@ dengan router yang sedia ada.
 """
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.domain import Asset, Component, ComponentHistory, MasterComponent, SystemLogs, get_utc_now
 from app.models.schemas.component import (
@@ -145,10 +145,24 @@ def delete_master(db: Session, master_id: int) -> dict:
 
 def get_component_by_asset(db: Session, asset_id: int) -> Component | None:
     """Ambil spesifikasi PC berdasarkan asset_id yang masih aktif."""
-    return db.query(Component).filter(
-        Component.asset_id == asset_id,
-        Component.is_deleted == False
-    ).first()
+    return (
+        db.query(Component)
+        .options(
+            joinedload(Component.asset),
+            joinedload(Component.cpu_ref),
+            joinedload(Component.ram_ref),
+            joinedload(Component.storage_ref),
+            joinedload(Component.os_ref),
+            joinedload(Component.mainboard_ref),
+            joinedload(Component.vga_ref),
+            joinedload(Component.monitor_ref),
+        )
+        .filter(
+            Component.asset_id == asset_id,
+            Component.is_deleted == False
+        )
+        .first()
+    )
 
 
 def get_component_history(db: Session, component_id: int) -> list[ComponentHistory]:

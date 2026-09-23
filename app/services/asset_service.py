@@ -5,8 +5,7 @@ from typing import List, Optional
 import pandas as pd
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import func, or_
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.domain import Asset, Component, MaintenanceLog, NetworkIP, Purchase, SystemLogs, get_utc_now
 from app.models.schemas.asset import AssetCreate, AssetUpdate
@@ -169,13 +168,26 @@ def import_assets_from_file(db: Session, file_bytes: bytes, filename: str) -> in
 # 2. LOGIKA KOMPONEN
 # ==========================================
 def get_components(db: Session, pc_type: Optional[str] = None):
-    query = db.query(Component).outerjoin(Asset).filter(Component.is_deleted == False)
+    query = (
+        db.query(Component)
+        .options(
+            joinedload(Component.asset),
+            joinedload(Component.cpu_ref),
+            joinedload(Component.ram_ref),
+            joinedload(Component.storage_ref),
+            joinedload(Component.os_ref),
+            joinedload(Component.mainboard_ref),
+            joinedload(Component.vga_ref),
+            joinedload(Component.monitor_ref),
+        )
+        .filter(Component.is_deleted == False)
+    )
     if pc_type and pc_type != "semua":
         query = query.filter(
             or_(
                 Component.pc_type == pc_type,
                 Component.pc_type == f"PC {pc_type}",
-                Component.pc_type == pc_type.replace("PC ", "")
+                Component.pc_type == pc_type.replace("PC ", ""),
             )
         )
     return query.all()
@@ -411,7 +423,7 @@ def delete_purchase(db: Session, item_id: int, user_id: int | None = None, clien
 # 4. LOGIKA MAINTENANCE
 # ==========================================
 def get_all_maintenance(db: Session):
-    logs = db.query(MaintenanceLog).all()
+    logs = db.query(MaintenanceLog).options(joinedload(MaintenanceLog.asset)).all()
     today = date.today()
     is_changed = False
 

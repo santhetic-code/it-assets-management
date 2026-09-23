@@ -197,20 +197,14 @@ def read_purchases(request: Request, db: DbSession, current_user: CurrentUser):
 
 @router.get("/hardware-components")
 def read_components(request: Request, db: DbSession, current_user: CurrentUser):
-    # Mengambil data komponen aktif dengan outerjoin ke Asset
-    components = (
-        db.query(domain.Component)
-        .outerjoin(domain.Asset)
-        .filter(domain.Component.is_deleted == False)
-        .all()
-    )
+    # Data tabel komponen dimuat secara dinamis via AJAX DataTables (/api/components/).
+    # Menghapus query Component yang membebani memori server (eliminasi double-fetching).
     assets = asset_service.get_all_assets(db)
     return render_template(
         request=request,
         name="components.html",
         context={
             "current_user": current_user,
-            "components": components,
             "assets": assets,
             "jenis_aktif": "semua",
         },

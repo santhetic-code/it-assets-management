@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from app.core.deps import (
     CurrentUser,
@@ -310,10 +311,24 @@ def get_component_detail(
     Ambil butiran penuh satu komponen PC beserta riwayat perubahannya (Audit History).
     Digunakan oleh Modal Detail dan Prefill Form Edit Offcanvas.
     """
-    comp = db.query(domain.Component).filter(
-        domain.Component.id == component_id,
-        domain.Component.is_deleted == False
-    ).first()
+    comp = (
+        db.query(domain.Component)
+        .options(
+            joinedload(domain.Component.asset),
+            joinedload(domain.Component.cpu_ref),
+            joinedload(domain.Component.ram_ref),
+            joinedload(domain.Component.storage_ref),
+            joinedload(domain.Component.os_ref),
+            joinedload(domain.Component.mainboard_ref),
+            joinedload(domain.Component.vga_ref),
+            joinedload(domain.Component.monitor_ref),
+        )
+        .filter(
+            domain.Component.id == component_id,
+            domain.Component.is_deleted == False,
+        )
+        .first()
+    )
     if not comp:
         raise HTTPException(status_code=404, detail="Spesifikasi PC tidak ditemukan.")
 
