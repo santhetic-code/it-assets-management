@@ -31,18 +31,11 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 def set_auth_cookies(response: Response, user: User):
     """
-    Helper untuk men-generate JWT Token baru dan memperbarui cookie
-    agar data profil dan avatar tersinkronisasi di seluruh halaman.
+    Helper untuk men-generate JWT Token baru dan memperbarui cookie.
+    Payload token disterilisasi hanya berisi klaim sub (Subject) unik pengguna.
     """
-    nama_tampil = user.full_name if user.full_name else user.username
-    role_tampil = user.role if user.role else "Staff IT"
     access_token = create_access_token(
-        data={
-            "sub": user.username,
-            "role": role_tampil,
-            "name": nama_tampil,
-            "avatar": user.avatar,
-        }
+        data={"sub": user.username}
     )
     response.set_cookie(
         key="access_token",

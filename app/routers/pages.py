@@ -77,7 +77,7 @@ def login_submit(
     db.commit()
 
     access_token = create_access_token(
-        data={"sub": str(user.id), "username": user.username, "role": user.role}
+        data={"sub": user.username}
     )
     response.set_cookie(
         key="itam_session",
