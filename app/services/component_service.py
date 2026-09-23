@@ -9,7 +9,7 @@ dengan router yang sedia ada.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models.domain import Asset, Component, ComponentHistory, MasterComponent
+from app.models.domain import Asset, Component, ComponentHistory, MasterComponent, SystemLogs, get_utc_now
 from app.models.schemas.component import (
     ComponentCreateV2,
     ComponentUpdateV2,
@@ -117,9 +117,13 @@ def create_master(db: Session, data: MasterComponentCreate) -> MasterComponent:
 
     new_master = MasterComponent(**data.model_dump())
     db.add(new_master)
-    db.commit()
-    db.refresh(new_master)
-    return new_master
+    try:
+        db.commit()
+        db.refresh(new_master)
+        return new_master
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menambahkan master komponen: {str(e)}")
 
 
 def delete_master(db: Session, master_id: int) -> dict:
@@ -127,8 +131,12 @@ def delete_master(db: Session, master_id: int) -> dict:
     if not master:
         raise HTTPException(status_code=404, detail="Master komponen tidak ditemukan.")
     db.delete(master)
-    db.commit()
-    return {"message": f"Master komponen '{master.name}' berhasil dihapus."}
+    try:
+        db.commit()
+        return {"message": f"Master komponen '{master.name}' berhasil dihapus."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menghapus master komponen: {str(e)}")
 
 
 # ==========================================
@@ -136,8 +144,11 @@ def delete_master(db: Session, master_id: int) -> dict:
 # ==========================================
 
 def get_component_by_asset(db: Session, asset_id: int) -> Component | None:
-    """Ambil spesifikasi PC berdasarkan asset_id."""
-    return db.query(Component).filter(Component.asset_id == asset_id).first()
+    """Ambil spesifikasi PC berdasarkan asset_id yang masih aktif."""
+    return db.query(Component).filter(
+        Component.asset_id == asset_id,
+        Component.is_deleted == False
+    ).first()
 
 
 def get_component_history(db: Session, component_id: int) -> list[ComponentHistory]:
@@ -153,6 +164,7 @@ def get_component_history(db: Session, component_id: int) -> list[ComponentHisto
 def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> Component:
     """
     Daftarkan spesifikasi PC baru dengan teks mentah tanpa kekangan Aset Induk atau Master FK.
+    Menerapkan transaksi atomik (db.commit / db.rollback).
     """
     pc_name = (data.identitas_pc or data.name or "").strip()
     if not pc_name:
@@ -160,34 +172,39 @@ def create_component_v2(db: Session, data: ComponentCreateV2, user_id: int) -> C
 
     pc_type = data.jenis_pc or data.pc_type or "PC Operasional"
 
-    db_comp = Component(
-        name=pc_name,
-        pc_type=pc_type,
-        processor_spec=data.cpu or data.processor_spec,
-        mainboard_spec=data.mainboard or data.mainboard_spec,
-        ram_spec=data.ram or data.ram_spec,
-        storage_spec=data.storage or data.storage_spec,
-        vga_spec=data.vga or data.vga_spec,
-        os_name=data.os or data.os_name,
-        monitor=data.monitor,
-        keyboard=data.keyboard,
-        mouse=data.mouse,
-        asset_id=data.asset_id,
-    )
-    db.add(db_comp)
-    db.flush()
+    try:
+        db_comp = Component(
+            name=pc_name,
+            pc_type=pc_type,
+            processor_spec=data.cpu or data.processor_spec,
+            mainboard_spec=data.mainboard or data.mainboard_spec,
+            ram_spec=data.ram or data.ram_spec,
+            storage_spec=data.storage or data.storage_spec,
+            vga_spec=data.vga or data.vga_spec,
+            os_name=data.os or data.os_name,
+            monitor=data.monitor,
+            keyboard=data.keyboard,
+            mouse=data.mouse,
+            asset_id=data.asset_id,
+            is_deleted=False,
+        )
+        db.add(db_comp)
+        db.flush()
 
-    # Rekodkan ciptaan awal di audit trail
-    history = ComponentHistory(
-        component_id=db_comp.id,
-        user_id=user_id,
-        action_type="CREATE",
-        changes_detail=f"Pendaftaran awal spesifikasi PC '{pc_name}' ({pc_type}).",
-    )
-    db.add(history)
-    db.commit()
-    db.refresh(db_comp)
-    return db_comp
+        # Rekodkan ciptaan awal di audit trail
+        history = ComponentHistory(
+            component_id=db_comp.id,
+            user_id=user_id,
+            action_type="CREATE",
+            changes_detail=f"Pendaftaran awal spesifikasi PC '{pc_name}' ({pc_type}).",
+        )
+        db.add(history)
+        db.commit()
+        db.refresh(db_comp)
+        return db_comp
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal mendaftarkan spesifikasi PC: {str(e)}")
 
 
 def update_component_v2(
@@ -195,10 +212,14 @@ def update_component_v2(
 ) -> Component:
     """
     Kemaskini spesifikasi PC dengan teks mentah dan enjin Auto-Diff audit trail.
+    Menerapkan transaksi atomik (db.commit / db.rollback).
     """
-    db_comp = db.query(Component).filter(Component.id == component_id).first()
+    db_comp = db.query(Component).filter(
+        Component.id == component_id,
+        Component.is_deleted == False
+    ).first()
     if not db_comp:
-        raise HTTPException(status_code=404, detail="Spesifikasi PC tidak dijumpai.")
+        raise HTTPException(status_code=404, detail="Spesifikasi PC tidak dijumpai atau telah dinonaktifkan.")
 
     # ── AUTO-DIFF ENGINE ─────────────────────────────────────────────────────
     changes = _detect_changes(db_comp, data)
@@ -237,20 +258,82 @@ def update_component_v2(
     if not reason and changes:
         reason = "Kemas kini spesifikasi PC"
 
-    if reason or changes:
-        action_type = _classify_action(reason, changes)
-        detail_log = f"Alasan: {reason}" if reason else "Kemas kini spesifikasi"
-        if changes:
-            detail_log += " | " + " | ".join(changes)
+    try:
+        if reason or changes:
+            action_type = _classify_action(reason, changes)
+            detail_log = f"Alasan: {reason}" if reason else "Kemas kini spesifikasi"
+            if changes:
+                detail_log += " | " + " | ".join(changes)
 
-        history = ComponentHistory(
-            component_id=db_comp.id,
+            history = ComponentHistory(
+                component_id=db_comp.id,
+                user_id=user_id,
+                action_type=action_type,
+                changes_detail=detail_log,
+            )
+            db.add(history)
+
+        db.commit()
+        db.refresh(db_comp)
+        return db_comp
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal memperbarui spesifikasi PC: {str(e)}")
+
+
+def soft_delete_component(
+    db: Session,
+    component_id: int,
+    user_id: int | None = None,
+    client_ip: str | None = None,
+) -> dict:
+    """
+    Soft Delete untuk spesifikasi PC.
+    1. Mengubah is_deleted = True, mengisi deleted_at dan deleted_by.
+    2. Menambahkan entri DECOMMISSION ke ComponentHistory (riwayat upgrade/spec tetap utuh).
+    3. Menambahkan log forensik digital ke SystemLogs.
+    4. Seluruh proses dieksekusi secara ATOMIK dalam 1 transaksi database.
+    """
+    comp = db.query(Component).filter(
+        Component.id == component_id,
+        Component.is_deleted == False
+    ).first()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Data Komponen tidak ditemukan atau sudah dihapus.")
+
+    pc_name = comp.name or comp.user_pc or f"ID-{comp.id}"
+    pc_type = comp.pc_type or "PC"
+
+    try:
+        # 1. Soft Delete pada entitas utama
+        comp.is_deleted = True
+        comp.deleted_at = get_utc_now()
+        comp.deleted_by = user_id
+
+        # 2. Catat DECOMMISSION ke riwayat komponen (relasi tetap utuh)
+        history_entry = ComponentHistory(
+            component_id=comp.id,
             user_id=user_id,
-            action_type=action_type,
-            changes_detail=detail_log,
+            action_type="DECOMMISSION",
+            changes_detail=f"Spesifikasi PC '{pc_name}' dinonaktifkan (Soft Delete) oleh Super Admin. Status: Decommissioned.",
         )
-        db.add(history)
+        db.add(history_entry)
 
-    db.commit()
-    db.refresh(db_comp)
-    return db_comp
+        # 3. Catat audit forensik ke SystemLogs
+        log_entry = SystemLogs(
+            user_id=user_id,
+            action=f"SOFT_DELETE: Menonaktifkan spesifikasi PC '{pc_name}' ({pc_type})",
+            entity="Component",
+            entity_id=component_id,
+            ip_address=client_ip,
+            timestamp=get_utc_now(),
+        )
+        db.add(log_entry)
+
+        # 4. Kunci transaksi atomik
+        db.commit()
+        return {"message": f"Spesifikasi PC '{pc_name}' berhasil dinonaktifkan (Soft Delete) dan tercatat di Audit Trail."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menghapus komponen. Transaksi dibatalkan: {str(e)}")
+

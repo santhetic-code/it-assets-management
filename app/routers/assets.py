@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_staff_or_admin, require_super_admin
+from app.core.deps import get_audit_logger, require_staff_or_admin, require_super_admin
 from app.models.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
 from app.services import asset_service
 
@@ -31,10 +31,19 @@ def update_asset(asset_id: int, asset: AssetUpdate, db: Session = Depends(get_db
     return db_asset
 
 
-# HANYA SUPER ADMIN YANG BOLEH MENGHAPUS ASET
+# HANYA SUPER ADMIN YANG BOLEH MENGHAPUS ASET (SOFT DELETE)
 @router.delete("/{asset_id}", dependencies=[Depends(require_super_admin)])
-def delete_asset(asset_id: int, db: Session = Depends(get_db)):
-    success = asset_service.delete_asset(db, asset_id)
+def delete_asset(
+    asset_id: int,
+    db: Session = Depends(get_db),
+    audit_info: dict = Depends(get_audit_logger),
+):
+    success = asset_service.delete_asset(
+        db,
+        asset_id,
+        user_id=audit_info["user_id"],
+        client_ip=audit_info["ip"],
+    )
     if not success:
         raise HTTPException(status_code=404, detail="Asset not found")
-    return {"detail": "Asset deleted successfully"}
+    return {"detail": "Asset berhasil dinonaktifkan (Soft Delete) dan dicatat di Audit Trail"}

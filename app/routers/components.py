@@ -167,10 +167,19 @@ def update_component(
 
 @router.delete(
     "/{component_id}",
-    dependencies=[Depends(require_super_admin), Depends(get_audit_logger)],
+    dependencies=[Depends(require_super_admin)],
 )
-def delete_component(component_id: int, db: DbSession):
-    return asset_service.delete_component(db, component_id)
+def delete_component(
+    component_id: int,
+    db: DbSession,
+    audit_info: dict = Depends(get_audit_logger),
+):
+    return component_service.soft_delete_component(
+        db=db,
+        component_id=component_id,
+        user_id=audit_info["user_id"],
+        client_ip=audit_info["ip"],
+    )
 
 
 @router.post(
@@ -301,7 +310,10 @@ def get_component_detail(
     Ambil butiran penuh satu komponen PC beserta riwayat perubahannya (Audit History).
     Digunakan oleh Modal Detail dan Prefill Form Edit Offcanvas.
     """
-    comp = db.query(domain.Component).filter(domain.Component.id == component_id).first()
+    comp = db.query(domain.Component).filter(
+        domain.Component.id == component_id,
+        domain.Component.is_deleted == False
+    ).first()
     if not comp:
         raise HTTPException(status_code=404, detail="Spesifikasi PC tidak ditemukan.")
 

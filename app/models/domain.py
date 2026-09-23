@@ -69,6 +69,11 @@ class Asset(Base):
     status = Column(String(50), nullable=False)                # Digunakan, Tidak Digunakan
     digunakan_oleh = Column(String(100), nullable=True)        # Nama user yang memakai
 
+    # Soft Delete Columns
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
     # Relasi ke tabel lain (Satu Aset bisa punya banyak Komponen, Log, dll)
     components = relationship(
         "Component", back_populates="asset", cascade="all, delete-orphan"
@@ -136,6 +141,11 @@ class Component(Base):
 
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+
+    # Soft Delete Columns
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     asset = relationship("Asset", back_populates="components")
@@ -467,6 +477,11 @@ class Purchase(Base):
 
     created_at = Column(DateTime, default=get_utc_now)
     created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    # Soft Delete Columns
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relasi
     asset = relationship("Asset", back_populates="purchase_info", foreign_keys=[asset_id])

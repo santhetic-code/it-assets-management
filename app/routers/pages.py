@@ -140,8 +140,8 @@ def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
 # ==========================================
 @router.get("/it-notes")
 def read_it_notes(request: Request, db: DbSession, current_user: CurrentUser):
-    # Mengambil seluruh data aset dari MySQL
-    assets = db.query(domain.Asset).all()
+    # Mengambil data aset aktif dari MySQL
+    assets = db.query(domain.Asset).filter(domain.Asset.is_deleted == False).all()
     # Mengirimkan variabel 'assets' ke Jinja2
     return render_template(
         request=request,
@@ -197,8 +197,13 @@ def read_purchases(request: Request, db: DbSession, current_user: CurrentUser):
 
 @router.get("/hardware-components")
 def read_components(request: Request, db: DbSession, current_user: CurrentUser):
-    # Mengambil SEMUA data komponen dengan outerjoin ke Asset agar data yang asset_id-nya NULL tetap muncul
-    components = db.query(domain.Component).outerjoin(domain.Asset).all()
+    # Mengambil data komponen aktif dengan outerjoin ke Asset
+    components = (
+        db.query(domain.Component)
+        .outerjoin(domain.Asset)
+        .filter(domain.Component.is_deleted == False)
+        .all()
+    )
     assets = asset_service.get_all_assets(db)
     return render_template(
         request=request,

@@ -8,7 +8,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.domain import Asset, Component, MaintenanceLog, NetworkIP, Purchase
+from app.models.domain import Asset, Component, MaintenanceLog, NetworkIP, Purchase, SystemLogs, get_utc_now
 from app.models.schemas.asset import AssetCreate, AssetUpdate
 from app.models.schemas.component import ComponentCreate, ComponentUpdate
 from app.models.schemas.maintenance import MaintenanceCreate, MaintenanceUpdate
@@ -19,8 +19,8 @@ from app.models.schemas.purchase import PurchaseCreate, PurchaseUpdate
 # 1. LOGIKA ASET
 # ==========================================
 def get_assets(db: Session, skip: int = 0, limit: int = 1000):
-    # Mengambil semua data aset (dibatasi 1000 agar tidak berat)
-    return db.query(Asset).offset(skip).limit(limit).all()
+    # Mengambil semua data aset aktif (dibatasi 1000 agar tidak berat)
+    return db.query(Asset).filter(Asset.is_deleted == False).offset(skip).limit(limit).all()
 
 
 def get_all_assets(db: Session):
@@ -28,37 +28,66 @@ def get_all_assets(db: Session):
 
 
 def get_asset_by_tag(db: Session, tag: str):
-    return db.query(Asset).filter(Asset.asset_tag == tag).first()
+    return db.query(Asset).filter(Asset.asset_tag == tag, Asset.is_deleted == False).first()
 
 
 def create_asset(db: Session, asset: AssetCreate):
-    # Memasukkan data baru ke database
-    db_asset = Asset(**asset.model_dump())
+    # Memasukkan data baru ke database dengan transaksi atomik
+    db_asset = Asset(**asset.model_dump(), is_deleted=False)
     db.add(db_asset)
-    db.commit()
-    db.refresh(db_asset)
-    return db_asset
+    try:
+        db.commit()
+        db.refresh(db_asset)
+        return db_asset
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menambahkan aset: {str(e)}")
 
 
 def update_asset(db: Session, asset_id: int, asset: AssetUpdate):
-    # Mencari aset berdasarkan ID lalu menimpanya dengan data baru
-    db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
-    if db_asset:
-        for key, value in asset.model_dump().items():
-            setattr(db_asset, key, value)
+    # Mencari aset aktif berdasarkan ID lalu menimpanya dengan data baru
+    db_asset = db.query(Asset).filter(Asset.id == asset_id, Asset.is_deleted == False).first()
+    if not db_asset:
+        return None
+    for key, value in asset.model_dump().items():
+        setattr(db_asset, key, value)
+    try:
         db.commit()
         db.refresh(db_asset)
-    return db_asset
+        return db_asset
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal memperbarui aset: {str(e)}")
 
 
-def delete_asset(db: Session, asset_id: int):
-    # Mencari dan menghapus aset
-    db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
-    if db_asset:
-        db.delete(db_asset)
+def delete_asset(db: Session, asset_id: int, user_id: int | None = None, client_ip: str | None = None):
+    # Soft Delete aset agar data historis dan relasi tidak musnah
+    db_asset = db.query(Asset).filter(Asset.id == asset_id, Asset.is_deleted == False).first()
+    if not db_asset:
+        return False
+
+    asset_name = db_asset.nama or db_asset.name or f"ID-{db_asset.id}"
+    try:
+        db_asset.is_deleted = True
+        db_asset.deleted_at = get_utc_now()
+        db_asset.deleted_by = user_id
+
+        # Catat forensik ke SystemLogs
+        log_entry = SystemLogs(
+            user_id=user_id,
+            action=f"SOFT_DELETE: Menonaktifkan aset '{asset_name}' (Tag: {db_asset.kode_aset or '-'})",
+            entity="Asset",
+            entity_id=asset_id,
+            ip_address=client_ip,
+            timestamp=get_utc_now(),
+        )
+        db.add(log_entry)
+
         db.commit()
         return True
-    return False
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menonaktifkan aset: {str(e)}")
 
 
 def import_assets_from_file(db: Session, file_bytes: bytes, filename: str) -> int:
@@ -140,7 +169,7 @@ def import_assets_from_file(db: Session, file_bytes: bytes, filename: str) -> in
 # 2. LOGIKA KOMPONEN
 # ==========================================
 def get_components(db: Session, pc_type: Optional[str] = None):
-    query = db.query(Component).outerjoin(Asset)
+    query = db.query(Component).outerjoin(Asset).filter(Component.is_deleted == False)
     if pc_type and pc_type != "semua":
         query = query.filter(
             or_(
@@ -153,15 +182,19 @@ def get_components(db: Session, pc_type: Optional[str] = None):
 
 
 def create_component(db: Session, data: ComponentCreate):
-    new_item = Component(**data.model_dump(exclude_unset=True))
+    new_item = Component(**data.model_dump(exclude_unset=True), is_deleted=False)
     db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    return new_item
+    try:
+        db.commit()
+        db.refresh(new_item)
+        return new_item
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menambahkan komponen: {str(e)}")
 
 
 def update_component(db: Session, item_id: int, data: ComponentUpdate):
-    db_item = db.query(Component).filter(Component.id == item_id).first()
+    db_item = db.query(Component).filter(Component.id == item_id, Component.is_deleted == False).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="Data Komponen tidak ditemukan.")
 
@@ -169,18 +202,18 @@ def update_component(db: Session, item_id: int, data: ComponentUpdate):
     for key, value in update_data.items():
         setattr(db_item, key, value)
 
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+    try:
+        db.commit()
+        db.refresh(db_item)
+        return db_item
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal memperbarui komponen: {str(e)}")
 
 
-def delete_component(db: Session, item_id: int):
-    item = db.query(Component).filter(Component.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Data Komponen tidak ditemukan.")
-    db.delete(item)
-    db.commit()
-    return {"message": "Komponen berhasil dihapus."}
+def delete_component(db: Session, item_id: int, user_id: int | None = None, client_ip: str | None = None):
+    from app.services import component_service
+    return component_service.soft_delete_component(db, item_id, user_id=user_id, client_ip=client_ip)
 
 
 async def import_components_from_file(db: Session, file: UploadFile):
@@ -194,10 +227,8 @@ async def import_components_from_file(db: Session, file: UploadFile):
     try:
         contents = await file.read()
         if file.filename.endswith(".csv"):
-            # Jika CSV, jadikan satu dictionary agar seragam dengan Excel
             df_dict = {"Sheet1": pd.read_csv(io.BytesIO(contents))}
         else:
-            # sheet_name=None akan membaca SELURUH sheet yang ada di file Excel
             df_dict = pd.read_excel(io.BytesIO(contents), sheet_name=None)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Gagal membaca file: {str(e)}")
@@ -205,14 +236,9 @@ async def import_components_from_file(db: Session, file: UploadFile):
     imported_count = 0
     errors = []
 
-    # Looping untuk setiap sheet di dalam file Excel
     for sheet_name, df in df_dict.items():
-        # Standarisasi nama kolom (huruf besar & hilangkan spasi)
         df.columns = df.columns.astype(str).str.strip().str.upper()
 
-        # PERBAIKAN: Deteksi Lebih Ketat
-        # Pastikan sheet memiliki kolom 'USER', 'OS', dan 'RAM' sebelum diproses.
-        # Ini otomatis mengabaikan sheet 'IP LIST XML', 'DATA LOGIN', 'REPORT AC', dll.
         required_columns = {"USER", "OS", "RAM"}
         if not required_columns.issubset(set(df.columns)):
             continue
@@ -227,17 +253,18 @@ async def import_components_from_file(db: Session, file: UploadFile):
             ):
                 continue
 
-            # Cek apakah Aset Induk sudah ada di database
             asset = (
                 db.query(Asset)
                 .filter(
-                    (Asset.name.ilike(f"%{pc_name}%"))
-                    | (Asset.assigned_to.ilike(f"%{pc_name}%"))
+                    Asset.is_deleted == False,
+                    (
+                        (Asset.name.ilike(f"%{pc_name}%"))
+                        | (Asset.assigned_to.ilike(f"%{pc_name}%"))
+                    )
                 )
                 .first()
             )
 
-            # FITUR BARU: Auto-Create Aset Induk jika belum ada
             if not asset:
                 auto_tag = f"PC-{uuid.uuid4().hex[:6].upper()}"
                 new_asset = Asset(
@@ -247,12 +274,12 @@ async def import_components_from_file(db: Session, file: UploadFile):
                     status="Digunakan",
                     condition="Baru",
                     assigned_to=pc_name,
+                    is_deleted=False,
                 )
                 db.add(new_asset)
-                db.flush()  # Dapatkan ID aset yang baru dibuat sebelum di-commit
+                db.flush()
                 asset = new_asset
 
-            # Ekstraksi Data Spesifikasi PC
             new_component = Component(
                 asset_id=asset.id,
                 name=f"Spesifikasi {pc_name}",
@@ -266,9 +293,9 @@ async def import_components_from_file(db: Session, file: UploadFile):
                 keyboard=str(row.get("KEYBOARD", "")),
                 mouse=str(row.get("MOUSE", "")),
                 pc_type=str(row.get("JENIS_PC", row.get("JENIS PC", "Operasional"))),
+                is_deleted=False,
             )
 
-            # Bersihkan nilai 'nan' dari pandas
             for key, value in list(new_component.__dict__.items()):
                 if isinstance(value, str) and value.lower() == "nan":
                     setattr(new_component, key, None)
@@ -276,71 +303,108 @@ async def import_components_from_file(db: Session, file: UploadFile):
             db.add(new_component)
             imported_count += 1
 
-    # Simpan semua data (Aset baru & Komponen) ke database
-    db.commit()
-
-    return {
-        "status": "success",
-        "message": f"Berhasil mengimpor {imported_count} data komponen PC.",
-        "errors": errors,
-        "count": imported_count,
-    }
+    try:
+        db.commit()
+        return {
+            "status": "success",
+            "message": f"Berhasil mengimpor {imported_count} data komponen PC.",
+            "errors": errors,
+            "count": imported_count,
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menyimpan data impor komponen: {str(e)}")
 
 
 # ==========================================
 # 3. LOGIKA PEMBELIAN
 # ==========================================
 def get_purchases(db: Session):
-    return db.query(Purchase).all()
+    return db.query(Purchase).filter(Purchase.is_deleted == False).all()
 
 
 def create_purchase(db: Session, data: PurchaseCreate):
-    purchase_data = data.model_dump(exclude_unset=True)
-    qty = purchase_data.get("quantity", 1) or 1
-    unit_price = purchase_data.get("price_per_item", purchase_data.get("cost", 0.0)) or 0.0
-    purchase_data["cost"] = unit_price
-    purchase_data["price_per_item"] = unit_price
-    purchase_data["quantity"] = qty
-    purchase_data["total_price"] = unit_price * qty
+    raw_data = data.model_dump(exclude_unset=True)
+    qty = raw_data.get("quantity", 1) or 1
+    unit_price = raw_data.get("unit_price", raw_data.get("price_per_item", raw_data.get("cost", 0.0))) or 0.0
+    total_price = raw_data.get("total_price", float(unit_price) * int(qty))
 
-    new_item = Purchase(**purchase_data)
+    new_item = Purchase(
+        item_name=raw_data.get("item_name"),
+        vendor=raw_data.get("vendor"),
+        unit_price=unit_price,
+        quantity=qty,
+        total_price=total_price,
+        purchase_date=raw_data.get("purchase_date"),
+        category=raw_data.get("category"),
+        description=raw_data.get("description"),
+        file_path=raw_data.get("file_path"),
+        is_deleted=False,
+    )
     db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    return new_item
+    try:
+        db.commit()
+        db.refresh(new_item)
+        return new_item
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menambahkan data pembelian: {str(e)}")
 
 
 def update_purchase(db: Session, item_id: int, data: PurchaseUpdate):
-    db_item = db.query(Purchase).filter(Purchase.id == item_id).first()
+    db_item = db.query(Purchase).filter(Purchase.id == item_id, Purchase.is_deleted == False).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="Data Pembelian tidak ditemukan.")
 
     update_data = data.model_dump(exclude_unset=True)
-    if "price_per_item" in update_data or "quantity" in update_data or "cost" in update_data:
+    if "unit_price" in update_data or "quantity" in update_data or "price_per_item" in update_data or "cost" in update_data:
         unit_price = update_data.get(
-            "price_per_item", update_data.get("cost", db_item.price_per_item or db_item.cost or 0.0)
+            "unit_price", update_data.get("price_per_item", update_data.get("cost", db_item.unit_price or 0.0))
         )
         qty = update_data.get("quantity", db_item.quantity or 1)
-        update_data["cost"] = unit_price
-        update_data["price_per_item"] = unit_price
+        update_data["unit_price"] = unit_price
         update_data["quantity"] = qty
         update_data["total_price"] = float(unit_price) * int(qty)
 
     for key, value in update_data.items():
-        setattr(db_item, key, value)
+        if hasattr(db_item, key):
+            setattr(db_item, key, value)
 
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+    try:
+        db.commit()
+        db.refresh(db_item)
+        return db_item
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal memperbarui data pembelian: {str(e)}")
 
 
-def delete_purchase(db: Session, item_id: int):
-    item = db.query(Purchase).filter(Purchase.id == item_id).first()
+def delete_purchase(db: Session, item_id: int, user_id: int | None = None, client_ip: str | None = None):
+    item = db.query(Purchase).filter(Purchase.id == item_id, Purchase.is_deleted == False).first()
     if not item:
         raise HTTPException(status_code=404, detail="Data Pembelian tidak ditemukan.")
-    db.delete(item)
-    db.commit()
-    return {"message": "Riwayat pembelian berhasil dihapus."}
+
+    item_name = item.item_name
+    try:
+        item.is_deleted = True
+        item.deleted_at = get_utc_now()
+        item.deleted_by = user_id
+
+        log_entry = SystemLogs(
+            user_id=user_id,
+            action=f"SOFT_DELETE: Menghapus data transaksi pembelian '{item_name}'",
+            entity="Purchase",
+            entity_id=item_id,
+            ip_address=client_ip,
+            timestamp=get_utc_now(),
+        )
+        db.add(log_entry)
+
+        db.commit()
+        return {"message": "Riwayat pembelian berhasil dinonaktifkan (Soft Delete)."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menghapus data pembelian: {str(e)}")
 
 
 # ==========================================
@@ -351,7 +415,6 @@ def get_all_maintenance(db: Session):
     today = date.today()
     is_changed = False
 
-    # Auto-flagging: Mengubah status otomatis jika tanggal lewat
     for log in logs:
         if (
             log.next_schedule_date
@@ -362,7 +425,10 @@ def get_all_maintenance(db: Session):
             is_changed = True
 
     if is_changed:
-        db.commit()
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
 
     return logs
 
@@ -370,9 +436,13 @@ def get_all_maintenance(db: Session):
 def create_maintenance(db: Session, data: MaintenanceCreate):
     new_item = MaintenanceLog(**data.model_dump(exclude_unset=True))
     db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    return new_item
+    try:
+        db.commit()
+        db.refresh(new_item)
+        return new_item
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menambahkan jadwal maintenance: {str(e)}")
 
 
 def update_maintenance(db: Session, item_id: int, data: MaintenanceUpdate):
@@ -384,9 +454,13 @@ def update_maintenance(db: Session, item_id: int, data: MaintenanceUpdate):
     for key, value in update_data.items():
         setattr(db_item, key, value)
 
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+    try:
+        db.commit()
+        db.refresh(db_item)
+        return db_item
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal memperbarui maintenance: {str(e)}")
 
 
 def delete_maintenance(db: Session, item_id: int):
@@ -394,23 +468,30 @@ def delete_maintenance(db: Session, item_id: int):
     if not item:
         raise HTTPException(status_code=404, detail="Data Maintenance tidak ditemukan.")
     db.delete(item)
-    db.commit()
-    return {"message": "Jadwal maintenance berhasil dihapus."}
+    try:
+        db.commit()
+        return {"message": "Jadwal maintenance berhasil dihapus."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Gagal menghapus maintenance: {str(e)}")
 
 
 # ==========================================
 # 5. STATISTIK DASHBOARD DINAMIS
 # ==========================================
 def get_dashboard_stats(db: Session):
-    total_assets = db.query(Asset).count()
-    total_components = db.query(Component).count()
+    total_assets = db.query(Asset).filter(Asset.is_deleted == False).count()
+    total_components = db.query(Component).filter(Component.is_deleted == False).count()
     active_ips = db.query(NetworkIP).filter(NetworkIP.status == "Aktif").count()
 
     all_maintenance = get_all_maintenance(db)
     pending_maintenance = sum(1 for m in all_maintenance if m.status == "Kritis")
 
     status_query = (
-        db.query(Asset.status, func.count(Asset.id)).group_by(Asset.status).all()
+        db.query(Asset.status, func.count(Asset.id))
+        .filter(Asset.is_deleted == False)
+        .group_by(Asset.status)
+        .all()
     )
     if status_query:
         status_labels = [row[0] for row in status_query]
@@ -420,7 +501,10 @@ def get_dashboard_stats(db: Session):
         status_data = [0, 0, 0]
 
     category_query = (
-        db.query(Asset.category, func.count(Asset.id)).group_by(Asset.category).all()
+        db.query(Asset.category, func.count(Asset.id))
+        .filter(Asset.is_deleted == False)
+        .group_by(Asset.category)
+        .all()
     )
     if category_query:
         bar_labels = [row[0] for row in category_query]
