@@ -14,3 +14,4 @@ qrcode
 Pillow
 pydantic-settings
 aiofiles
+passlib[bcrypt]

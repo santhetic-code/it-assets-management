@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: itam_db_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    ports:
+      # Opsional: Diekspos agar Anda bisa meremote DB dari DBeaver/Navicat di laptop Anda
+      # Format -> PORT_LAPTOP:PORT_CONTAINER
+      - "3306:3306" 
+    volumes:
+      # VOLUME KRUSIAL: Menjaga data database tidak hilang saat container mati
+      - mysql_data:/var/lib/mysql
+    # Healthcheck mencegah backend menyala sebelum MySQL benar-benar siap menerima koneksi
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: itam_web_container
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Anda sebelumnya menggunakan port 8001. Kita petakan port 8001 di host ke 8000 di container
+      - "8001:8000"
+    env_file:
+      - .env
+    volumes:
+      # VOLUME KRUSIAL: Menjaga foto profil dan nota pembelian tidak hilang
+      - ./static/avatars:/app/static/avatars
+      - ./static/uploads:/app/static/uploads
+
+volumes:
+  mysql_data:
