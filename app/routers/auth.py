@@ -267,9 +267,19 @@ def upload_avatar(
     upload_dir = "static/avatars"
     os.makedirs(upload_dir, exist_ok=True)
 
-    # Simpan file dengan nama unik
+    # Hapus file avatar lama user jika ada (agar file tidak menumpuk di disk)
+    if user.avatar and user.avatar.startswith("/static/avatars/avatar_"):
+        old_file = user.avatar.lstrip("/")
+        if os.path.exists(old_file):
+            try:
+                os.remove(old_file)
+            except Exception:
+                pass
+
+    # Simpan file dengan nama unik berbasis timestamp agar browser selalu mendeteksi URL baru
     file_ext = file.filename.split(".")[-1]
-    file_name = f"avatar_{username}.{file_ext}"
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    file_name = f"avatar_{username}_{timestamp}.{file_ext}"
     file_path = os.path.join(upload_dir, file_name)
 
     with open(file_path, "wb") as buffer:

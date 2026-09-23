@@ -17,6 +17,7 @@ def render_template(request: Request, name: str, context: dict = None):
     """
     Helper untuk merender template Jinja2 sekaligus memastikan
     csrf_token diterbitkan, dimasukkan ke context template, dan disimpan di cookie browser.
+    Serta menambahkan header Cache-Control agar browser selalu mengambil HTML terbaru secara real-time.
     """
     if context is None:
         context = {}
@@ -30,6 +31,10 @@ def render_template(request: Request, name: str, context: dict = None):
         secure=SECURE_COOKIES,
         samesite="lax",
     )
+    # Hancurkan cache browser agar halaman HTML selalu fresh dari server
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     return response
 
 
