@@ -23,6 +23,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - itam_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: itam_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - itam_network
+    volumes:
+      - redis_data:/data
 
   web:
     build: .
@@ -31,6 +44,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     ports:
       # Anda sebelumnya menggunakan port 8001. Kita petakan port 8001 di host ke 8000 di container
       - "8001:8000"
@@ -40,6 +55,13 @@ services:
       # VOLUME KRUSIAL: Menjaga foto profil dan nota pembelian tidak hilang
       - ./static/avatars:/app/static/avatars
       - ./static/uploads:/app/static/uploads
+    networks:
+      - itam_network
 
 volumes:
   mysql_data:
+  redis_data:
+
+networks:
+  itam_network:
+    driver: bridge

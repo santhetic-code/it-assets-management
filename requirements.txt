@@ -16,3 +16,4 @@ pydantic-settings
 aiofiles
 passlib[bcrypt]
 slowapi==0.1.9
+redis>=4.5.4

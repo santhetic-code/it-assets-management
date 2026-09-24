@@ -17,6 +17,7 @@ from app.core.deps import (
 )
 from app.core.limiter import limiter
 from app.core.security import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
     SECURE_COOKIES,
     create_access_token,
     get_password_hash,
@@ -38,23 +39,22 @@ def set_auth_cookies(response: Response, user: User):
     access_token = create_access_token(
         data={"sub": user.username}
     )
+    # HANYA gunakan parameter ini untuk menyetel cookie
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
-        httponly=True,
-        secure=SECURE_COOKIES,
-        samesite="lax",
-        max_age=7200,
-        expires=7200,
+        httponly=True,  # Mutlak: Mencegah Javascript (XSS) membaca token
+        samesite="lax", # Mencegah pengiriman cookie ke situs pihak ketiga (Mitigasi awal CSRF)
+        secure=False,   # SET KE True JIKA SUDAH MENGGUNAKAN HTTPS DI PRODUCTION
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     response.set_cookie(
         key="itam_session",
         value=access_token,
         httponly=True,
-        secure=SECURE_COOKIES,
         samesite="lax",
-        max_age=7200,
-        expires=7200,
+        secure=False,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     return access_token
 
@@ -110,7 +110,10 @@ def login(
     nama_tampil = user.full_name if user.full_name else user.username
     role_tampil = user.role if user.role else "Staff IT"
 
-    return {"message": "Berhasil Login", "name": nama_tampil, "role": role_tampil}
+    return {"message": "Login berhasil", "name": nama_tampil, "role": role_tampil}
+
+
+login_for_access_token = login
 
 
 @router.post("/logout")

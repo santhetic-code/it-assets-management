@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     # Database Configuration
     DATABASE_URL: str
+    REDIS_URL: str = "redis://redis:6379/0"
 
     # Security Keys
     SECRET_KEY: str
