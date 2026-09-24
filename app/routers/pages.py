@@ -4,10 +4,17 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.deps import CurrentUser, DbSession
+from app.core.limiter import limiter
 from app.core.security import SECURE_COOKIES, create_access_token, verify_jwt_token
 from app.models import domain
 from app.models.schemas.user import UserCreate
-from app.services import asset_service, auth_service, ip_service, vault_service
+from app.services import (
+    asset_service,
+    auth_service,
+    component_service,
+    ip_service,
+    vault_service,
+)
 
 router = APIRouter(tags=["Frontend Pages"])
 templates = Jinja2Templates(directory="views")
@@ -54,6 +61,7 @@ def login_page(request: Request):
 
 
 @router.post("/login")
+@limiter.limit("5/minute")
 def login_submit(
     request: Request,
     db: DbSession,
@@ -197,8 +205,8 @@ def read_purchases(request: Request, db: DbSession, current_user: CurrentUser):
 
 @router.get("/hardware-components")
 def read_components(request: Request, db: DbSession, current_user: CurrentUser):
-    # Data tabel komponen dimuat secara dinamis via AJAX DataTables (/api/components/).
-    # Menghapus query Component yang membebani memori server (eliminasi double-fetching).
+    # Mengambil kartu statistik dengan query agregat ringan (cepat & ramah memori)
+    comp_stats = component_service.get_component_stats(db)
     assets = asset_service.get_all_assets(db)
     return render_template(
         request=request,
@@ -207,6 +215,7 @@ def read_components(request: Request, db: DbSession, current_user: CurrentUser):
             "current_user": current_user,
             "assets": assets,
             "jenis_aktif": "semua",
+            **comp_stats,
         },
     )
 

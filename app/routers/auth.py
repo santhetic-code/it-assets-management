@@ -15,6 +15,7 @@ from app.core.deps import (
     get_current_user,
     require_super_admin,
 )
+from app.core.limiter import limiter
 from app.core.security import (
     SECURE_COOKIES,
     create_access_token,
@@ -81,7 +82,13 @@ class LoginRequest(BaseModel):
 
 
 @router.post("/login")
-def login(request_data: LoginRequest, response: Response, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(
+    request: Request,
+    request_data: LoginRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+):
     # 1. Cari user di database
     user = db.query(User).filter(User.username == request_data.username).first()
 

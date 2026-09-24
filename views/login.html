@@ -232,7 +232,7 @@
                 });
             } else {
                 // Sekarang pesan error dari backend akan langsung tercetak sempurna di sini!
-                Swal.fire('Akses Ditolak', data.detail || 'Terjadi kesalahan kredensial', 'error');
+                Swal.fire('Akses Ditolak', data.detail || data.error || 'Terjadi kesalahan kredensial', 'error');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }

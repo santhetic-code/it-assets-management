@@ -3,14 +3,22 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 from app.core.database import SessionLocal, engine
 from app.core.deps import get_current_user
+from app.core.limiter import limiter
 from app.models import domain
 
 # Import seluruh router dari arsitektur MVC kita
 from app.routers import assets, auth, components, ips, maintenance, pages, purchases, qr, vault
 
 app = FastAPI(title="ITAM Pro Enterprise")
+
+# Daftarkan slowapi rate limiter ke aplikasi & tangani exception 429
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # 1. Mount folder static (CSS, JS, Gambar)
 app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -177,7 +177,7 @@
                     <div class="position-relative z-1">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">TOTAL SEMUA PC</h6>
-                            <h3 class="mb-0 fw-black text-dark" id="countTotal">0</h3>
+                            <h3 class="mb-0 fw-black text-dark" id="countTotal">{{ count_total | default(0) }}</h3>
                         </div>
                         <div class="progress mt-3" style="height: 5px; border-radius: 3px;">
                             <div class="progress-bar bg-secondary" style="width: 100%;"></div>
@@ -197,12 +197,12 @@
                     <div class="position-relative z-1">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">PC OPERASIONAL</h6>
-                            <h3 class="mb-0 fw-black text-primary" id="countOperasional">0</h3>
+                            <h3 class="mb-0 fw-black text-primary" id="countOperasional">{{ count_operasional | default(0) }}</h3>
                         </div>
                         <div class="progress mt-3" style="height: 5px; border-radius: 3px; background-color: #e0f2fe;">
-                            <div class="progress-bar bg-primary" id="barOperasional" style="width: 0%;"></div>
+                            <div class="progress-bar bg-primary" id="barOperasional" style="width: {{ pct_operasional | default(0) }}%;"></div>
                         </div>
-                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textOperasional">0% dari total inventaris</small>
+                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textOperasional">{{ pct_operasional | default(0) }}% dari total inventaris</small>
                     </div>
                     <i class="bi bi-pc-display position-absolute text-primary" style="bottom: -15px; right: -10px; font-size: 5rem; opacity: 0.08; z-index: 0;"></i>
                 </div>
@@ -216,12 +216,12 @@
                     <div class="position-relative z-1">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">PC SERVER</h6>
-                            <h3 class="mb-0 fw-black text-danger" id="countServer">0</h3>
+                            <h3 class="mb-0 fw-black text-danger" id="countServer">{{ count_server | default(0) }}</h3>
                         </div>
                         <div class="progress mt-3" style="height: 5px; border-radius: 3px; background-color: #fee2e2;">
-                            <div class="progress-bar bg-danger" id="barServer" style="width: 0%;"></div>
+                            <div class="progress-bar bg-danger" id="barServer" style="width: {{ pct_server | default(0) }}%;"></div>
                         </div>
-                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textServer">0% dari total inventaris</small>
+                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textServer">{{ pct_server | default(0) }}% dari total inventaris</small>
                     </div>
                     <i class="bi bi-hdd-network position-absolute text-danger" style="bottom: -15px; right: -10px; font-size: 5rem; opacity: 0.08; z-index: 0;"></i>
                 </div>
@@ -235,12 +235,12 @@
                     <div class="position-relative z-1">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <h6 class="text-secondary fw-bold mb-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">PC BACKUP</h6>
-                            <h3 class="mb-0 fw-black text-warning" id="countBackup">0</h3>
+                            <h3 class="mb-0 fw-black text-warning" id="countBackup">{{ count_backup | default(0) }}</h3>
                         </div>
                         <div class="progress mt-3" style="height: 5px; border-radius: 3px; background-color: #fef3c7;">
-                            <div class="progress-bar bg-warning" id="barBackup" style="width: 0%;"></div>
+                            <div class="progress-bar bg-warning" id="barBackup" style="width: {{ pct_backup | default(0) }}%;"></div>
                         </div>
-                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textBackup">0% dari total inventaris</small>
+                        <small class="text-muted mt-2 d-block fw-medium" style="font-size: 0.7rem;" id="textBackup">{{ pct_backup | default(0) }}% dari total inventaris</small>
                     </div>
                     <i class="bi bi-device-hdd position-absolute text-warning" style="bottom: -15px; right: -10px; font-size: 5rem; opacity: 0.08; z-index: 0;"></i>
                 </div>
@@ -573,17 +573,17 @@ $(document).ready(function () {
         ajax: {
             url: "/api/components/", 
             dataSrc: function (json) {
+                let items = (json && json.data) ? json.data : (Array.isArray(json) ? json : []);
                 let totalOp = 0, totalSrv = 0, totalBkp = 0;
                 
-                if (json.data) {
-                    json.data.forEach(item => {
-                        if (item.jenis_pc === "PC Operasional") totalOp++;
-                        else if (item.jenis_pc === "PC Server") totalSrv++;
-                        else if (item.jenis_pc === "PC Backup") totalBkp++;
-                    });
-                }
+                items.forEach(item => {
+                    let j = (item.jenis_pc || '').trim().toLowerCase();
+                    if (j.includes("server")) totalSrv++;
+                    else if (j.includes("backup")) totalBkp++;
+                    else totalOp++;
+                });
                 
-                let totalAll = totalOp + totalSrv + totalBkp;
+                let totalAll = items.length;
                 
                 // Animasi update teks angka
                 $('#countTotal').text(totalAll);
@@ -606,7 +606,7 @@ $(document).ready(function () {
                 $('#barBackup').css('width', pctBkp + '%');
                 $('#textBackup').text(`${pctBkp}% dari total inventaris`);
 
-                return json.data;
+                return items;
             }
         },
         dom: "<'#hidden-dt-controls'lf>rt<'row mt-4'<'col-sm-12 col-md-5 text-muted'i><'col-sm-12 col-md-7'p>>",

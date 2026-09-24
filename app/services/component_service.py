@@ -7,6 +7,7 @@ dengan router yang sedia ada.
 """
 
 from fastapi import HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.domain import Asset, Component, ComponentHistory, MasterComponent, SystemLogs, get_utc_now
@@ -350,4 +351,51 @@ def soft_delete_component(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Gagal menghapus komponen. Transaksi dibatalkan: {str(e)}")
+
+
+# ==========================================
+# AGREGASI STATISTIK KARTU KOMPONEN (RINGAN & RAMAH MEMORI)
+# ==========================================
+
+def get_component_stats(db: Session) -> dict:
+    """
+    Fungsi agregat khusus untuk menghitung indikator kartu statistik PC.
+    Hanya mengeksekusi COUNT() di MySQL tanpa memuat seluruh baris objek ke memori.
+    """
+    counts = (
+        db.query(Component.pc_type, func.count(Component.id))
+        .filter(Component.is_deleted == False)
+        .group_by(Component.pc_type)
+        .all()
+    )
+
+    total_op = 0
+    total_srv = 0
+    total_bkp = 0
+    total_all = 0
+
+    for pc_type, cnt in counts:
+        total_all += cnt
+        pt = (pc_type or "").strip().lower()
+        if "server" in pt:
+            total_srv += cnt
+        elif "backup" in pt:
+            total_bkp += cnt
+        else:
+            # Mengakomodasi "PC Operasional", "Operasional", atau tipe default lainnya
+            total_op += cnt
+
+    pct_op = round((total_op / total_all) * 100) if total_all > 0 else 0
+    pct_srv = round((total_srv / total_all) * 100) if total_all > 0 else 0
+    pct_bkp = round((total_bkp / total_all) * 100) if total_all > 0 else 0
+
+    return {
+        "count_total": total_all,
+        "count_operasional": total_op,
+        "count_server": total_srv,
+        "count_backup": total_bkp,
+        "pct_operasional": pct_op,
+        "pct_server": pct_srv,
+        "pct_backup": pct_bkp,
+    }
 
