@@ -113,24 +113,20 @@ class Component(Base):
     __tablename__ = "components"
 
     id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=True)  # Opsional, bisa tanpa relasi aset
-    name = Column(String(100), nullable=False)  # Misalnya: "PC - DIREKTUR"
+    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=True)
+    name = Column(String(100), nullable=False)
 
-    # Kolom baru hasil adaptasi dari Spreadsheet
-    os_name = Column(String(255), nullable=True)
-    ram_spec = Column(String(255), nullable=True)
-    vga_spec = Column(String(255), nullable=True)  # Mewakili VGA / GPU Card
-    processor_spec = Column(String(255), nullable=True)  # Mewakili CPU / Processor
-    mainboard_spec = Column(String(255), nullable=True)
-    storage_spec = Column(String(500), nullable=True)  # Mewakili HDD/SSD
-    monitor = Column(String(255), nullable=True)
+    # --- KOLOM STRING REDUNDAN TELAH DIBUANG ---
+    # os_name, ram_spec, vga_spec, processor_spec, mainboard_spec, storage_spec, monitor DIHAPUS.
+
+    # Periferal yang belum di-master-kan (Bisa di-upgrade ke tabel terpisah nanti)
     keyboard = Column(String(255), nullable=True)
     mouse = Column(String(255), nullable=True)
-    pc_type = Column(String(50), nullable=True, default="Operasional")  # Operasional / Server
+    pc_type = Column(String(50), nullable=True, default="Operasional")
     psu = Column(String(255), nullable=True)
     casing = Column(String(255), nullable=True)
 
-    # FK ke MasterComponent (nullable agar kompatibel dengan data free-text lama)
+    # --- FOREIGN KEY WAJIB (Single Source of Truth) ---
     os_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
     cpu_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
     mainboard_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
@@ -151,7 +147,7 @@ class Component(Base):
     asset = relationship("Asset", back_populates="components")
     history = relationship("ComponentHistory", back_populates="component", cascade="all, delete-orphan")
 
-    # Master Component Relationships (untuk eager-load nama tanpa join manual)
+    # Master Component Relationships
     os_ref       = relationship("MasterComponent", foreign_keys=[os_id])
     cpu_ref      = relationship("MasterComponent", foreign_keys=[cpu_id])
     mainboard_ref= relationship("MasterComponent", foreign_keys=[mainboard_id])
@@ -160,113 +156,44 @@ class Component(Base):
     storage_ref  = relationship("MasterComponent", foreign_keys=[storage_id])
     monitor_ref  = relationship("MasterComponent", foreign_keys=[monitor_id])
 
+    # --- PROPERTY DIBERSIHKAN: Hanya membaca dari relasi master ---
     @property
     def identitas_pc(self):
-        return self.user_pc
-
-    @identitas_pc.setter
-    def identitas_pc(self, value):
-        self.name = value
-
-    @property
-    def user_pc(self):
-        if self.name:
-            return self.name
-        if self.asset and self.asset.nama:
-            return self.asset.nama
-        return "-"
-
-    @property
-    def os(self):
-        if self.os_name:
-            return self.os_name
-        if self.os_ref:
-            return self.os_ref.name
-        return "-"
-
-    @os.setter
-    def os(self, value):
-        self.os_name = value
+        return self.name
 
     @property
     def jenis_pc(self):
         if not self.pc_type:
             return "PC Operasional"
-        if self.pc_type.startswith("PC "):
-            return self.pc_type
-        return f"PC {self.pc_type}"
+        return self.pc_type if self.pc_type.startswith("PC ") else f"PC {self.pc_type}"
 
-    @jenis_pc.setter
-    def jenis_pc(self, value):
-        self.pc_type = value
+    @property
+    def os(self):
+        return self.os_ref.name if self.os_ref else "-"
 
     @property
     def cpu(self):
-        if self.processor_spec:
-            return self.processor_spec
-        if self.cpu_ref:
-            return self.cpu_ref.name
-        return "-"
-
-    @cpu.setter
-    def cpu(self, value):
-        self.processor_spec = value
+        return self.cpu_ref.name if self.cpu_ref else "-"
 
     @property
     def mainboard(self):
-        if self.mainboard_spec:
-            return self.mainboard_spec
-        if self.mainboard_ref:
-            return self.mainboard_ref.name
-        return "-"
-
-    @mainboard.setter
-    def mainboard(self, value):
-        self.mainboard_spec = value
+        return self.mainboard_ref.name if self.mainboard_ref else "-"
 
     @property
     def ram(self):
-        if self.ram_spec:
-            return self.ram_spec
-        if self.ram_ref:
-            return self.ram_ref.name
-        return "-"
-
-    @ram.setter
-    def ram(self, value):
-        self.ram_spec = value
+        return self.ram_ref.name if self.ram_ref else "-"
 
     @property
     def vga(self):
-        if self.vga_spec:
-            return self.vga_spec
-        if self.vga_ref:
-            return self.vga_ref.name
-        return "-"
-
-    @vga.setter
-    def vga(self, value):
-        self.vga_spec = value
+        return self.vga_ref.name if self.vga_ref else "-"
 
     @property
     def storage(self):
-        if self.storage_spec:
-            return self.storage_spec
-        if self.storage_ref:
-            return self.storage_ref.name
-        return "-"
-
-    @storage.setter
-    def storage(self, value):
-        self.storage_spec = value
+        return self.storage_ref.name if self.storage_ref else "-"
 
     @property
     def monitor_display(self):
-        if self.monitor:
-            return self.monitor
-        if self.monitor_ref:
-            return self.monitor_ref.name
-        return "-"
+        return self.monitor_ref.name if self.monitor_ref else "-"
 
     @property
     def last_update(self):
@@ -274,7 +201,7 @@ class Component(Base):
         if dt:
             months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
             return f"{dt.day} {months[dt.month - 1]} {dt.year}"
-        return "11 Sep 2026"
+        return "-"
 
 
 # ==========================================
