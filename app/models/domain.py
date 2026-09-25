@@ -213,11 +213,13 @@ class ComponentHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     component_id = Column(Integer, ForeignKey("components.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    action_type = Column(String(50), nullable=False)  # UPGRADE, REPLACE, DOWNGRADE, REPAIR
-    changes_detail = Column(Text, nullable=False)     # Cth: 'RAM diubah dari 8GB ke 16GB'
+    action_type = Column(String(50), nullable=False)  
+    
+    # UBAH DARI Text MENJADI JSON
+    changes_detail = Column(JSON, nullable=False)     
+    
     created_at = Column(DateTime, default=get_utc_now)
 
-    # Relationships
     component = relationship("Component", back_populates="history")
     user = relationship("User", foreign_keys=[user_id])
 
@@ -237,19 +239,6 @@ class NetworkIP(Base):
     keterangan = Column(String(255), nullable=True)
 
 
-class Credential(Base):
-    __tablename__ = "credentials"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(100), nullable=False)
-    url = Column(String(255), nullable=True)
-    username = Column(String(100), nullable=False)
-    password_hash = Column(
-        Text, nullable=False
-    )  # Disimpan dalam bentuk enkripsi Fernet
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=get_utc_now)
-    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
 
 class MaintenanceLog(Base):
@@ -288,10 +277,11 @@ class SystemLogs(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    action = Column(
-        String(255), nullable=False
-    )  # Cth: "Mengubah Aset", "Reveal Password"
-    entity = Column(String(50), nullable=True)  # Cth: "Asset", "Credential"
+    
+    # UBAH DARI String(255) MENJADI JSON
+    action = Column(JSON, nullable=False)  
+    
+    entity = Column(String(50), nullable=True)
     entity_id = Column(Integer, nullable=True)
     ip_address = Column(String(50), nullable=True)
     timestamp = Column(DateTime, default=get_utc_now)
@@ -299,14 +289,6 @@ class SystemLogs(Base):
     user = relationship("User", back_populates="audit_logs")
 
 
-class VaultCredential(Base):
-    __tablename__ = "vault_credentials"
-
-    id = Column(Integer, primary_key=True, index=True)
-    nama_sistem = Column(String(100), nullable=False)  # Contoh: xmltronik.com
-    kategori = Column(String(50), nullable=False)      # Contoh: Website, Email, Mikrotik
-    kredensial_data = Column(JSON, nullable=False)     # Kolom Ajaib untuk menampung data dinamis
-    akses_role = Column(String(255), default="All")    # Untuk keamanan Lapis 2 (Siapa saja yang boleh lihat)
 
 
 # ==========================================

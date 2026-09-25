@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 # ==========================================
@@ -72,7 +72,7 @@ class ComponentHistoryResponse(BaseModel):
     component_id: int
     user_id: Optional[int] = None
     action_type: str
-    changes_detail: str
+    changes_detail: Any
     created_at: datetime
 
     model_config = {"from_attributes": True}

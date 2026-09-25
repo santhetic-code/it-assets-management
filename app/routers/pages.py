@@ -180,7 +180,7 @@ def read_network(request: Request, db: DbSession, current_user: CurrentUser):
 @router.get("/vault")
 def read_vault(request: Request, db: DbSession, current_user: CurrentUser):
     # Mengambil semua data vault dari database
-    vaults = db.query(domain.VaultCredential).all()
+    vaults = db.query(domain.Vault).all()
     return render_template(
         request=request,
         name="credentials.html",

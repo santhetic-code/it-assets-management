@@ -43,12 +43,15 @@ def create_component(db: Session, component: ComponentCreate, current_user_id: i
     db.commit()
     db.refresh(db_component)
 
-    # Catat ke History (Audit Trail)
+    # REFAKTOR: Catat JSON ke History
     history_entry = ComponentHistory(
         component_id=db_component.id,
         user_id=current_user_id,
         action_type="CREATE",
-        changes_detail=f"Pendaftaran spesifikasi PC: '{db_component.name}' ({db_component.pc_type})",
+        changes_detail={
+            "reason": "Pendaftaran awal spesifikasi PC",
+            "changes": []
+        },
         created_at=get_utc_now()
     )
     db.add(history_entry)
@@ -62,7 +65,7 @@ def update_component(db: Session, component_id: int, component_data: ComponentUp
     if not db_comp:
         return None
 
-    # Simpan state lama untuk perbandingan (Audit Trail)
+    # Simpan state lama
     old_state = {
         "name": db_comp.name,
         "pc_type": db_comp.pc_type,
@@ -79,10 +82,7 @@ def update_component(db: Session, component_id: int, component_data: ComponentUp
         "casing": db_comp.casing
     }
 
-    # Update data
     update_data = component_data.model_dump(exclude_unset=True)
-    
-    # Ambil alasan dari update_data lalu hapus agar tidak masuk ke model Component
     update_reason = update_data.pop("update_reason", None)
 
     for key, value in update_data.items():
@@ -92,25 +92,31 @@ def update_component(db: Session, component_id: int, component_data: ComponentUp
     db.commit()
     db.refresh(db_comp)
 
-    # Deteksi perubahan untuk Audit Trail
+    # REFAKTOR: Bangun JSON Array untuk perubahan
     changes = []
     for key, old_val in old_state.items():
         new_val = getattr(db_comp, key)
         if str(old_val) != str(new_val):
-            changes.append(f"{key}: [{old_val}] -> [{new_val}]")
+            changes.append({
+                "field": key,
+                "old_value": old_val,
+                "new_value": new_val
+            })
 
     if changes:
-        reason_text = f"Alasan: {update_reason} | " if update_reason else ""
         action_type = "UPDATE"
-        # Logika sederhana penentuan aksi: jika memori/storage berubah -> UPGRADE/DOWNGRADE (bisa dikembangkan)
-        if "ram_id" in str(changes) or "storage_id" in str(changes):
+        # Cek apakah ada perubahan di sektor kritikal
+        if any(c["field"] in ["ram_id", "storage_id", "cpu_id"] for c in changes):
             action_type = "UPGRADE/DOWNGRADE"
 
         history_entry = ComponentHistory(
             component_id=db_comp.id,
             user_id=current_user_id,
             action_type=action_type,
-            changes_detail=reason_text + " | ".join(changes),
+            changes_detail={
+                "reason": update_reason or "Update spesifikasi rutin",
+                "changes": changes
+            },
             created_at=get_utc_now()
         )
         db.add(history_entry)
@@ -120,19 +126,21 @@ def update_component(db: Session, component_id: int, component_data: ComponentUp
 
 
 def delete_component(db: Session, component_id: int, current_user_id: int):
-    # Menggunakan Soft Delete
     db_comp = get_component(db, component_id)
     if db_comp:
         db_comp.is_deleted = True
         db_comp.deleted_at = get_utc_now()
         db_comp.deleted_by = current_user_id
         
-        # Catat di history
+        # REFAKTOR: Catat JSON ke History
         history = ComponentHistory(
             component_id=db_comp.id,
             user_id=current_user_id,
             action_type="DECOMMISSION",
-            changes_detail=f"Spesifikasi PC dinonaktifkan (Soft Delete)",
+            changes_detail={
+                "reason": "Penghapusan komponen (Soft Delete)",
+                "changes": [{"field": "is_deleted", "old_value": False, "new_value": True}]
+            },
             created_at=get_utc_now()
         )
         db.add(history)

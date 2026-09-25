@@ -205,25 +205,45 @@ def decrypt_vault_data(encrypted_text: str) -> str:
 
 
 # ==========================================
-# MESIN ENKRIPSI DINAMIS (JSON PAYLOAD)
+# MESIN ENKRIPSI DINAMIS (FERNET AES-128-CBC)
 # ==========================================
 import json
-from app.core.config import settings
 
-# Inisialisasi Mesin Enkripsi dengan Kunci Master
-fernet = Fernet((settings.VAULT_SECRET_KEY or ENCRYPTION_KEY).encode())
+# 1. Pemuatan Kunci Enkripsi dari Environment
+# PERINGATAN: Di production, kunci ini harus disimpan di Docker Secret atau KMS, bukan sekadar .env
+VAULT_SECRET_KEY = os.getenv("VAULT_SECRET_KEY")
+if VAULT_SECRET_KEY:
+    VAULT_SECRET_KEY = VAULT_SECRET_KEY.strip("\"'")
 
-def encrypt_payload(payload_dict: dict) -> str:
-    """Mengubah dictionary JSON menjadi string terenkripsi."""
-    # Ubah dict ke string JSON, lalu ubah ke bytes, lalu enkripsi
-    json_str = json.dumps(payload_dict)
-    encrypted_bytes = fernet.encrypt(json_str.encode())
-    # Kembalikan sebagai string agar mudah disimpan ke MariaDB
-    return encrypted_bytes.decode()
+# Fallback darurat jika lupa set .env (jangan gunakan di production!)
+if not VAULT_SECRET_KEY:
+    # Fernet membutuhkan key 32-url-safe-base64-encoded bytes
+    VAULT_SECRET_KEY = Fernet.generate_key().decode()
+    print("CRITICAL WARNING: VAULT_SECRET_KEY tidak ditemukan di .env! Menggunakan kunci ephemeral (data akan hilang saat restart).")
 
-def decrypt_payload(encrypted_str: str) -> dict:
-    """Mengubah string terenkripsi kembali menjadi dictionary JSON."""
-    # Ubah string ke bytes, lalu dekripsi, lalu ubah kembali ke dictionary
-    decrypted_bytes = fernet.decrypt(encrypted_str.encode())
-    return json.loads(decrypted_bytes.decode())
+try:
+    vault_cipher = Fernet(VAULT_SECRET_KEY.encode())
+except Exception as e:
+    raise ValueError(f"VAULT_SECRET_KEY tidak valid. Harus berupa 32-byte base64 encoded string. Error: {e}")
+
+def encrypt_vault_payload(payload_dict: dict) -> str:
+    """Mengubah dictionary menjadi JSON plaintext, lalu mengenkripsinya menjadi Ciphertext."""
+    try:
+        json_data = json.dumps(payload_dict)
+        encrypted_bytes = vault_cipher.encrypt(json_data.encode('utf-8'))
+        return encrypted_bytes.decode('utf-8')
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Gagal mengenkripsi data kredensial.")
+
+def decrypt_vault_payload(encrypted_str: str) -> dict:
+    """Mendekripsi Ciphertext kembali menjadi dictionary."""
+    try:
+        decrypted_bytes = vault_cipher.decrypt(encrypted_str.encode('utf-8'))
+        return json.loads(decrypted_bytes.decode('utf-8'))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Gagal mendekripsi data atau kunci enkripsi tidak cocok.")
+
+# Alias untuk kompatibilitas ke fungsi lama jika ada pemanggil
+encrypt_payload = encrypt_vault_payload
+decrypt_payload = decrypt_vault_payload
 
