@@ -1,4 +1,5 @@
 import os
+import json
 import types
 from datetime import datetime, timedelta, timezone
 
@@ -25,10 +26,12 @@ bcrypt.hashpw = _safe_hashpw
 
 from passlib.context import CryptContext
 
-# Kunci Rahasia Sistem (Jangan beritahu siapa pun!)
-SECRET_KEY = "XML_TRONIK_SUPER_SECRET_KEY_2026_!@#"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 120  # Tiket otomatis hangus dalam 2 Jam
+# Kunci Rahasia Sistem — WAJIB diambil dari .env via Settings, BUKAN hardcode!
+from app.core.config import settings
+
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 # Mesin Pengacak Password (Bcrypt)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -82,8 +85,8 @@ def verify_jwt_token(token: str) -> dict:
         )
 
 
-# Inisialisasi Fernet untuk Vault Kredensial
-VAULT_KEY = b"fOQjX5s_5W2mK-u7z8jE1v4L2yA6N8d9w0R_1B3yU6E="
+# Inisialisasi Fernet untuk Vault Kredensial — kunci diambil dari .env
+VAULT_KEY = settings.VAULT_KEY.encode() if isinstance(settings.VAULT_KEY, str) else settings.VAULT_KEY
 cipher_suite = Fernet(VAULT_KEY)
 
 
@@ -171,20 +174,11 @@ async def secure_save_file(
 # ==========================================
 # MESIN ENKRIPSI VAULT (AES-256 FERNET)
 # ==========================================
-import os
-from cryptography.fernet import Fernet
-from dotenv import load_dotenv
 
-load_dotenv()
+# Mengambil ENCRYPTION_KEY dari Settings (.env)
+ENCRYPTION_KEY = settings.ENCRYPTION_KEY if settings.ENCRYPTION_KEY else Fernet.generate_key().decode()
 
-# Mengambil Master Key dari file .env
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
-
-# Jaga-jaga jika lupa isi .env, sistem akan membuat kunci sementara (Tidak untuk Production!)
-if not ENCRYPTION_KEY:
-    ENCRYPTION_KEY = Fernet.generate_key().decode()
-
-fernet_machine = Fernet(ENCRYPTION_KEY.encode())
+fernet_machine = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
 
 
 def encrypt_vault_data(plain_text: str) -> str:
@@ -207,22 +201,17 @@ def decrypt_vault_data(encrypted_text: str) -> str:
 # ==========================================
 # MESIN ENKRIPSI DINAMIS (FERNET AES-128-CBC)
 # ==========================================
-import json
 
-# 1. Pemuatan Kunci Enkripsi dari Environment
-# PERINGATAN: Di production, kunci ini harus disimpan di Docker Secret atau KMS, bukan sekadar .env
-VAULT_SECRET_KEY = os.getenv("VAULT_SECRET_KEY")
-if VAULT_SECRET_KEY:
-    VAULT_SECRET_KEY = VAULT_SECRET_KEY.strip("\"'")
+# Pemuatan VAULT_SECRET_KEY dari Settings (.env)
+_vault_secret = settings.VAULT_SECRET_KEY.strip("\"'") if settings.VAULT_SECRET_KEY else ""
 
 # Fallback darurat jika lupa set .env (jangan gunakan di production!)
-if not VAULT_SECRET_KEY:
-    # Fernet membutuhkan key 32-url-safe-base64-encoded bytes
-    VAULT_SECRET_KEY = Fernet.generate_key().decode()
+if not _vault_secret:
+    _vault_secret = Fernet.generate_key().decode()
     print("CRITICAL WARNING: VAULT_SECRET_KEY tidak ditemukan di .env! Menggunakan kunci ephemeral (data akan hilang saat restart).")
 
 try:
-    vault_cipher = Fernet(VAULT_SECRET_KEY.encode())
+    vault_cipher = Fernet(_vault_secret.encode())
 except Exception as e:
     raise ValueError(f"VAULT_SECRET_KEY tidak valid. Harus berupa 32-byte base64 encoded string. Error: {e}")
 

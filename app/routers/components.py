@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.security import verify_csrf_token
 from app.models.schemas.component import ComponentCreate, ComponentUpdate, ComponentResponse, ComponentHistoryResponse
 from app.services import component_service
 
@@ -26,8 +27,8 @@ def read_component(component_id: int, db: Session = Depends(get_db)):
     return db_component
 
 
-@router.post("", response_model=ComponentResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=ComponentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ComponentResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(verify_csrf_token)])
+@router.post("/", response_model=ComponentResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(verify_csrf_token)])
 def create_component(
     component: ComponentCreate,
     db: Session = Depends(get_db),
@@ -37,7 +38,7 @@ def create_component(
     return component_service.create_component(db=db, component=component, current_user_id=current_user.id)
 
 
-@router.put("/{component_id}", response_model=ComponentResponse)
+@router.put("/{component_id}", response_model=ComponentResponse, dependencies=[Depends(verify_csrf_token)])
 def update_component(
     component_id: int,
     component: ComponentUpdate,
@@ -51,7 +52,7 @@ def update_component(
     return db_component
 
 
-@router.delete("/{component_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{component_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(verify_csrf_token)])
 def delete_component(
     component_id: int,
     db: Session = Depends(get_db),

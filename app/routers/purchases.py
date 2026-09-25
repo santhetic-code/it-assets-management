@@ -8,6 +8,7 @@ from pathlib import Path
 
 from app.core.database import get_db
 from app.core.deps import get_audit_logger, get_current_user, require_super_admin
+from app.core.security import verify_csrf_token
 from app.models.domain import Purchase, Asset, SystemLogs, User, get_utc_now
 from app.models.schemas.purchase import PurchaseResponse
 
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/api/purchases", tags=["Purchases"])
 # ==========================================
 # POST — Tambah Pembelian + Upload Nota
 # ==========================================
-@router.post("/", response_model=PurchaseResponse)
+@router.post("/", response_model=PurchaseResponse, dependencies=[Depends(verify_csrf_token)])
 async def create_purchase(
     item_name: str = Form(...),
     vendor: Optional[str] = Form(None),
@@ -117,7 +118,7 @@ def get_purchases(
 # ==========================================
 # DELETE — Soft Delete Data Pembelian (Preservasi Nota & Audit)
 # ==========================================
-@router.delete("/{purchase_id}", dependencies=[Depends(require_super_admin)])
+@router.delete("/{purchase_id}", dependencies=[Depends(require_super_admin), Depends(verify_csrf_token)])
 def delete_purchase(
     purchase_id: int,
     db: Session = Depends(get_db),

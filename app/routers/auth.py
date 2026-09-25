@@ -21,6 +21,7 @@ from app.core.security import (
     SECURE_COOKIES,
     create_access_token,
     get_password_hash,
+    verify_csrf_token,
     verify_jwt_token,
     verify_password,
 )
@@ -167,7 +168,7 @@ def read_users(db: DbSession):
 # ==========================================
 # API 1: TAMBAH PENGGUNA BARU (TERKUNCI)
 # ==========================================
-@router.post("/users", dependencies=[Depends(get_current_super_admin)])
+@router.post("/users", dependencies=[Depends(get_current_super_admin), Depends(verify_csrf_token)])
 def create_new_user(data: NewUserRequest, db: Session = Depends(get_db)):
     # Cek apakah username sudah dipakai
     user_exist = db.query(User).filter(User.username == data.username).first()
@@ -189,7 +190,7 @@ def create_new_user(data: NewUserRequest, db: Session = Depends(get_db)):
 # ==========================================
 # API: UPDATE PROFIL UTAMA (Oleh User Sendiri)
 # ==========================================
-@router.put("/users/profile")
+@router.put("/users/profile", dependencies=[Depends(verify_csrf_token)])
 def update_profile(
     data: UserUpdate,
     response: Response,
@@ -212,7 +213,7 @@ def update_profile(
 @router.put(
     "/users/{user_id}",
     response_model=UserResponse,
-    dependencies=[Depends(require_super_admin), Depends(get_audit_logger)],
+    dependencies=[Depends(require_super_admin), Depends(get_audit_logger), Depends(verify_csrf_token)],
 )
 def update_user(user_id: int, user_data: UserUpdate, db: DbSession):
     return auth_service.update_user(db, user_id, user_data)
@@ -221,7 +222,7 @@ def update_user(user_id: int, user_data: UserUpdate, db: DbSession):
 # ==========================================
 # API: HAPUS PENGGUNA (TERKUNCI)
 # ==========================================
-@router.delete("/users/{user_id}", dependencies=[Depends(get_current_super_admin)])
+@router.delete("/users/{user_id}", dependencies=[Depends(get_current_super_admin), Depends(verify_csrf_token)])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     # 1. Cari user di database berdasarkan ID
     user = db.query(User).filter(User.id == user_id).first()
@@ -246,7 +247,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 # ==========================================
 # API 2: GANTI KATA SANDI
 # ==========================================
-@router.put("/change-password")
+@router.put("/change-password", dependencies=[Depends(verify_csrf_token)])
 def change_password(data: ChangePasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == data.username).first()
 
@@ -262,7 +263,7 @@ def change_password(data: ChangePasswordRequest, db: Session = Depends(get_db)):
 # ==========================================
 # API 3: UPLOAD FOTO PROFIL (AVATAR)
 # ==========================================
-@router.post("/users/{username}/avatar")
+@router.post("/users/{username}/avatar", dependencies=[Depends(verify_csrf_token)])
 def upload_avatar(
     username: str,
     response: Response,

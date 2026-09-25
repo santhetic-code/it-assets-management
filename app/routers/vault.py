@@ -7,7 +7,7 @@ from app.core.deps import get_current_user, require_super_admin
 from app.models.domain import Vault, VaultUserAccess, User
 from app.models.schemas.vault import VaultCreate, VaultResponse, DecryptResponse, VaultAccessToggle
 # Import mesin enkripsi kita!
-from app.core.security import encrypt_payload, decrypt_payload
+from app.core.security import encrypt_payload, decrypt_payload, verify_csrf_token
 
 router = APIRouter(prefix="/api/vaults", tags=["Credential Vault"])
 
@@ -31,7 +31,7 @@ def get_vaults(db: Session = Depends(get_db), current_user: User = Depends(get_c
 # ==========================================
 # 2. TAMBAH KREDENSIAL BARU (LANGSUNG ENKRIPSI)
 # ==========================================
-@router.post("/", response_model=VaultResponse, dependencies=[Depends(require_super_admin)])
+@router.post("/", response_model=VaultResponse, dependencies=[Depends(require_super_admin), Depends(verify_csrf_token)])
 def create_vault(vault_in: VaultCreate, db: Session = Depends(get_db)):
     # 1. Enkripsi seluruh JSON menjadi satu string acak Fernet
     encrypted_str = encrypt_payload(vault_in.secrets)
@@ -107,7 +107,7 @@ def get_vault_access(vault_id: int, db: Session = Depends(get_db)):
 # ==========================================
 # 5. EKSEKUSI TOMBOL TOGGLE ON/OFF HAK AKSES
 # ==========================================
-@router.post("/{vault_id}/access", dependencies=[Depends(require_super_admin)])
+@router.post("/{vault_id}/access", dependencies=[Depends(require_super_admin), Depends(verify_csrf_token)])
 def toggle_vault_access(vault_id: int, data: VaultAccessToggle, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Cari apakah staf tersebut sudah punya akses sebelumnya
     existing_access = db.query(VaultUserAccess).filter(
@@ -130,7 +130,7 @@ def toggle_vault_access(vault_id: int, data: VaultAccessToggle, db: Session = De
 # ==========================================
 # 6. UPDATE KREDENSIAL (RE-ENCRYPT)
 # ==========================================
-@router.put("/{vault_id}", response_model=VaultResponse, dependencies=[Depends(require_super_admin)])
+@router.put("/{vault_id}", response_model=VaultResponse, dependencies=[Depends(require_super_admin), Depends(verify_csrf_token)])
 def update_vault(vault_id: int, vault_in: VaultCreate, db: Session = Depends(get_db)):
     vault = db.query(Vault).filter(Vault.id == vault_id).first()
     if not vault:
@@ -154,7 +154,7 @@ def update_vault(vault_id: int, vault_in: VaultCreate, db: Session = Depends(get
 # ==========================================
 # 7. HAPUS KREDENSIAL PERMANEN
 # ==========================================
-@router.delete("/{vault_id}", dependencies=[Depends(require_super_admin)])
+@router.delete("/{vault_id}", dependencies=[Depends(require_super_admin), Depends(verify_csrf_token)])
 def delete_vault(vault_id: int, db: Session = Depends(get_db)):
     vault = db.query(Vault).filter(Vault.id == vault_id).first()
     if not vault:

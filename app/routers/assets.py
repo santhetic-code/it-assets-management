@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_audit_logger, require_staff_or_admin, require_super_admin
+from app.core.security import verify_csrf_token
 from app.models.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
 from app.services import asset_service
 
@@ -17,13 +18,13 @@ def read_assets(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db))
     return assets
 
 
-@router.post("/", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin)])
-@router.post("", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin)])
+@router.post("/", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin), Depends(verify_csrf_token)])
+@router.post("", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin), Depends(verify_csrf_token)])
 def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
     return asset_service.create_asset(db=db, asset=asset)
 
 
-@router.put("/{asset_id}", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin)])
+@router.put("/{asset_id}", response_model=AssetResponse, dependencies=[Depends(require_staff_or_admin), Depends(verify_csrf_token)])
 def update_asset(asset_id: int, asset: AssetUpdate, db: Session = Depends(get_db)):
     db_asset = asset_service.update_asset(db, asset_id, asset)
     if not db_asset:
@@ -32,7 +33,7 @@ def update_asset(asset_id: int, asset: AssetUpdate, db: Session = Depends(get_db
 
 
 # HANYA SUPER ADMIN YANG BOLEH MENGHAPUS ASET (SOFT DELETE)
-@router.delete("/{asset_id}", dependencies=[Depends(require_super_admin)])
+@router.delete("/{asset_id}", dependencies=[Depends(require_super_admin), Depends(verify_csrf_token)])
 def delete_asset(
     asset_id: int,
     db: Session = Depends(get_db),
