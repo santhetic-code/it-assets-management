@@ -3,384 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ITAM Pro{% endblock %}</title>
+    <title>ITAM Pro - Enterprise Asset Management</title>
     
-    <!-- CSS Utama -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
-
-    <!-- 1. Import Font Modern 'Poppins' dari Google Fonts -->
+    <!-- Google Font: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CSRF Meta Tag untuk dibaca oleh Fetch API JS -->
-    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Bootstrap Icons untuk ikon komponen visual -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- SweetAlert2 CSS & JS -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- Tailwind CSS (Gunakan CDN untuk development, build via CLI untuk production nanti) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX untuk Interaktivitas SPA tanpa Javascript rumit -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- SweetAlert2 untuk Notifikasi -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        /* Mengubah skala seluruh website menjadi 80% secara default */
-        html {
-            font-size: 80%; 
-        }
-
-        /* 1. ROOT VARIABLES (Palet Warna Khas ITAM PRO) */
-        :root {
-            --itam-cyan: #1DB5E5;  /* Biru muda terang (Logo) */
-            --itam-blue: #0A6BA8;  /* Biru tua (Logo) */
-            --itam-bg-body: #F0F4F9; /* Warna latar luar: Biru-abu sangat muda (KUNCI KONTRAS) */
-            --itam-card-bg: #FFFFFF; /* Warna kartu: Putih murni */
-            
-            --bs-primary: var(--itam-cyan);
-            --bs-font-sans-serif: 'Poppins', sans-serif;
-        }
-
-        /* 2. BODY & FONT */
-        body {
-            font-family: var(--bs-font-sans-serif);
-            background-color: var(--itam-bg-body);
-            color: #3f4254; /* Teks abu-abu gelap agar tidak sekeras warna hitam pekat */
-            overflow-x: hidden;
-        }
-
-        /* Layout Sidebar & Main Content */
-        .sidebar-menu { padding: 0 15px; }
-        .sidebar-menu .menu-title { font-size: 0.75rem; text-transform: uppercase; color: #a1a5b7; font-weight: 700; margin: 20px 0 10px 15px; letter-spacing: 1px; }
-        .sidebar a { padding: 12px 20px; margin-bottom: 5px; text-decoration: none; font-size: 0.95rem; font-weight: 600; color: #7e8299; display: flex; align-items: center; border-radius: 12px; transition: all 0.3s ease; }
-        .sidebar a i { margin-right: 15px; font-size: 1.2rem; color: #b5b5c3; transition: 0.3s; }
-        .sidebar a:hover, .sidebar a.active { background-color: #eef6ff; color: #3699ff; }
-        .sidebar a:hover i, .sidebar a.active i { color: #3699ff; }
-        @media (min-width: 768px) {
-            .sidebar { height: 100vh; width: 260px; position: fixed; top: 0; left: 0; background-color: #ffffff; padding-top: 20px; box-shadow: 4px 0 24px rgba(149, 157, 165, 0.08); z-index: 1000; }
-            .main-content { margin-left: 260px; padding: 30px 40px; }
-        }
-        @media (max-width: 767.98px) {
-            .main-content { margin-left: 0; padding: 20px; padding-top: 70px; }
-        }
-
-        /* 3. ELEMEN KARTU (CARDS) & MODAL */
-        .card, .card-custom, .modal-content {
-            background-color: var(--itam-card-bg);
-            border: none !important;
-            border-radius: 16px !important;
-            /* Bayangan diperbesar dan diberi sedikit rona biru agar menyatu dengan tema */
-            box-shadow: 0px 8px 24px rgba(10, 107, 168, 0.08) !important; 
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .card-custom { padding: 25px; margin-bottom: 25px; }
-
-        /* 4. TOMBOL UTAMA (GRADASI) */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--itam-cyan), var(--itam-blue));
-            border: none;
-            box-shadow: 0 4px 12px rgba(29, 181, 229, 0.25);
-            border-radius: 8px;
-            font-weight: 500;
-            color: #ffffff;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--itam-blue), var(--itam-cyan));
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(29, 181, 229, 0.4);
-            color: #ffffff;
-        }
-
-        /* 5. HEADER TABEL (Memecah kekosongan warna putih di tengah layar) */
-        .table thead { background-color: #f9fbfd; color: #a1a5b7; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .table td { vertical-align: middle; color: #5e6278; font-weight: 500; font-size: 0.95rem; }
-        .table-light th {
-            background-color: #E6F4FA !important; /* Background header biru sangat muda */
-            color: var(--itam-blue) !important;    /* Teks header biru tua */
-            border-bottom: 2px solid #BFE3F3 !important;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        /* 6. TAB KATEGORI (Pills) */
-        .nav-pills .nav-link {
-            color: #5e6278;
-            font-weight: 500;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-        .nav-pills .nav-link:hover {
-            background-color: rgba(29, 181, 229, 0.05);
-            color: var(--itam-cyan);
-        }
-        .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
-            background-color: rgba(29, 181, 229, 0.1) !important; /* Background tombol tab aktif */
-            color: var(--itam-blue) !important;
-            font-weight: 600;
-        }
-
-        /* Tooltip, Animasi, Placeholder */
-        .tooltip-inner {
-            white-space: pre-wrap !important;
-            text-align: left !important;
-            max-width: 350px !important;
-        }
-        .main-content {
-            animation: fadeIn 0.15s ease-out;
-        }
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        ::placeholder {
-            color: #adb5bd !important;
-            opacity: 0.7 !important;
-            font-weight: 400 !important;
-            font-style: italic;
-        }
-    </style>
-
-    <!-- Script ini di HEAD untuk sinkronisasi tema -->
+    <!-- Kustomisasi Tema Tailwind -->
     <script>
-        const savedTheme = localStorage.getItem('itam_theme') || 'light';
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        itam: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
     </script>
 </head>
-<body>
-    <!-- Tombol Hamburger Mobile -->
-    <button class="btn btn-primary d-md-none m-3 position-fixed top-0 start-0 z-3 shadow" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
-        <i class="bi bi-list"></i>
-    </button>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR (Hanya ditulis satu kali di sini!) -->
-    <div class="sidebar offcanvas-md offcanvas-start" tabindex="-1" id="sidebarMenu">
-        <!-- Area Logo Sidebar -->
-        <a href="/" class="d-flex align-items-center mt-2 mb-4 text-decoration-none justify-content-center w-100 px-2">  
-            <img src="/static/img/logo-itam.png" alt="ITAM PRO" style="width: 100%; max-width: 220px; height: auto; object-fit: contain; transform: scale(1.2);">
-        </a>
-        <div class="sidebar-menu">
-            <!-- Nanti script JavaScript akan menandai menu mana yang aktif secara otomatis -->
-            <div class="menu-title">Main Menu</div>
-            <a href="/" id="menu-dashboard"><i class="bi bi-pie-chart-fill me-3 fs-5"></i> Dashboard Utama</a>
-            <a href="/it-notes" id="menu-it-notes"><i class="bi bi-file-earmark-text-fill me-3 fs-5"></i> Catatan IT</a>
-            <a href="/network" id="menu-network"><i class="bi bi-hdd-network-fill me-3 fs-5"></i> IP Jaringan</a>
-            
-            <div class="menu-title">Inventory & Vault</div>
-            <a href="/vault" id="menu-vault"><i class="bi bi-shield-lock-fill me-3 fs-5"></i> Kredensial</a>
-            <a href="/purchase-records" id="menu-purchases"><i class="bi bi-cart-check-fill me-3 fs-5"></i> Pembelian</a>
-            <a href="/hardware-components" id="menu-components"><i class="bi bi-pc-display me-3 fs-5"></i> Komponen (Spek)</a>
-            
-            <div class="menu-title">System</div>
-            <a href="/maintenance-logs" id="menu-maintenance"><i class="bi bi-tools me-3 fs-5"></i> Maintenance</a>
-            <a href="/account" id="menu-account"><i class="bi bi-person-badge-fill me-3 fs-5"></i> Akun & Keamanan</a>
-
-            <!-- MENU AUDIT TRAIL HANYA UNTUK SUPER ADMIN -->
-            {% if current_user and current_user.role == 'Super Admin' %}
-            <a href="/system-logs" id="menu-logs"><i class="bi bi-journal-text me-3 fs-5"></i> Audit Trail</a>
-            {% endif %}
-            <div class="menu-title mt-4">Tampilan</div>
-            <a href="#" id="theme-toggle">
-                <i class="bi bi-moon-stars-fill"></i> <span id="theme-text">Dark Mode</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
-        <!-- ========================================== -->
-        <!-- TOP BAR (NAVBAR ATAS) CLEAN & MODERN       -->
-        <!-- ========================================== -->
-        {% block topbar %}
-        <!-- Hapus border-bottom border-primary agar clean, hanya gunakan shadow-sm -->
-        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm" style="margin-top: -10px;">
-            
-            <!-- KIRI: Judul Halaman Dinamis -->
-            <div class="d-flex align-items-center">
-                <div class="bg-primary-subtle text-primary rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
-                    <!-- Ikon ini bisa Anda ganti sesuai halaman -->
-                    {% block page_icon %}<i class="bi bi-grid-fill fs-5"></i>{% endblock %}
+    <!-- Sidebar Navigasi -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between h-full shadow-sm z-10">
+        <div>
+            <div class="h-16 flex items-center px-6 border-b border-gray-100 gap-3">
+                <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-itam-700 to-itam-500 flex items-center justify-center text-white shadow-sm shadow-itam-500/30">
+                    <i class="bi bi-shield-check text-lg"></i>
                 </div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0 fw-medium" style="font-size: 0.85rem;">
-                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">ITAM Pro</a></li>
-                        <!-- Block Breadcrumb Jinja2 -->
-                        <li class="breadcrumb-item active text-primary fw-bold" aria-current="page">{% block breadcrumb %}Workspace{% endblock %}</li>
-                    </ol>
-                    <!-- Block Judul Halaman Jinja2 -->
-                    <span class="d-block text-dark fw-bold" style="font-size: 1.1rem; line-height: 1.2;">{% block page_title %}Sistem Manajemen Aset{% endblock %}</span>
-                </nav>
+                <div>
+                    <span class="text-xl font-extrabold text-itam-800 tracking-tight">ITAM<span class="text-itam-500">.Pro</span></span>
+                    <span class="block text-[10px] uppercase font-bold tracking-widest text-gray-400 -mt-1">Enterprise</span>
+                </div>
+            </div>
+            <nav class="p-4 space-y-1.5" id="sidebar-nav">
+                <!-- Gunakan hx-get untuk memuat konten ke dalam #main-content tanpa full reload -->
+                <a href="#" hx-get="/ui/dashboard" hx-target="#main-content" class="nav-item flex items-center px-4 py-2.5 text-sm font-medium rounded-xl text-gray-700 hover:bg-itam-50 hover:text-itam-700 transition-all gap-3">
+                    <i class="bi bi-grid-1x2 text-base text-gray-400 group-hover:text-itam-600"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" hx-get="/ui/components" hx-target="#main-content" class="nav-item flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl bg-itam-50 text-itam-700 shadow-sm shadow-itam-500/10 transition-all gap-3">
+                    <i class="bi bi-pc-display text-base text-itam-600"></i>
+                    <span>Hardware & PC</span>
+                </a>
+                <a href="#" hx-get="/ui/vault" hx-target="#main-content" class="nav-item flex items-center px-4 py-2.5 text-sm font-medium rounded-xl text-gray-700 hover:bg-itam-50 hover:text-itam-700 transition-all gap-3">
+                    <i class="bi bi-safe text-base text-gray-400 group-hover:text-itam-600"></i>
+                    <span>Kredensial Vault</span>
+                </a>
+            </nav>
+        </div>
+        
+        <div class="p-4 border-t border-gray-100">
+            <button hx-post="/api/auth/logout" class="w-full flex justify-center items-center px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors gap-2">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Area Konten Utama -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/70">
+        <!-- Header Atas -->
+        <header class="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 shadow-sm z-10">
+            <!-- Kiri: Breadcrumb & Title -->
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                </div>
+                <div>
+                    <div class="text-xs font-semibold text-blue-600 mb-0.5">ITAM Pro <span class="text-gray-400 mx-1">/</span> <span class="text-gray-500">Manajemen Data</span></div>
+                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">Spesifikasi Hardware & PC</h1>
+                </div>
             </div>
 
-            <!-- KANAN: Jam Realtime, Refresh & Profil -->
-            <div class="d-flex align-items-center gap-4">
-                
-                <!-- Info Waktu & Tombol Refresh -->
-                <div class="text-end d-none d-md-block">
-                    <!-- Jam Realtime -->
-                    <div class="fw-bold text-dark fs-6" id="realtime-clock">00:00:00 WIB</div>
-                    <!-- Tombol Refresh Modern -->
-                    <button onclick="window.location.reload()" class="btn btn-sm btn-light text-primary border-0 fw-bold mt-1 px-3 rounded-pill" style="font-size: 0.7rem; background-color: #E6F4FA;">
-                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
-                    </button>
-                </div>
-                
-                <!-- Garis Pemisah -->
-                <div class="vr text-secondary d-none d-md-block" style="width: 2px;"></div>
-                
-                <!-- Menu Profil -->
-                <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="d-flex flex-column text-end pe-3">
-                            <!-- Menarik Nama Lengkap / Username dari session -->
-                            <span class="fw-bold text-dark fs-6">{{ current_user.full_name or current_user.username }}</span>
-                            <!-- Menarik Role (Jabatan) dari session -->
-                            <span class="text-primary fw-semibold" style="font-size: 0.75rem;">{{ current_user.role }}</span>
-                        </div>
-                        {% set avatar_url = current_user.avatar_url if current_user.avatar else ('https://ui-avatars.com/api/?name=' ~ (current_user.full_name or current_user.username) ~ '&background=E6F4FA&color=0A6BA8&bold=true') %}
-                        <img src="{{ avatar_url }}" onerror="this.onerror=null; this.src='/static/avatars/default.png';" class="rounded-circle shadow-sm border border-2 border-white" width="42" height="42" style="object-fit: cover;" alt="User Avatar">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-3">
-                        <li><h6 class="dropdown-header text-dark fw-bold">Akun Saya</h6></li>
-                        <li><a class="dropdown-item py-2" href="/account"><i class="bi bi-person text-secondary me-2"></i>Profil</a></li>
-                        <li><a class="dropdown-item py-2" href="#"><i class="bi bi-gear text-secondary me-2"></i>Pengaturan</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <!-- Panggilan ke fungsi confirmLogout(event) -->
-                        <li><a class="dropdown-item py-2 text-danger fw-bold" href="#" onclick="confirmLogout(event)"><i class="bi bi-box-arrow-right me-2"></i>Keluar</a></li>
-                    </ul>
+            <!-- Kanan: Status, Notifikasi, Jam & Profil -->
+            <div class="flex items-center gap-6">
+                <!-- Status Indicator -->
+                <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                    </span>
+                    <span class="text-xs font-semibold text-gray-600">Database: Online</span>
                 </div>
 
+                <div class="w-px h-8 bg-gray-200"></div>
+
+                <!-- Notification Bell -->
+                <button class="relative text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold border-2 border-white">3</span>
+                </button>
+
+                <div class="w-px h-8 bg-gray-200"></div>
+
+                <!-- Greeting & Realtime Clock -->
+                <div class="text-right">
+                    <div id="greeting-text" class="text-sm font-bold text-gray-800">Selamat datang 👋</div>
+                    <div class="flex items-center justify-end gap-1.5 mt-0.5">
+                        <span id="clock-display" class="text-xs font-semibold text-gray-500">00:00:00 WIB</span>
+                        <button hx-get="/ui/components" hx-target="#main-content" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-0.5 rounded flex items-center gap-1 text-[10px] font-bold px-1.5 border border-blue-100 transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-px h-8 bg-gray-200"></div>
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg transition-colors">
+                    <div class="text-right">
+                        <div class="text-sm font-bold text-gray-800">{{ current_user.full_name or current_user.username if current_user else "Developer ITAM PRO" }}</div>
+                        <div class="text-[11px] font-semibold text-blue-600 uppercase tracking-wide">{{ current_user.role if current_user else "Super Admin" }}</div>
+                    </div>
+                    <!-- Ganti src dengan {{ current_user.avatar_url }} di Jinja -->
+                    <img src="{{ current_user.avatar_url if current_user and current_user.avatar_url else '/static/avatars/default.png' }}" alt="Avatar" class="h-10 w-10 rounded-full border-2 border-gray-200 object-cover shadow-sm" onerror="this.onerror=null; this.src='/static/avatars/default.png'">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
+        </header>
+
+        <!-- Container Injeksi HTMX -->
+        <div id="main-content" class="flex-1 overflow-auto p-8" hx-get="/ui/components" hx-trigger="load">
+            <!-- Konten dari backend akan dirender di sini -->
+            <div class="flex flex-col items-center justify-center h-64 text-gray-400">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-itam-500 border-t-transparent"></div>
+                <div class="mt-4 text-sm font-medium">Memuat modul antarmuka...</div>
             </div>
         </div>
-        {% endblock %}
-        <!-- ========================================== -->
+    </main>
 
-        <!-- Tempat file lain menyuntikkan konten halamannya -->
-        {% block content %}
-        {% endblock %}
-    </div>
+    <!-- Modal Container untuk Injeksi Modal HTMX -->
+    <div id="modal-container"></div>
 
-    <!-- JS Utama -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-
-    <!-- Script agar menu sidebar otomatis aktif sesuai URL -->
+    <!-- Global HTMX Event Listeners (CSRF, Error Handling, Toast) -->
     <script>
-        const path = window.location.pathname;
-        if(path === '/') document.getElementById('menu-dashboard').classList.add('active');
-        else if(path.includes('/it-notes')) document.getElementById('menu-it-notes').classList.add('active');
-        else if(path.includes('/network')) document.getElementById('menu-network').classList.add('active');
-        else if(path.includes('/vault')) document.getElementById('menu-vault').classList.add('active');
-        else if(path.includes('/purchase-records')) document.getElementById('menu-purchases').classList.add('active');
-        else if(path.includes('/hardware-components')) document.getElementById('menu-components').classList.add('active');
-        else if(path.includes('/maintenance-logs')) document.getElementById('menu-maintenance').classList.add('active');
-        else if(path.includes('/account')) document.getElementById('menu-account').classList.add('active');
-        else if(path.includes('/system-logs')) document.getElementById('menu-logs').classList.add('active');
-    </script>
-
-    <!-- Tempat file lain menyuntikkan script khususnya -->
-    {% block scripts %}
-    {% endblock %}
-
-    <!-- Menyediakan token CSRF sebagai variabel global untuk semua halaman -->
-    <script>
-        // Menangkap token CSRF dari meta tag agar bisa digunakan oleh semua API (Edit, Hapus, Import)
-        const metaCsrf = document.querySelector('meta[name="csrf-token"]');
-        const csrfToken = metaCsrf ? metaCsrf.getAttribute('content') : '';
-    </script>
-
-    <!-- Script Toggle Dark/Light Mode (Hanya untuk tombol) -->
-    <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const currentTheme = localStorage.getItem('itam_theme') || 'light';
-
-        // Atur teks & icon tombol saat halaman selesai dimuat
-        if (currentTheme === 'dark') {
-            themeToggle.innerHTML = '<i class="bi bi-sun-fill text-warning"></i> <span>Light Mode</span>';
-        } else {
-            themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i> <span>Dark Mode</span>';
-        }
-
-        // Aksi ketika tombol diklik
-        themeToggle.addEventListener('click', (e) => {
-            e.preventDefault(); 
+        // Injeksi otomatis X-CSRF-Token untuk semua request mutasi (POST/PUT/DELETE)
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            const csrfToken = document.cookie.split('; ')
+                .find(row => row.startsWith('csrf_token='))
+                ?.split('=')[1] || '';
             
-            if (document.documentElement.getAttribute('data-bs-theme') === 'dark') {
-                document.documentElement.setAttribute('data-bs-theme', 'light');
-                localStorage.setItem('itam_theme', 'light');
-                themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i> <span>Dark Mode</span>';
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
-                localStorage.setItem('itam_theme', 'dark');
-                themeToggle.innerHTML = '<i class="bi bi-sun-fill text-warning"></i> <span>Light Mode</span>';
+            if (csrfToken) {
+                evt.detail.headers['X-CSRF-Token'] = csrfToken;
             }
         });
 
-    </script>
+        // Global Error Handler untuk menampilkan SweetAlert saat terjadi HTTP Error (misal 403 CSRF, 500)
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            let errorMsg = evt.detail.xhr.statusText || 'Gagal terhubung ke server';
+            try {
+                const jsonResp = JSON.parse(evt.detail.xhr.responseText);
+                if (jsonResp.detail) {
+                    errorMsg = typeof jsonResp.detail === 'string' ? jsonResp.detail : JSON.stringify(jsonResp.detail);
+                }
+            } catch (e) {}
 
+            Swal.fire({
+                title: 'Terjadi Kesalahan',
+                text: errorMsg,
+                icon: 'error',
+                confirmButtonColor: '#0f766e'
+            });
+        });
 
+        // Event listener untuk custom SweetAlert notifikasi via trigger header
+        document.body.addEventListener('showToast', function(evt) {
+            closeModal();
+            const data = evt.detail;
+            Swal.fire({
+                title: data.title || (data.type === 'error' ? 'Gagal' : 'Berhasil'),
+                text: data.message || '',
+                icon: data.type || 'success',
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
 
-    <!-- Script Jam & Logout SweetAlert -->
-    <script>
-        // 1. Script Jam Real-Time
-        function updateClock() {
-            const now = new Date();
-            // Mengambil waktu lokal dengan format 24 Jam
-            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
-            const clockEl = document.getElementById('realtime-clock');
-            if (clockEl) {
-                clockEl.textContent = timeString;
+        // Helper untuk menutup modal
+        function closeModal() {
+            const modal = document.getElementById('active-modal');
+            if (modal) {
+                modal.remove();
             }
         }
-        // Jalankan setiap 1 detik (1000 ms)
-        setInterval(updateClock, 1000);
-        updateClock(); // Panggilan pertama agar tidak delay 1 detik
 
-        // Fungsi Global Logout dengan SweetAlert
-        function confirmLogout(event) {
-            if (event) event.preventDefault();
-            Swal.fire({
-                title: 'Keluar dari Sistem?',
-                text: "Sesi kerja Anda akan diakhiri dan Anda harus login kembali untuk masuk.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545', // Merah peringatan
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i> Ya, Keluar',
-                cancelButtonText: 'Batal'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        // Menembak API logout dan mengirimkan username
-                        const res = await fetch('/api/auth/logout', { 
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ username: "{{ current_user.username }}" })
-                        });
-                        if (res.ok) {
-                            // Arahkan kembali ke halaman Login
-                            window.location.href = '/login';
-                        }
-                    } catch (error) {
-                        Swal.fire('Error', 'Gagal memutus koneksi dengan server.', 'error');
-                    }
-                }
+        // Active State Navigasi
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('#sidebar-nav .nav-item');
+            if (!link) return;
+            document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+                el.classList.remove('bg-itam-50', 'text-itam-700', 'font-semibold', 'shadow-sm', 'shadow-itam-500/10');
+                el.classList.add('text-gray-700', 'font-medium');
+                const icon = el.querySelector('i');
+                if (icon) icon.className = icon.className.replace('text-itam-600', 'text-gray-400');
             });
+            link.classList.remove('text-gray-700', 'font-medium');
+            link.classList.add('bg-itam-50', 'text-itam-700', 'font-semibold', 'shadow-sm', 'shadow-itam-500/10');
+            const icon = link.querySelector('i');
+            if (icon) icon.className = icon.className.replace('text-gray-400', 'text-itam-600');
+        });
+
+        // Script Dinamis untuk Jam & Sapaan (Langkah 1)
+        function updateClockAndGreeting() {
+            const now = new Date();
+            const hours = now.getHours();
+            const timeString = now.toLocaleTimeString('id-ID', { hour12: false }) + ' WIB';
+            const clockEl = document.getElementById('clock-display');
+            if (clockEl) clockEl.textContent = timeString;
+
+            let greeting = 'Selamat malam';
+            if (hours >= 5 && hours < 11) greeting = 'Selamat pagi';
+            else if (hours >= 11 && hours < 15) greeting = 'Selamat siang';
+            else if (hours >= 15 && hours < 18) greeting = 'Selamat sore';
+            
+            const greetingEl = document.getElementById('greeting-text');
+            const userName = "{{ current_user.full_name or current_user.username if current_user else 'Suryo' }}";
+            if (greetingEl) greetingEl.textContent = `${greeting}, ${userName} 👋`; 
         }
+        setInterval(updateClockAndGreeting, 1000);
+        updateClockAndGreeting();
     </script>
-
-    <!-- SUNTIKAN POP-UP SWEETALERT2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 </body>
 </html>

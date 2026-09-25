@@ -12,7 +12,7 @@ from app.core.limiter import limiter
 from app.models import domain
 
 # Import seluruh router dari arsitektur MVC kita
-from app.routers import assets, auth, components, ips, maintenance, pages, purchases, qr, vault
+from app.routers import assets, auth, components, ips, maintenance, pages, purchases, qr, ui, vault
 
 app = FastAPI(title="ITAM Pro Enterprise")
 
@@ -25,11 +25,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # 2. Pengatur Lalu Lintas Cerdas (Pencegah Infinite Loop)
-# Jika ada error 401 (Belum Login) di halaman Web, lempar ke /login.
+# Jika ada error 401 (Belum Login) di halaman Web / HTMX, lempar ke /login.
 # Jika error 401 di endpoint /api/, biarkan tetap merespons format JSON.
 @app.exception_handler(StarletteHTTPException)
 async def custom_auth_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 401:
+        if request.headers.get("HX-Request") == "true":
+            from fastapi import Response
+            res = Response(status_code=401)
+            res.headers["HX-Redirect"] = "/login"
+            return res
         if not request.url.path.startswith("/api/"):
             return RedirectResponse(url="/login")
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
@@ -39,6 +44,7 @@ async def custom_auth_exception_handler(request: Request, exc: StarletteHTTPExce
 # Router Pages & Auth dibiarkan bebas karena memiliki aturannya sendiri di dalam file
 app.include_router(auth.router)
 app.include_router(pages.router)
+app.include_router(ui.router, dependencies=[Depends(get_current_user)])
 
 # SEGEL KEAMANAN: Semua API Module sekarang WAJIB LOGIN!
 app.include_router(vault.router, dependencies=[Depends(get_current_user)])

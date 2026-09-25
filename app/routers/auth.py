@@ -150,6 +150,7 @@ def logout(
     # Hancurkan tiket sesi
     response.delete_cookie("access_token")
     response.delete_cookie("itam_session")
+    response.headers["HX-Redirect"] = "/login"
     return {"message": "Berhasil Logout"}
 
 

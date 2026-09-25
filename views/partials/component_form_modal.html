@@ -1,0 +1,267 @@
+<div id="active-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- Header Modal -->
+        <div class="px-6 py-4.5 border-b border-gray-100 flex items-center justify-between bg-slate-50/70">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-itam-500/10 text-itam-700 flex items-center justify-center text-lg font-bold">
+                    <i class="bi bi-pc-display"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">
+                        {{ 'Edit Spesifikasi PC' if is_edit else 'Registrasi Spesifikasi PC Baru' }}
+                    </h3>
+                    <p class="text-xs text-gray-500">
+                        {{ 'Perbarui konfigurasi master dan catat riwayat perubahan.' if is_edit else 'Konfigurasi perangkat menggunakan referensi Master Component tunggal.' }}
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="h-8 w-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Form Modal Body (Scrollable) -->
+        <form id="component-form"
+              hx-post="{{ '/ui/components/' ~ component.id ~ '/update' if is_edit else '/ui/components/create' }}"
+              hx-target="#main-content"
+              hx-swap="innerHTML"
+              hx-indicator="#form-spinner"
+              class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            <!-- SECTION 1: Identitas & Asosiasi Aset -->
+            <div class="bg-slate-50/60 rounded-xl p-4.5 border border-gray-100 space-y-4">
+                <div class="flex items-center gap-2 text-xs font-bold text-itam-800 uppercase tracking-wider">
+                    <span class="h-5 w-5 rounded-md bg-itam-100 text-itam-700 flex items-center justify-center text-[10px]">1</span>
+                    <span>Identitas & Asosiasi Aset</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Nama PC -->
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">
+                            Identitas / Nama PC <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="name" required
+                               value="{{ component.name if component else '' }}"
+                               placeholder="Cth: PC-ADMIN-01"
+                               class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium">
+                    </div>
+
+                    <!-- Kategori PC -->
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">
+                            Kategori PC <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="pc_type" required
+                                class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="Operasional" {{ 'selected' if component and 'operasional' in (component.pc_type or '')|lower else '' }}>PC Operasional</option>
+                            <option value="Server" {{ 'selected' if component and 'server' in (component.pc_type or '')|lower else '' }}>PC Server</option>
+                            <option value="Backup" {{ 'selected' if component and 'backup' in (component.pc_type or '')|lower else '' }}>PC Backup</option>
+                        </select>
+                    </div>
+
+                    <!-- Hubungkan ke Aset -->
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">
+                            Hubungkan ke Aset
+                        </label>
+                        <select name="asset_id"
+                                class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Standalone (Tanpa Aset) --</option>
+                            {% for asset in assets %}
+                            <option value="{{ asset.id }}" {{ 'selected' if component and component.asset_id == asset.id else '' }}>
+                                {{ asset.kode_aset or ('Aset #' ~ asset.id) }} - {{ asset.nama or '' }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Komponen Teras (Master Foreign Keys) -->
+            <div class="bg-slate-50/60 rounded-xl p-4.5 border border-gray-100 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-xs font-bold text-itam-800 uppercase tracking-wider">
+                        <span class="h-5 w-5 rounded-md bg-itam-100 text-itam-700 flex items-center justify-center text-[10px]">2</span>
+                        <span>Komponen Teras (Master Reference)</span>
+                    </div>
+                    <span class="text-[11px] text-gray-400 font-medium">Single Source of Truth</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- CPU -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                            <i class="bi bi-cpu text-itam-600"></i>
+                            <span>Processor (CPU)</span>
+                        </label>
+                        <select name="cpu_id" class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Pilih CPU Master --</option>
+                            {% for item in masters.get('CPU', []) %}
+                            <option value="{{ item.id }}" {{ 'selected' if component and component.cpu_id == item.id else '' }}>
+                                {{ item.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- RAM -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                            <i class="bi bi-memory text-sky-600"></i>
+                            <span>Kapasitas RAM</span>
+                        </label>
+                        <select name="ram_id" class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Pilih RAM Master --</option>
+                            {% for item in masters.get('RAM', []) %}
+                            <option value="{{ item.id }}" {{ 'selected' if component and component.ram_id == item.id else '' }}>
+                                {{ item.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Storage -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                            <i class="bi bi-device-ssd text-amber-600"></i>
+                            <span>Penyimpanan (Storage)</span>
+                        </label>
+                        <select name="storage_id" class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Pilih Storage Master --</option>
+                            {% for item in masters.get('STORAGE', []) %}
+                            <option value="{{ item.id }}" {{ 'selected' if component and component.storage_id == item.id else '' }}>
+                                {{ item.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Mainboard -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                            <i class="bi bi-motherboard text-slate-600"></i>
+                            <span>Motherboard / Mainboard</span>
+                        </label>
+                        <select name="mainboard_id" class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Pilih Mainboard Master --</option>
+                            {% for item in masters.get('MAINBOARD', []) %}
+                            <option value="{{ item.id }}" {{ 'selected' if component and component.mainboard_id == item.id else '' }}>
+                                {{ item.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- VGA -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                            <i class="bi bi-gpu-card text-purple-600"></i>
+                            <span>Kartu Grafis (VGA / GPU)</span>
+                        </label>
+                        <select name="vga_id" class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Pilih VGA Master --</option>
+                            {% for item in masters.get('VGA', []) %}
+                            <option value="{{ item.id }}" {{ 'selected' if component and component.vga_id == item.id else '' }}>
+                                {{ item.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- OS -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                            <i class="bi bi-window text-itam-600"></i>
+                            <span>Sistem Operasi (OS)</span>
+                        </label>
+                        <select name="os_id" class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Pilih OS Master --</option>
+                            {% for item in masters.get('OS', []) %}
+                            <option value="{{ item.id }}" {{ 'selected' if component and component.os_id == item.id else '' }}>
+                                {{ item.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Monitor -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                            <i class="bi bi-display text-blue-600"></i>
+                            <span>Monitor Display</span>
+                        </label>
+                        <select name="monitor_id" class="w-full px-3.5 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-itam-500/20 focus:border-itam-500 font-medium cursor-pointer">
+                            <option value="">-- Pilih Monitor Master --</option>
+                            {% for item in masters.get('MONITOR', []) %}
+                            <option value="{{ item.id }}" {{ 'selected' if component and component.monitor_id == item.id else '' }}>
+                                {{ item.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Periferal Eksternal -->
+            <div class="bg-slate-50/60 rounded-xl p-4.5 border border-gray-100 space-y-4">
+                <div class="flex items-center gap-2 text-xs font-bold text-itam-800 uppercase tracking-wider">
+                    <span class="h-5 w-5 rounded-md bg-itam-100 text-itam-700 flex items-center justify-center text-[10px]">3</span>
+                    <span>Periferal Eksternal & Casing</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Keyboard</label>
+                        <input type="text" name="keyboard" value="{{ component.keyboard if component and component.keyboard else '' }}" placeholder="Cth: Logitech K120"
+                               class="w-full px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Mouse</label>
+                        <input type="text" name="mouse" value="{{ component.mouse if component and component.mouse else '' }}" placeholder="Cth: Logitech B100"
+                               class="w-full px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Power Supply (PSU)</label>
+                        <input type="text" name="psu" value="{{ component.psu if component and component.psu else '' }}" placeholder="Cth: Corsair CV550"
+                               class="w-full px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Casing</label>
+                        <input type="text" name="casing" value="{{ component.casing if component and component.casing else '' }}" placeholder="Cth: Armaggeddon Nimitz"
+                               class="w-full px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: Alasan Perubahan (Hanya Saat Edit) -->
+            {% if is_edit %}
+            <div class="bg-amber-50/70 rounded-xl p-4.5 border border-amber-200 space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-amber-900 uppercase tracking-wider">
+                    <i class="bi bi-journal-text text-amber-700"></i>
+                    <span>Alasan Perubahan / Catatan Audit Trail</span>
+                </div>
+                <input type="text" name="update_reason" placeholder="Contoh: Upgrade RAM dari 8GB ke 16GB untuk rendering staf desain"
+                       class="w-full px-3.5 py-2 text-sm bg-white border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium">
+                <span class="text-[11px] text-amber-700/80 block">Catatan ini akan tersimpan permanen di histori audit trail spesifikasi.</span>
+            </div>
+            {% endif %}
+
+            <!-- Footer Tombol -->
+            <div class="pt-2 flex items-center justify-end gap-3 border-t border-gray-100">
+                <button type="button" onclick="closeModal()"
+                        class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-itam-600 to-itam-500 hover:from-itam-700 hover:to-itam-600 text-white text-sm font-bold shadow-md shadow-itam-500/20 transition-all">
+                    <span id="form-spinner" class="htmx-indicator hidden">
+                        <i class="bi bi-arrow-repeat animate-spin"></i>
+                    </span>
+                    <span>{{ 'Simpan Perubahan' if is_edit else 'Simpan Spesifikasi PC' }}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

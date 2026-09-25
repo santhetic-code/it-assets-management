@@ -1,0 +1,119 @@
+<div id="active-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- Header Modal -->
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-slate-50/70">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-itam-500/10 text-itam-700 flex items-center justify-center text-lg font-bold">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-gray-900">
+                        Audit Trail: {{ component.name if component else 'Spesifikasi PC' }}
+                    </h3>
+                    <p class="text-xs text-gray-500">
+                        Catatan audit perubahan terstruktur (JSON History) berbasis Single Source of Truth.
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="h-8 w-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        <!-- History Content (Scrollable Timeline) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+            {% if history and history|length > 0 %}
+                <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                    {% for h in history %}
+                    <div class="relative group">
+                        <!-- Dot Indicator -->
+                        <div class="absolute -left-6 top-1.5 h-4 w-4 rounded-full border-2 border-white shadow-sm
+                            {% if h.action_type == 'CREATE' %}
+                                bg-emerald-500
+                            {% elif 'UPGRADE' in h.action_type %}
+                                bg-purple-500
+                            {% elif h.action_type == 'DECOMMISSION' %}
+                                bg-rose-500
+                            {% else %}
+                                bg-blue-500
+                            {% endif %}">
+                        </div>
+
+                        <!-- History Entry Card -->
+                        <div class="bg-slate-50/80 rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow transition-shadow space-y-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold
+                                        {% if h.action_type == 'CREATE' %}
+                                            bg-emerald-50 text-emerald-700 border border-emerald-200
+                                        {% elif 'UPGRADE' in h.action_type %}
+                                            bg-purple-50 text-purple-700 border border-purple-200
+                                        {% elif h.action_type == 'DECOMMISSION' %}
+                                            bg-rose-50 text-rose-700 border border-rose-200
+                                        {% else %}
+                                            bg-blue-50 text-blue-700 border border-blue-200
+                                        {% endif %}">
+                                        {{ h.action_type }}
+                                    </span>
+                                    <span class="text-xs font-semibold text-gray-700">
+                                        Oleh: {{ h.user.username if h.user else 'Sistem' }}
+                                    </span>
+                                </div>
+                                <span class="text-xs text-gray-400 font-mono">
+                                    {{ h.created_at.strftime('%d %b %Y, %H:%M:%S UTC') if h.created_at else '-' }}
+                                </span>
+                            </div>
+
+                            <!-- Alasan / Reason -->
+                            {% set reason = h.changes_detail.get('reason') if h.changes_detail is mapping else '-' %}
+                            <div class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-100 font-medium">
+                                <i class="bi bi-chat-left-quote text-itam-600 mr-1.5"></i>
+                                <span>{{ reason }}</span>
+                            </div>
+
+                            <!-- Rincian Diffs -->
+                            {% set changes = h.changes_detail.get('changes') if h.changes_detail is mapping else [] %}
+                            {% if changes and changes|length > 0 %}
+                            <div class="overflow-x-auto rounded-lg border border-gray-200/60 bg-white">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-100">
+                                        <tr>
+                                            <th class="py-2 px-3">Parameter / Field</th>
+                                            <th class="py-2 px-3 text-rose-600">Nilai Lama</th>
+                                            <th class="py-2 px-3 text-emerald-600">Nilai Baru</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        {% for c in changes %}
+                                        <tr>
+                                            <td class="py-2 px-3 font-mono font-medium text-gray-700">{{ c.get('field', '-') }}</td>
+                                            <td class="py-2 px-3 text-rose-600 font-medium">{{ c.get('old_value', '-') }}</td>
+                                            <td class="py-2 px-3 text-emerald-600 font-medium">{{ c.get('new_value', '-') }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="py-12 text-center text-gray-400">
+                    <i class="bi bi-clock text-3xl mb-2 block"></i>
+                    <p class="text-sm font-medium">Belum ada riwayat tercatat untuk komponen ini.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-3 border-t border-gray-100 bg-slate-50/70 flex justify-end">
+            <button type="button" onclick="closeModal()"
+                    class="px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold shadow-sm transition-colors">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>

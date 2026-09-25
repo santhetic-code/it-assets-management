@@ -130,16 +130,10 @@ def logout_action(request: Request, db: DbSession):
 # ==========================================
 @router.get("/")
 def read_dashboard(request: Request, db: DbSession, current_user: CurrentUser):
-    # Mengambil statistik & agregasi data secara dinamis dari Service Layer
-    dashboard_stats = asset_service.get_dashboard_stats(db)
-
     return render_template(
         request=request,
-        name="index.html",
-        context={
-            "current_user": current_user,
-            **dashboard_stats,
-        },
+        name="base.html",
+        context={"current_user": current_user},
     )
 
 
@@ -204,19 +198,12 @@ def read_purchases(request: Request, db: DbSession, current_user: CurrentUser):
 
 
 @router.get("/hardware-components")
+@router.get("/components")
 def read_components(request: Request, db: DbSession, current_user: CurrentUser):
-    # Mengambil kartu statistik dengan query agregat ringan (cepat & ramah memori)
-    comp_stats = component_service.get_component_stats(db)
-    assets = asset_service.get_all_assets(db)
     return render_template(
         request=request,
-        name="components.html",
-        context={
-            "current_user": current_user,
-            "assets": assets,
-            "jenis_aktif": "semua",
-            **comp_stats,
-        },
+        name="base.html",
+        context={"current_user": current_user},
     )
 
 

@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from sqlalchemy.orm import Session
-from sqlalchemy import exc
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import exc, or_, func
 from typing import List, Optional
-from app.models.domain import Component, ComponentHistory
+from app.models.domain import Component, ComponentHistory, MasterComponent, Asset
 from app.models.schemas.component import ComponentCreate, ComponentUpdate
 
 
@@ -11,11 +11,94 @@ def get_utc_now():
 
 
 def get_components(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Component).filter(Component.is_deleted == False).offset(skip).limit(limit).all()
+    return (
+        db.query(Component)
+        .options(
+            joinedload(Component.cpu_ref),
+            joinedload(Component.ram_ref),
+            joinedload(Component.storage_ref),
+            joinedload(Component.mainboard_ref),
+            joinedload(Component.os_ref),
+            joinedload(Component.vga_ref),
+            joinedload(Component.monitor_ref),
+            joinedload(Component.asset),
+        )
+        .filter(Component.is_deleted == False)
+        .order_by(Component.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def get_components_filtered(db: Session, search: Optional[str] = None, category: Optional[str] = None):
+    query = (
+        db.query(Component)
+        .options(
+            joinedload(Component.cpu_ref),
+            joinedload(Component.ram_ref),
+            joinedload(Component.storage_ref),
+            joinedload(Component.mainboard_ref),
+            joinedload(Component.os_ref),
+            joinedload(Component.vga_ref),
+            joinedload(Component.monitor_ref),
+            joinedload(Component.asset),
+        )
+        .filter(Component.is_deleted == False)
+    )
+
+    if category and category.strip() and category != "Semua":
+        query = query.filter(Component.pc_type == category.strip())
+
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Component.name.ilike(term),
+                Component.pc_type.ilike(term),
+                Component.keyboard.ilike(term),
+                Component.mouse.ilike(term),
+                Component.psu.ilike(term),
+                Component.casing.ilike(term),
+            )
+        )
+
+    return query.order_by(Component.id.desc()).all()
+
+
+def get_master_components(db: Session, category: Optional[str] = None) -> List[MasterComponent]:
+    query = db.query(MasterComponent)
+    if category:
+        query = query.filter(MasterComponent.category == category)
+    return query.order_by(MasterComponent.name.asc()).all()
+
+
+def get_master_components_grouped(db: Session) -> dict:
+    masters = db.query(MasterComponent).order_by(MasterComponent.name.asc()).all()
+    grouped = {}
+    for m in masters:
+        cat = (m.category or "OTHER").strip().upper()
+        grouped.setdefault(cat, []).append(m)
+    return grouped
+
 
 
 def get_component(db: Session, component_id: int):
-    return db.query(Component).filter(Component.id == component_id, Component.is_deleted == False).first()
+    return (
+        db.query(Component)
+        .options(
+            joinedload(Component.cpu_ref),
+            joinedload(Component.ram_ref),
+            joinedload(Component.storage_ref),
+            joinedload(Component.mainboard_ref),
+            joinedload(Component.os_ref),
+            joinedload(Component.vga_ref),
+            joinedload(Component.monitor_ref),
+            joinedload(Component.asset),
+        )
+        .filter(Component.id == component_id, Component.is_deleted == False)
+        .first()
+    )
 
 
 def create_component(db: Session, component: ComponentCreate, current_user_id: int):
