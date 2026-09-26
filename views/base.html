@@ -173,8 +173,68 @@
 
         // Helper untuk menutup modal
         function closeModal() {
-            const modal = document.getElementById('active-modal');
+            const modal = document.getElementById('active-modal') || document.getElementById('modal-backdrop');
             if (modal) modal.remove();
+        }
+
+        // Fungsi Global Custom Confirm untuk Print/Export
+        function confirmAction(message, actionCallback) {
+            Swal.fire({
+                title: 'Konfirmasi Tindakan',
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0f766e',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, Lanjutkan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    actionCallback();
+                }
+            });
+        }
+
+        // Intersepsi HTMX hx-confirm agar menggunakan SweetAlert2
+        document.body.addEventListener('htmx:confirm', function(evt) {
+            evt.preventDefault(); // Hentikan alert bawaan browser yang jelek
+            if (evt.detail.question) {
+                Swal.fire({
+                    title: 'Apakah Anda Yakin?',
+                    text: evt.detail.question,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0f766e',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Eksekusi!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        evt.detail.issueRequest(); // Lanjutkan request AJAX ke backend
+                    }
+                });
+            } else {
+                evt.detail.issueRequest();
+            }
+        });
+
+        // Fungsi Sederhana Export CSV (Pengganti Excel DataTables)
+        function exportTableToCSV(filename) {
+            var csv = [];
+            var rows = document.querySelectorAll("#table-body tr");
+            for (var i = 0; i < rows.length; i++) {
+                var row = [], cols = rows[i].querySelectorAll("td, th");
+                for (var j = 0; j < cols.length - 1; j++) // -1 untuk skip kolom Aksi
+                    row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                csv.push(row.join(","));
+            }
+            var csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
+            var downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
         }
 
         // Listener Toast Notifikasi & Auto-Close Modal

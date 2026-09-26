@@ -2,12 +2,15 @@ import json
 import secrets
 from typing import Optional
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import CurrentUser, DbSession, get_current_user
 from app.core.security import SECURE_COOKIES, verify_csrf_token
+from app.models.domain import Component
 from app.models.schemas.component import ComponentCreate, ComponentUpdate
 from app.services import asset_service, component_service
 
@@ -37,48 +40,63 @@ def render_template(request: Request, name: str, context: Optional[dict] = None)
 # 1. HARDWARE & PC (KOMPONEN) ENDPOINTS
 # ==========================================
 
-@router.get("/components")
-def get_components_view(
-    request: Request,
-    db: DbSession,
-    current_user: CurrentUser,
-):
-    """Merender tampilan utama modul Hardware & PC (Stat Cards + Toolbar + Tabel)."""
-    components = component_service.get_components(db)
-    stats = component_service.get_component_stats(db)
+# 1. Endpoint untuk memuat kerangka Modul & Stats Cards
+@router.get("/components", response_class=HTMLResponse)
+async def load_components_module(request: Request, db: Session = Depends(get_db)):
+    # Hitung statistik langsung dari database (hanya yang belum dihapus)
+    base_query = db.query(Component).filter(Component.is_deleted == False)
+    
+    total_all = base_query.count()
+    total_operasional = base_query.filter(Component.pc_type == "Operasional").count()
+    total_server = base_query.filter(Component.pc_type == "Server").count()
+    total_backup = base_query.filter(Component.pc_type == "Backup").count()
+
     return render_template(
         request=request,
-        name="partials/components.html",
+        name="partials/components.html", 
         context={
-            "components": components,
-            "current_user": current_user,
-            **stats,  # unpack: total_all, total_operasional, total_server, total_backup
-        },
+            "total_all": total_all,
+            "total_operasional": total_operasional,
+            "total_server": total_server,
+            "total_backup": total_backup,
+        }
     )
 
 
-@router.get("/components/table")
-def get_components_table_view(
-    request: Request,
-    db: DbSession,
-    current_user: CurrentUser,
-    search: Optional[str] = None,
-    category: Optional[str] = None,
-    type: Optional[str] = None,
-    type_filter: Optional[str] = None,
+# 2. Endpoint untuk memuat Tabel Data PC
+@router.get("/components/table", response_class=HTMLResponse)
+async def load_components_table(
+    request: Request, 
+    type_filter: str = "", 
+    type: str = "",
+    category: str = "",
+    search: str = "", 
+    db: Session = Depends(get_db)
 ):
-    """Merender tabel komponen secara responsif berdasarkan filter dan kata kunci."""
-    selected_category = type or type_filter or category
-    components = component_service.get_components_filtered(db, search=search, category=selected_category)
+    query = db.query(Component).filter(Component.is_deleted == False)
+    
+    selected_type = type_filter or type or category
+    if selected_type and selected_type.strip() and selected_type.strip() != "Semua Kategori":
+        query = query.filter(Component.pc_type == selected_type.strip())
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Component.name.ilike(term),
+                Component.processor_spec.ilike(term),
+                Component.ram_spec.ilike(term),
+                Component.storage_spec.ilike(term),
+                Component.mainboard_spec.ilike(term),
+                Component.pc_type.ilike(term),
+            )
+        )
+        
+    components = query.order_by(Component.id.desc()).all()
+    
     return render_template(
         request=request,
-        name="partials/components_table.html",
-        context={
-            "components": components,
-            "current_user": current_user,
-            "selected_type": selected_category,
-            "search": search,
-        },
+        name="partials/components_table.html", 
+        context={"components": components}
     )
 
 
@@ -105,6 +123,7 @@ def get_add_component_modal(
 
 
 @router.get("/components/{component_id}/modal/edit")
+@router.get("/components/{component_id}/edit")
 def get_edit_component_modal(
     request: Request,
     component_id: int,
@@ -211,6 +230,17 @@ def update_component_action(
     current_user: CurrentUser,
     name: str = Form(...),
     pc_type: str = Form("Operasional"),
+    processor_spec: Optional[str] = Form(None),
+    ram_spec: Optional[str] = Form(None),
+    storage_spec: Optional[str] = Form(None),
+    mainboard_spec: Optional[str] = Form(None),
+    vga_spec: Optional[str] = Form(None),
+    os_name: Optional[str] = Form(None),
+    monitor: Optional[str] = Form(None),
+    keyboard: Optional[str] = Form(None),
+    mouse: Optional[str] = Form(None),
+    psu: Optional[str] = Form(None),
+    casing: Optional[str] = Form(None),
     asset_id: Optional[int] = Form(None),
     cpu_id: Optional[int] = Form(None),
     ram_id: Optional[int] = Form(None),
@@ -219,10 +249,6 @@ def update_component_action(
     vga_id: Optional[int] = Form(None),
     os_id: Optional[int] = Form(None),
     monitor_id: Optional[int] = Form(None),
-    keyboard: Optional[str] = Form(None),
-    mouse: Optional[str] = Form(None),
-    psu: Optional[str] = Form(None),
-    casing: Optional[str] = Form(None),
     update_reason: Optional[str] = Form(None),
 ):
     """Memperbarui spesifikasi PC dan mencatat audit trail perubahannya."""
@@ -230,6 +256,13 @@ def update_component_action(
         name=name,
         pc_type=pc_type,
         asset_id=asset_id,
+        processor_spec=processor_spec,
+        ram_spec=ram_spec,
+        storage_spec=storage_spec,
+        mainboard_spec=mainboard_spec,
+        vga_spec=vga_spec,
+        os_name=os_name,
+        monitor=monitor,
         cpu_id=cpu_id,
         ram_id=ram_id,
         storage_id=storage_id,
@@ -249,15 +282,13 @@ def update_component_action(
     if not updated_comp:
         raise HTTPException(status_code=404, detail="Spesifikasi PC tidak ditemukan")
 
-    # Render ulang modul utama
-    components = component_service.get_components(db)
-    stats = component_service.get_component_stats(db)
+    # Render ulang tabel komponen ke #table-container
+    components = component_service.get_components_filtered(db)
     response = render_template(
         request=request,
-        name="partials/components.html",
+        name="partials/components_table.html",
         context={
             "components": components,
-            "stats": stats,
             "current_user": current_user,
         },
     )
@@ -303,6 +334,7 @@ def delete_component_action(
 
 
 @router.get("/components/{component_id}/history")
+@router.get("/components/{component_id}/view")
 def get_component_history_view(
     request: Request,
     component_id: int,
