@@ -24,8 +24,17 @@ class ComponentBase(BaseModel):
     name: str = Field(..., description="Identitas PC / Nama PC / User")
     pc_type: Optional[str] = Field(default="Operasional", description="Kategori PC")
     asset_id: Optional[int] = None
+
+    # Input manual teks langsung
+    processor_spec: Optional[str] = None
+    ram_spec: Optional[str] = None
+    storage_spec: Optional[str] = None
+    mainboard_spec: Optional[str] = None
+    vga_spec: Optional[str] = None
+    os_name: Optional[str] = None
+    monitor: Optional[str] = None
     
-    # Wajib menggunakan ID dari master_components
+    # ID dari master_components (opsional)
     os_id: Optional[int] = None
     cpu_id: Optional[int] = None
     mainboard_id: Optional[int] = None
@@ -34,7 +43,7 @@ class ComponentBase(BaseModel):
     storage_id: Optional[int] = None
     monitor_id: Optional[int] = None
 
-    # Periferal string (belum di-master)
+    # Periferal string
     keyboard: Optional[str] = None
     mouse: Optional[str] = None
     psu: Optional[str] = None

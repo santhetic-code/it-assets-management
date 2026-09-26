@@ -56,6 +56,13 @@ def get_components_filtered(db: Session, search: Optional[str] = None, category:
             or_(
                 Component.name.ilike(term),
                 Component.pc_type.ilike(term),
+                Component.processor_spec.ilike(term),
+                Component.ram_spec.ilike(term),
+                Component.storage_spec.ilike(term),
+                Component.mainboard_spec.ilike(term),
+                Component.vga_spec.ilike(term),
+                Component.os_name.ilike(term),
+                Component.monitor.ilike(term),
                 Component.keyboard.ilike(term),
                 Component.mouse.ilike(term),
                 Component.psu.ilike(term),
@@ -83,6 +90,27 @@ def get_master_components_grouped(db: Session) -> dict:
 
 
 
+def get_component_stats(db: Session) -> dict:
+    """Mengembalikan hitungan PC per kategori langsung dari database."""
+    total_all = db.query(func.count(Component.id)).filter(Component.is_deleted == False).scalar() or 0
+    total_operasional = db.query(func.count(Component.id)).filter(
+        Component.is_deleted == False, Component.pc_type == "Operasional"
+    ).scalar() or 0
+    total_server = db.query(func.count(Component.id)).filter(
+        Component.is_deleted == False, Component.pc_type == "Server"
+    ).scalar() or 0
+    total_backup = db.query(func.count(Component.id)).filter(
+        Component.is_deleted == False, Component.pc_type == "Backup"
+    ).scalar() or 0
+    return {
+        "total_all": total_all,
+        "total_operasional": total_operasional,
+        "total_server": total_server,
+        "total_backup": total_backup,
+    }
+
+
+
 def get_component(db: Session, component_id: int):
     return (
         db.query(Component)
@@ -101,12 +129,19 @@ def get_component(db: Session, component_id: int):
     )
 
 
+
 def create_component(db: Session, component: ComponentCreate, current_user_id: int):
-    # Buat komponen baru dengan strict foreign keys
     db_component = Component(
         name=component.name,
         pc_type=component.pc_type,
         asset_id=component.asset_id,
+        processor_spec=component.processor_spec,
+        ram_spec=component.ram_spec,
+        storage_spec=component.storage_spec,
+        mainboard_spec=component.mainboard_spec,
+        vga_spec=component.vga_spec,
+        os_name=component.os_name,
+        monitor=component.monitor,
         os_id=component.os_id,
         cpu_id=component.cpu_id,
         mainboard_id=component.mainboard_id,
@@ -148,10 +183,16 @@ def update_component(db: Session, component_id: int, component_data: ComponentUp
     if not db_comp:
         return None
 
-    # Simpan state lama
     old_state = {
         "name": db_comp.name,
         "pc_type": db_comp.pc_type,
+        "processor_spec": db_comp.processor_spec,
+        "ram_spec": db_comp.ram_spec,
+        "storage_spec": db_comp.storage_spec,
+        "mainboard_spec": db_comp.mainboard_spec,
+        "vga_spec": db_comp.vga_spec,
+        "os_name": db_comp.os_name,
+        "monitor": db_comp.monitor,
         "os_id": db_comp.os_id,
         "cpu_id": db_comp.cpu_id,
         "mainboard_id": db_comp.mainboard_id,

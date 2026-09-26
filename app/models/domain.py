@@ -116,8 +116,14 @@ class Component(Base):
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=True)
     name = Column(String(100), nullable=False)
 
-    # --- KOLOM STRING REDUNDAN TELAH DIBUANG ---
-    # os_name, ram_spec, vga_spec, processor_spec, mainboard_spec, storage_spec, monitor DIHAPUS.
+    # --- SPESIFIKASI HARDWARE MANUAL (Input Text Langsung) ---
+    processor_spec = Column(String(255), nullable=True)
+    ram_spec       = Column(String(255), nullable=True)
+    storage_spec   = Column(String(500), nullable=True)
+    mainboard_spec = Column(String(255), nullable=True)
+    vga_spec       = Column(String(255), nullable=True)
+    os_name        = Column(String(255), nullable=True)
+    monitor        = Column(String(255), nullable=True)
 
     # Periferal yang belum di-master-kan (Bisa di-upgrade ke tabel terpisah nanti)
     keyboard = Column(String(255), nullable=True)
@@ -126,7 +132,7 @@ class Component(Base):
     psu = Column(String(255), nullable=True)
     casing = Column(String(255), nullable=True)
 
-    # --- FOREIGN KEY WAJIB (Single Source of Truth) ---
+    # --- FOREIGN KEY OPSIONAL (Referensi Master) ---
     os_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
     cpu_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
     mainboard_id = Column(Integer, ForeignKey("master_components.id"), nullable=True)
@@ -156,7 +162,7 @@ class Component(Base):
     storage_ref  = relationship("MasterComponent", foreign_keys=[storage_id])
     monitor_ref  = relationship("MasterComponent", foreign_keys=[monitor_id])
 
-    # --- PROPERTY DIBERSIHKAN: Hanya membaca dari relasi master ---
+    # --- PROPERTIES: Membaca teks manual terlebih dahulu, fallback ke master ref ---
     @property
     def identitas_pc(self):
         return self.name
@@ -169,31 +175,31 @@ class Component(Base):
 
     @property
     def os(self):
-        return self.os_ref.name if self.os_ref else "-"
+        return self.os_name or (self.os_ref.name if self.os_ref else "-")
 
     @property
     def cpu(self):
-        return self.cpu_ref.name if self.cpu_ref else "-"
+        return self.processor_spec or (self.cpu_ref.name if self.cpu_ref else "-")
 
     @property
     def mainboard(self):
-        return self.mainboard_ref.name if self.mainboard_ref else "-"
+        return self.mainboard_spec or (self.mainboard_ref.name if self.mainboard_ref else "-")
 
     @property
     def ram(self):
-        return self.ram_ref.name if self.ram_ref else "-"
+        return self.ram_spec or (self.ram_ref.name if self.ram_ref else "-")
 
     @property
     def vga(self):
-        return self.vga_ref.name if self.vga_ref else "-"
+        return self.vga_spec or (self.vga_ref.name if self.vga_ref else "-")
 
     @property
     def storage(self):
-        return self.storage_ref.name if self.storage_ref else "-"
+        return self.storage_spec or (self.storage_ref.name if self.storage_ref else "-")
 
     @property
     def monitor_display(self):
-        return self.monitor_ref.name if self.monitor_ref else "-"
+        return self.monitor or (self.monitor_ref.name if self.monitor_ref else "-")
 
     @property
     def last_update(self):

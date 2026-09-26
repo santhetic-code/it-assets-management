@@ -51,8 +51,8 @@ def get_components_view(
         name="partials/components.html",
         context={
             "components": components,
-            "stats": stats,
             "current_user": current_user,
+            **stats,  # unpack: total_all, total_operasional, total_server, total_backup
         },
     )
 
@@ -138,6 +138,17 @@ def create_component_action(
     current_user: CurrentUser,
     name: str = Form(...),
     pc_type: str = Form("Operasional"),
+    processor_spec: Optional[str] = Form(None),
+    ram_spec: Optional[str] = Form(None),
+    storage_spec: Optional[str] = Form(None),
+    mainboard_spec: Optional[str] = Form(None),
+    vga_spec: Optional[str] = Form(None),
+    os_name: Optional[str] = Form(None),
+    monitor: Optional[str] = Form(None),
+    keyboard: Optional[str] = Form(None),
+    mouse: Optional[str] = Form(None),
+    psu: Optional[str] = Form(None),
+    casing: Optional[str] = Form(None),
     asset_id: Optional[int] = Form(None),
     cpu_id: Optional[int] = Form(None),
     ram_id: Optional[int] = Form(None),
@@ -146,16 +157,23 @@ def create_component_action(
     vga_id: Optional[int] = Form(None),
     os_id: Optional[int] = Form(None),
     monitor_id: Optional[int] = Form(None),
-    keyboard: Optional[str] = Form(None),
-    mouse: Optional[str] = Form(None),
-    psu: Optional[str] = Form(None),
-    casing: Optional[str] = Form(None),
 ):
-    """Membuat spesifikasi PC baru dengan validasi foreign key ketat."""
+    """Membuat spesifikasi PC baru dengan konfigurasi manual teks murni."""
     component_in = ComponentCreate(
         name=name,
         pc_type=pc_type,
         asset_id=asset_id,
+        processor_spec=processor_spec,
+        ram_spec=ram_spec,
+        storage_spec=storage_spec,
+        mainboard_spec=mainboard_spec,
+        vga_spec=vga_spec,
+        os_name=os_name,
+        monitor=monitor,
+        keyboard=keyboard,
+        mouse=mouse,
+        psu=psu,
+        casing=casing,
         cpu_id=cpu_id,
         ram_id=ram_id,
         storage_id=storage_id,
@@ -163,22 +181,16 @@ def create_component_action(
         vga_id=vga_id,
         os_id=os_id,
         monitor_id=monitor_id,
-        keyboard=keyboard,
-        mouse=mouse,
-        psu=psu,
-        casing=casing,
     )
     new_comp = component_service.create_component(db, component_in, current_user_id=current_user.id)
 
-    # Render ulang tampilan modul utama dengan toast notifikasi
-    components = component_service.get_components(db)
-    stats = component_service.get_component_stats(db)
+    # Render ulang tabel komponen ke #table-container
+    components = component_service.get_components_filtered(db)
     response = render_template(
         request=request,
-        name="partials/components.html",
+        name="partials/components_table.html",
         context={
             "components": components,
-            "stats": stats,
             "current_user": current_user,
         },
     )
