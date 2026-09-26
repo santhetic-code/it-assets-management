@@ -52,6 +52,11 @@ services:
     env_file:
       - .env
     volumes:
+      # VOLUME HOT-RELOAD: Kode & Template sinkron langsung dari laptop ke container
+      - ./app:/app/app
+      - ./views:/app/views
+      - ./static:/app/static
+      - ./main.py:/app/main.py
       # VOLUME KRUSIAL: Menjaga foto profil dan nota pembelian tidak hilang
       - ./static/avatars:/app/static/avatars
       - ./static/uploads:/app/static/uploads

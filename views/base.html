@@ -29,16 +29,48 @@
             <div class="h-20 flex items-center px-6 border-b border-gray-100">
                 <span class="text-2xl font-black text-itam-700 tracking-tighter">ITAM<span class="text-gray-800">Pro.</span></span>
             </div>
-            <nav class="p-4 space-y-2 mt-4" id="sidebar-nav">
-                <p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Manajemen Data</p>
-                <!-- Menambahkan onclick pushState agar URL di browser ikut berubah tanpa reload -->
-                <a href="javascript:void(0)" hx-get="/ui/components" hx-target="#main-content" onclick="history.pushState({}, '', '/components'); setActiveNav(this, 'Spesifikasi Hardware & PC');" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
-                    Hardware & PC
+            <nav class="p-4 space-y-1 mt-2 overflow-y-auto h-[calc(100vh-160px)] custom-scrollbar" id="sidebar-nav">
+
+                <p class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 mt-2">Main Menu</p>
+                <a href="javascript:void(0)" hx-get="/ui/dashboard" hx-target="#main-content" onclick="updateTopBar('Dashboard Utama'); history.pushState({}, '', '/')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Dashboard Utama
                 </a>
-                <a href="javascript:void(0)" hx-get="/ui/vault" hx-target="#main-content" onclick="history.pushState({}, '', '/vault'); setActiveNav(this, 'Kredensial Vault');" class="nav-link flex items-center px-4 py-3 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                <a href="javascript:void(0)" hx-get="/ui/notes" hx-target="#main-content" onclick="updateTopBar('Catatan IT'); history.pushState({}, '', '/notes')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Catatan IT
+                </a>
+                <a href="javascript:void(0)" hx-get="/ui/ips" hx-target="#main-content" onclick="updateTopBar('IP Jaringan'); history.pushState({}, '', '/ips')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                    IP Jaringan
+                </a>
+
+                <p class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 mt-6">Inventory & Vault</p>
+                <a href="javascript:void(0)" hx-get="/ui/vault" hx-target="#main-content" onclick="updateTopBar('Kredensial Vault'); history.pushState({}, '', '/vault')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    Kredensial Vault
+                    Kredensial
+                </a>
+                <a href="javascript:void(0)" hx-get="/ui/purchases" hx-target="#main-content" onclick="updateTopBar('Pembelian'); history.pushState({}, '', '/purchases')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Pembelian
+                </a>
+                <a href="javascript:void(0)" hx-get="/ui/components" hx-target="#main-content" onclick="updateTopBar('Hardware & PC'); history.pushState({}, '', '/components')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-itam-700 bg-itam-50 transition-all" id="menu-components">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                    Komponen (Spek)
+                </a>
+
+                <p class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 mt-6">System</p>
+                <a href="javascript:void(0)" hx-get="/ui/maintenance" hx-target="#main-content" onclick="updateTopBar('Maintenance'); history.pushState({}, '', '/maintenance')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Maintenance
+                </a>
+                <a href="javascript:void(0)" hx-get="/ui/account" hx-target="#main-content" onclick="updateTopBar('Akun & Keamanan'); history.pushState({}, '', '/account')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Akun & Keamanan
+                </a>
+                <a href="javascript:void(0)" hx-get="/ui/audit" hx-target="#main-content" onclick="updateTopBar('Audit Trail'); history.pushState({}, '', '/audit')" class="flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-600 hover:bg-itam-50 hover:text-itam-700 transition-all">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    Audit Trail
                 </a>
             </nav>
         </div>
@@ -61,7 +93,15 @@
                 <div>
                     <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Workspace</div>
                     <h1 id="module-title" class="text-lg font-black text-gray-800 tracking-tight">
-                        {{ 'Kredensial Vault' if request.url.path == '/vault' else 'Spesifikasi Hardware & PC' }}
+                        {% if request.url.path == '/vault' %}Kredensial Vault
+                        {% elif request.url.path == '/notes' %}Catatan IT
+                        {% elif request.url.path == '/ips' %}IP Jaringan
+                        {% elif request.url.path == '/purchases' %}Pembelian
+                        {% elif request.url.path == '/maintenance' %}Maintenance
+                        {% elif request.url.path == '/account' %}Akun & Keamanan
+                        {% elif request.url.path == '/audit' %}Audit Trail
+                        {% elif request.url.path == '/' %}Dashboard Utama
+                        {% else %}Hardware & PC{% endif %}
                     </h1>
                 </div>
             </div>
@@ -103,7 +143,8 @@
         </header>
 
         <!-- Deep Linking HTMX Logic: Memuat URL UI backend sesuai path browser saat direfresh -->
-        {% set target_module = "/ui" + request.url.path if request.url.path != "/" else "/ui/components" %}
+        {% set path = request.url.path %}
+        {% set target_module = '/ui/components' if path == '/' else '/ui/dashboard' if path == '/dashboard' else '/ui/vault' if path == '/vault' else '/ui/notes' if path == '/notes' else '/ui/ips' if path == '/ips' else '/ui/purchases' if path == '/purchases' else '/ui/maintenance' if path == '/maintenance' else '/ui/account' if path == '/account' else '/ui/audit' if path == '/audit' else '/ui' + path %}
         <div id="main-content" class="flex-1 overflow-auto p-8" hx-get="{{ target_module }}" hx-trigger="load">
             <div class="flex flex-col items-center justify-center h-full text-gray-400">
                 <svg class="animate-spin h-8 w-8 text-itam-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -151,21 +192,30 @@
             });
         });
 
-        // Helper untuk update judul modul dan active state nav
-        function setActiveNav(el, title) {
-            document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => {
-                link.classList.remove('bg-itam-50', 'text-itam-700');
-                link.classList.add('text-gray-600');
+        // Fungsi untuk memperbarui judul Top Bar dan sorotan menu aktif
+        function updateTopBar(title) {
+            const titleEl = document.getElementById('module-title');
+            if (titleEl) titleEl.textContent = title;
+
+            // Reset semua link menu ke default (abu-abu)
+            document.querySelectorAll('aside nav a').forEach(el => {
+                el.classList.remove('text-itam-700', 'bg-itam-50');
+                el.classList.add('text-gray-600');
             });
-            if (el) {
-                el.classList.add('bg-itam-50', 'text-itam-700');
-                el.classList.remove('text-gray-600');
-            }
-            if (title) {
-                const titleEl = document.getElementById('module-title');
-                if (titleEl) titleEl.textContent = title;
+
+            // Sorot menu yang diklik (hijau ITAM)
+            const activeMenu = Array.from(document.querySelectorAll('aside nav a')).find(
+                el => el.textContent.trim().includes(title.replace(' & ', ''))
+                    || el.textContent.trim() === title
+            );
+            if (activeMenu) {
+                activeMenu.classList.remove('text-gray-600');
+                activeMenu.classList.add('text-itam-700', 'bg-itam-50');
             }
         }
+
+        // Alias backward-compat
+        function setActiveNav(el, title) { updateTopBar(title); }
 
         // Skrip Sapaan & Jam Real-Time
         function updateTime() {

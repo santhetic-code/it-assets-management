@@ -26,6 +26,12 @@ async def login_page(request: Request):
 @router.get("/", response_class=HTMLResponse)
 @router.get("/components", response_class=HTMLResponse)
 @router.get("/vault", response_class=HTMLResponse)
+@router.get("/notes", response_class=HTMLResponse)
+@router.get("/ips", response_class=HTMLResponse)
+@router.get("/purchases", response_class=HTMLResponse)
+@router.get("/maintenance", response_class=HTMLResponse)
+@router.get("/account", response_class=HTMLResponse)
+@router.get("/audit", response_class=HTMLResponse)
 async def render_spa_shell(request: Request, current_user=Depends(get_current_user)):
     # Mengirimkan request dan current_user ke Jinja2
     response = templates.TemplateResponse(

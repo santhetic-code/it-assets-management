@@ -346,3 +346,94 @@ def get_vault_view(
         name="partials/vault.html",
         context={"current_user": current_user},
     )
+
+
+# ==========================================
+# 3. PLACEHOLDER ENDPOINTS (Anti-404 Guard)
+# Setiap menu di sidebar memiliki endpoint agar tidak 404 saat diklik.
+# Masing-masing merender partial "coming soon" bawaan.
+# ==========================================
+
+def _placeholder(request: Request, current_user: CurrentUser, title: str, icon: str, desc: str):
+    """Helper generik untuk merender halaman placeholder modul."""
+    html = f"""
+<div class="flex flex-col items-center justify-center h-full min-h-[60vh] text-center space-y-4">
+    <div class="h-20 w-20 rounded-2xl bg-itam-50 text-itam-600 flex items-center justify-center text-4xl mx-auto shadow-inner">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{icon}"></path>
+        </svg>
+    </div>
+    <h2 class="text-2xl font-extrabold text-gray-800">{title}</h2>
+    <p class="text-sm text-gray-500 max-w-sm leading-relaxed">{desc}</p>
+    <span class="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold uppercase tracking-wider">
+        Segera Hadir
+    </span>
+</div>"""
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html)
+
+
+@router.get("/notes")
+def get_notes_view(request: Request, current_user: CurrentUser):
+    """Placeholder modul Catatan IT."""
+    return _placeholder(
+        request, current_user,
+        title="Catatan IT",
+        icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+        desc="Modul pencatatan insiden, tiket, dan catatan teknis IT. Sedang dalam pengembangan.",
+    )
+
+
+@router.get("/ips")
+def get_ips_view(request: Request, current_user: CurrentUser):
+    """Placeholder modul IP Jaringan."""
+    return _placeholder(
+        request, current_user,
+        title="IP Jaringan",
+        icon="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9",
+        desc="Manajemen alokasi IP address, subnet, dan inventaris perangkat jaringan.",
+    )
+
+
+@router.get("/purchases")
+def get_purchases_view(request: Request, current_user: CurrentUser):
+    """Placeholder modul Pembelian."""
+    return _placeholder(
+        request, current_user,
+        title="Pembelian",
+        icon="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z",
+        desc="Rekap nota pembelian aset IT, garansi, dan vendor management.",
+    )
+
+
+@router.get("/maintenance")
+def get_maintenance_view(request: Request, current_user: CurrentUser):
+    """Placeholder modul Maintenance."""
+    return _placeholder(
+        request, current_user,
+        title="Maintenance",
+        icon="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
+        desc="Jadwal preventive maintenance, rekap perbaikan, dan history kerusakan aset.",
+    )
+
+
+@router.get("/account")
+def get_account_view(request: Request, current_user: CurrentUser):
+    """Placeholder modul Akun & Keamanan."""
+    return _placeholder(
+        request, current_user,
+        title="Akun & Keamanan",
+        icon="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+        desc="Manajemen pengguna, role, dan pengaturan keamanan sistem ITAM.",
+    )
+
+
+@router.get("/audit")
+def get_audit_view(request: Request, current_user: CurrentUser):
+    """Placeholder modul Audit Trail."""
+    return _placeholder(
+        request, current_user,
+        title="Audit Trail",
+        icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+        desc="Log seluruh aktivitas sistem: login, perubahan data, dan akses vault.",
+    )
