@@ -320,8 +320,8 @@ def delete_component_action(
         name="partials/components.html",
         context={
             "components": components,
-            "stats": stats,
             "current_user": current_user,
+            **stats,  # total_all, total_operasional, total_server, total_backup
         },
     )
     toast_payload = {

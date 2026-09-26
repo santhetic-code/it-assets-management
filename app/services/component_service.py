@@ -281,40 +281,11 @@ def soft_delete_component(db: Session, component_id: int, user_id: int | None = 
     return delete_component(db, component_id, current_user_id=user_id)
 
 
-def get_component_stats(db: Session) -> dict:
-    from sqlalchemy import func
-    counts = (
-        db.query(Component.pc_type, func.count(Component.id))
-        .filter(Component.is_deleted == False)
-        .group_by(Component.pc_type)
-        .all()
-    )
-
-    total_op = 0
-    total_srv = 0
-    total_bkp = 0
-    total_all = 0
-
-    for pc_type, cnt in counts:
-        total_all += cnt
-        pt = (pc_type or "").strip().lower()
-        if "server" in pt:
-            total_srv += cnt
-        elif "backup" in pt:
-            total_bkp += cnt
-        else:
-            total_op += cnt
-
-    pct_op = round((total_op / total_all) * 100) if total_all > 0 else 0
-    pct_srv = round((total_srv / total_all) * 100) if total_all > 0 else 0
-    pct_bkp = round((total_bkp / total_all) * 100) if total_all > 0 else 0
-
-    return {
-        "count_total": total_all,
-        "count_operasional": total_op,
-        "count_server": total_srv,
-        "count_backup": total_bkp,
-        "pct_operasional": pct_op,
-        "pct_server": pct_srv,
-        "pct_backup": pct_bkp,
-    }
+# CATATAN PERBAIKAN:
+# Sebelumnya ada 2 fungsi `get_component_stats` di file ini (definisi kedua otomatis
+# menimpa yang pertama di Python). Definisi kedua mengembalikan key "count_total",
+# "count_operasional", dst — padahal partials/components.html membaca "total_all",
+# "total_operasional", dst. Akibatnya, setiap kali route delete_component_action
+# me-render ulang components.html, ke-4 kartu statistik tampil 0 (default Jinja).
+# Definisi ganda tsb sudah dihapus; fungsi di atas (baris ~93) yang dipertahankan
+# karena key-nya sudah cocok dengan template.
