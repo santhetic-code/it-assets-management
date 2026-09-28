@@ -36,6 +36,11 @@ def render_template(request: Request, name: str, context: Optional[dict] = None)
     return response
 
 
+def _norm(val: Optional[str]) -> Optional[str]:
+    """Membuang spasi berlebihan dan trim input string."""
+    return " ".join(val.strip().split()) if val and val.strip() else None
+
+
 # ==========================================
 # 1. HARDWARE & PC (KOMPONEN) ENDPOINTS
 # ==========================================
@@ -169,37 +174,23 @@ def create_component_action(
     psu: Optional[str] = Form(None),
     casing: Optional[str] = Form(None),
     asset_id: Optional[int] = Form(None),
-    cpu_id: Optional[int] = Form(None),
-    ram_id: Optional[int] = Form(None),
-    storage_id: Optional[int] = Form(None),
-    mainboard_id: Optional[int] = Form(None),
-    vga_id: Optional[int] = Form(None),
-    os_id: Optional[int] = Form(None),
-    monitor_id: Optional[int] = Form(None),
 ):
     """Membuat spesifikasi PC baru dengan konfigurasi manual teks murni."""
     component_in = ComponentCreate(
-        name=name,
-        pc_type=pc_type,
+        name=_norm(name) or "",
+        pc_type=_norm(pc_type) or "Operasional",
         asset_id=asset_id,
-        processor_spec=processor_spec,
-        ram_spec=ram_spec,
-        storage_spec=storage_spec,
-        mainboard_spec=mainboard_spec,
-        vga_spec=vga_spec,
-        os_name=os_name,
-        monitor=monitor,
-        keyboard=keyboard,
-        mouse=mouse,
-        psu=psu,
-        casing=casing,
-        cpu_id=cpu_id,
-        ram_id=ram_id,
-        storage_id=storage_id,
-        mainboard_id=mainboard_id,
-        vga_id=vga_id,
-        os_id=os_id,
-        monitor_id=monitor_id,
+        processor_spec=_norm(processor_spec),
+        ram_spec=_norm(ram_spec),
+        storage_spec=_norm(storage_spec),
+        mainboard_spec=_norm(mainboard_spec),
+        vga_spec=_norm(vga_spec),
+        os_name=_norm(os_name),
+        monitor=_norm(monitor),
+        keyboard=_norm(keyboard),
+        mouse=_norm(mouse),
+        psu=_norm(psu),
+        casing=_norm(casing),
     )
     new_comp = component_service.create_component(db, component_in, current_user_id=current_user.id)
 
@@ -241,40 +232,24 @@ def update_component_action(
     mouse: Optional[str] = Form(None),
     psu: Optional[str] = Form(None),
     casing: Optional[str] = Form(None),
-    asset_id: Optional[int] = Form(None),
-    cpu_id: Optional[int] = Form(None),
-    ram_id: Optional[int] = Form(None),
-    storage_id: Optional[int] = Form(None),
-    mainboard_id: Optional[int] = Form(None),
-    vga_id: Optional[int] = Form(None),
-    os_id: Optional[int] = Form(None),
-    monitor_id: Optional[int] = Form(None),
     update_reason: Optional[str] = Form(None),
 ):
     """Memperbarui spesifikasi PC dan mencatat audit trail perubahannya."""
     component_update = ComponentUpdate(
-        name=name,
-        pc_type=pc_type,
-        asset_id=asset_id,
-        processor_spec=processor_spec,
-        ram_spec=ram_spec,
-        storage_spec=storage_spec,
-        mainboard_spec=mainboard_spec,
-        vga_spec=vga_spec,
-        os_name=os_name,
-        monitor=monitor,
-        cpu_id=cpu_id,
-        ram_id=ram_id,
-        storage_id=storage_id,
-        mainboard_id=mainboard_id,
-        vga_id=vga_id,
-        os_id=os_id,
-        monitor_id=monitor_id,
-        keyboard=keyboard,
-        mouse=mouse,
-        psu=psu,
-        casing=casing,
-        update_reason=update_reason or "Update spesifikasi rutin",
+        name=_norm(name) or "",
+        pc_type=_norm(pc_type) or "Operasional",
+        processor_spec=_norm(processor_spec),
+        ram_spec=_norm(ram_spec),
+        storage_spec=_norm(storage_spec),
+        mainboard_spec=_norm(mainboard_spec),
+        vga_spec=_norm(vga_spec),
+        os_name=_norm(os_name),
+        monitor=_norm(monitor),
+        keyboard=_norm(keyboard),
+        mouse=_norm(mouse),
+        psu=_norm(psu),
+        casing=_norm(casing),
+        update_reason=_norm(update_reason) or "Update spesifikasi rutin",
     )
     updated_comp = component_service.update_component(
         db, component_id=component_id, component_data=component_update, current_user_id=current_user.id
