@@ -1,109 +1,209 @@
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-    
-    .modal-font { 
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
-    }
-    
-    .section-eyebrow {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #94A3B8;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .section-eyebrow::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: #F1F5F9;
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    /* ── Base ── */
+    .fs-overlay {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
+    /* ── Dot-grid canvas ── */
+    .form-canvas {
+        background-color: #F8FAFC;
+        background-image: radial-gradient(circle at 1px 1px, #CBD5E1 1.2px, transparent 0);
+        background-size: 24px 24px;
+    }
+
+    /* ── Sidebar diagram panel ── */
+    .diagram-panel {
+        background: linear-gradient(160deg, #0F172A 0%, #0C1A2E 60%, #0A1628 100%);
+    }
+
+    /* ── Section separator — circuit line ── */
+    .circuit-separator {
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, #A5F3FC 20%, #67E8F9 50%, #A5F3FC 80%, transparent 100%);
+        opacity: 0.35;
+        margin: 0 -2px;
+    }
+
+    /* ── Section eyebrow ── */
+    .section-eyebrow {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #64748B;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .section-eyebrow::before {
+        content: '';
+        width: 14px;
+        height: 2px;
+        background: linear-gradient(90deg, #0891B2, #67E8F9);
+        border-radius: 99px;
+        flex-shrink: 0;
+    }
+
+    /* ── Mono font for technical values ── */
+    .spec-input {
+        font-family: 'JetBrains Mono', 'Fira Mono', 'Cascadia Code', monospace;
+        font-size: 12.5px;
+        letter-spacing: -0.01em;
+    }
+
+    /* ── Field wrapper + icon chip ── */
+    .field-wrap { position: relative; }
     .field-icon-chip {
         position: absolute;
-        left: 12px;
-        top: 12px;
-        width: 24px; 
-        height: 24px;
-        border-radius: 6px;
-        background: rgba(8,145,178,0.08);
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        background: rgba(8,145,178,0.09);
         color: #0891B2;
-        display: flex; 
-        align-items: center; 
+        display: flex;
+        align-items: center;
         justify-content: center;
         pointer-events: none;
         z-index: 10;
-        transition: all 0.2s ease;
+        transition: background 0.2s, color 0.2s;
+        flex-shrink: 0;
+    }
+    .field-icon-chip svg { width: 12px; height: 12px; }
+
+    /* For textarea, pin to top */
+    .textarea-wrap .field-icon-chip {
+        top: 11px;
+        transform: none;
     }
 
-    .apple-input {
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        transform-origin: center;
-        outline: none !important; 
+    /* ── Input base ── */
+    .hw-input {
+        transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        outline: none !important;
     }
-    .apple-input:hover {
-        transform: scale(1.015);
-        box-shadow: 0 6px 20px rgba(8, 145, 178, 0.08); 
-        border-color: #cbd5e1;
+    .hw-input:hover {
+        border-color: #93C5FD;
+        box-shadow: 0 2px 12px rgba(8,145,178,0.06);
     }
-    .apple-input:focus { 
-        box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.15) !important; 
-        border-color: #0891B2 !important; 
-        background-color: #ffffff;
-        transform: scale(1.015);
+    .hw-input:focus {
+        border-color: #0891B2 !important;
+        box-shadow: 0 0 0 1px #0891B2, 0 0 24px rgba(8,145,178,0.20) !important;
+        background: #ffffff !important;
     }
-    .apple-input:focus + .field-icon-chip {
+    /* icon glow on focus via :focus-within on wrapper */
+    .field-wrap:focus-within .field-icon-chip {
         background: #0891B2;
-        color: #ffffff;
-    }
-    
-    .progress-bar-fill {
-        transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        color: #fff;
     }
 
-    @keyframes modalEntry { 
-        from { opacity: 0; transform: scale(0.96) translateY(10px); } 
-        to { opacity: 1; transform: scale(1) translateY(0); } 
+    /* ── Progress bar ── */
+    .progress-bar-fill {
+        transition: width 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    @keyframes backdropEntry {
-        from { opacity: 0; } to { opacity: 1; }
+
+    /* ── Entry / exit animations ── */
+    @keyframes fsEntry  { from { opacity:0; transform:translateY(14px) scale(0.99); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes fsExit   { from { opacity:1; transform:translateY(0) scale(1); }      to { opacity:0; transform:translateY(14px) scale(0.99); } }
+    .animate-fs-entry { animation: fsEntry  0.35s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .animate-fs-exit  { animation: fsExit   0.22s ease-in forwards !important; }
+
+    /* ── PC Diagram SVG glows ── */
+    .pc-part {
+        transition: stroke 0.4s ease, filter 0.4s ease, opacity 0.4s ease;
+        stroke: #1E3A4A;
+        opacity: 0.5;
     }
-    @keyframes modalExit { 
-        from { opacity: 1; transform: scale(1) translateY(0); } 
-        to { opacity: 0; transform: scale(0.96) translateY(10px); } 
+    .pc-part.lit {
+        stroke: #0891B2;
+        filter: drop-shadow(0 0 6px rgba(8,145,178,0.7));
+        opacity: 1;
     }
-    @keyframes backdropExit {
-        from { opacity: 1; } to { opacity: 0; }
+    .pc-part-fill {
+        transition: fill 0.4s ease, opacity 0.4s ease;
+        fill: #0D2030;
+        opacity: 0.4;
     }
-    .animate-modal-exit { animation: modalExit 0.25s cubic-bezier(0.1, 0.76, 0.55, 0.9) forwards !important; }
-    .animate-backdrop-exit { animation: backdropExit 0.25s ease-out forwards !important; }
+    .pc-part-fill.lit {
+        fill: rgba(8,145,178,0.12);
+        opacity: 1;
+    }
+    .pc-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 7.5px;
+        fill: #334155;
+        transition: fill 0.4s;
+    }
+    .pc-label.lit { fill: #67E8F9; }
+
+    /* ── Segmented pill ── */
+    .seg-pill-wrap {
+        background: rgba(15,23,42,0.06);
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 10px;
+        padding: 3px;
+        display: flex;
+        height: 42px;
+    }
+    .seg-pill-wrap label { flex: 1; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .seg-pill-inner {
+        padding: 6px 4px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748B;
+        border-radius: 7px;
+        transition: all 0.2s;
+        width: 100%;
+        text-align: center;
+    }
+    input[type=radio].seg-radio:checked + .seg-pill-inner {
+        color: #0891B2;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+    }
+
+    /* ── Scrollbar ── */
+    .thin-scroll::-webkit-scrollbar { width: 4px; }
+    .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
 </style>
 
-<div id="modal-backdrop" class="modal-font fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 animate-[backdropEntry_0.3s_ease-out_forwards]">
-    
-    <div id="modal-content" class="bg-white rounded-[24px] shadow-2xl ring-1 ring-slate-900/10 w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden animate-[modalEntry_0.4s_cubic-bezier(0.1,0.76,0.55,0.9)_forwards] relative">
+<!-- ════════════════════════════════════════════════════════
+     FULL-SCREEN OVERLAY
+════════════════════════════════════════════════════════ -->
+<div id="fs-overlay"
+     class="fs-overlay fixed inset-0 z-[100] flex flex-col animate-fs-entry"
+     style="background: rgba(2,6,23,0.68); backdrop-filter: blur(8px);">
 
-        <div class="flex-1 flex flex-col min-w-0 bg-[#FAFAFA] relative">
-            
+    <!-- Inner shell -->
+    <div class="flex-1 flex overflow-hidden m-3 rounded-[20px] shadow-[0_32px_80px_rgba(0,0,0,0.5)] ring-1 ring-white/10">
+
+        <!-- ════════ LEFT: FORM PANEL ════════ -->
+        <div class="flex-1 flex flex-col min-h-0 min-w-0 form-canvas">
+
             <!-- Header -->
-            <div class="px-8 pt-8 pb-6 flex justify-between items-start shrink-0 bg-white border-b border-slate-100">
-                <div class="flex items-center gap-5">
-                    <div class="w-12 h-12 rounded-[12px] bg-[#E6F7F8] text-[#0891B2] flex items-center justify-center shrink-0 border border-cyan-100/50">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+            <div class="flex items-center justify-between px-8 py-4 bg-white/85 backdrop-blur border-b border-slate-200/70 shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-[10px] bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
                     </div>
                     <div>
-                        <h2 class="text-[20px] font-bold text-slate-800 tracking-tight leading-tight flex items-center gap-3">
+                        <h2 class="text-[17px] font-bold text-slate-800 tracking-tight leading-tight">
                             {% if is_edit %}Edit Spesifikasi PC{% else %}Registrasi PC Baru{% endif %}
                         </h2>
-                        <p class="text-[13px] text-slate-500 mt-1 font-medium">Standardisasi parameter teknis aset IT.</p>
+                        <p class="text-[12px] text-slate-400 font-medium mt-0.5">Standardisasi parameter teknis aset IT</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors z-50">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button type="button" onclick="closeFsModal()"
+                        class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                 </button>
             </div>
 
@@ -112,212 +212,510 @@
                   hx-post="{% if is_edit %}/ui/components/{{ component.id }}/update{% else %}/ui/components/create{% endif %}"
                   hx-target="#table-container"
                   hx-swap="innerHTML"
-                  hx-on::after-request="if(event.detail.successful) closeModal();"
-                  class="flex-1 flex flex-col overflow-hidden">
+                  hx-on::after-request="if(event.detail.successful) closeFsModal();"
+                  class="flex-1 flex flex-col min-h-0 overflow-hidden">
 
-                <div class="flex-1 overflow-y-auto px-8 py-8 space-y-10 custom-scrollbar">
-                    
-                    <!-- INFORMASI DASAR -->
-                    <div>
-                        <div class="section-eyebrow">Informasi Dasar</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-2">Nama PC / Identifier <span class="text-red-500">*</span></label>
-                                <input type="text" name="name" required autocomplete="off" value="{{ component.name or '' }}" class="sync-input apple-input w-full px-4 h-[48px] bg-white border border-slate-200 rounded-[10px] text-[14px] font-medium text-slate-800 shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-2">Peruntukan <span class="text-red-500">*</span></label>
-                                <!-- Segmented Pill -->
-                                <div class="flex p-1 bg-slate-100/80 border border-slate-200/60 rounded-[12px]">
-                                    <label class="flex-1 text-center cursor-pointer relative">
-                                        <input type="radio" name="pc_type" value="Operasional" class="peer sr-only" {% if not component or component.pc_type == 'Operasional' %}checked{% endif %}>
-                                        <div class="py-2.5 text-[13px] font-bold text-slate-500 peer-checked:text-cyan-700 peer-checked:bg-white peer-checked:shadow-sm rounded-[8px] transition-all">Operasional</div>
-                                    </label>
-                                    <label class="flex-1 text-center cursor-pointer relative">
-                                        <input type="radio" name="pc_type" value="Server" class="peer sr-only" {% if component and component.pc_type == 'Server' %}checked{% endif %}>
-                                        <div class="py-2.5 text-[13px] font-bold text-slate-500 peer-checked:text-cyan-700 peer-checked:bg-white peer-checked:shadow-sm rounded-[8px] transition-all">Server</div>
-                                    </label>
-                                    <label class="flex-1 text-center cursor-pointer relative">
-                                        <input type="radio" name="pc_type" value="Backup" class="peer sr-only" {% if component and component.pc_type == 'Backup' %}checked{% endif %}>
-                                        <div class="py-2.5 text-[13px] font-bold text-slate-500 peer-checked:text-cyan-700 peer-checked:bg-white peer-checked:shadow-sm rounded-[8px] transition-all">Backup</div>
-                                    </label>
-                                </div>
+                <!-- Scrollable field area -->
+                <div class="flex-1 min-h-0 overflow-y-auto thin-scroll px-8 py-6">
+
+                    <!-- 3-column grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+
+                        <!-- ─── INFORMASI DASAR ─── -->
+                        <div class="lg:col-span-3 mb-1">
+                            <div class="section-eyebrow">Informasi Dasar</div>
+                            <div class="circuit-separator"></div>
+                        </div>
+
+                        <!-- Nama PC -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
+                                Nama PC / Identifier <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative field-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                </span>
+                                <input type="text" name="name" required autocomplete="off"
+                                       value="{{ component.name or '' }}"
+                                       data-diagram="name"
+                                       placeholder="PC-LAB-01"
+                                       class="sync-input hw-input spec-input w-full h-[42px] pl-10 pr-3 bg-white border border-slate-200 rounded-[9px] text-slate-800 shadow-sm">
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SPESIFIKASI INTI -->
-                    <div>
-                        <div class="section-eyebrow">Spesifikasi Inti</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Processor (CPU)</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Intel Core i5-12400F</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="processor_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.processor_spec or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Memori (RAM)</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: 16 GB DDR4 3200 MHz</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="ram_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.ram_spec or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M6 12v4M10 12v4M14 12v4M18 12v4"/></svg></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Penyimpanan</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: SSD NVMe 512 GB</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="storage_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.storage_spec or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Mainboard</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: MSI B760M Bomber</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="mainboard_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.mainboard_spec or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M14 9V5M10 9V5M14 19v-4M10 19v-4M5 14H9M5 10H9M19 14h-4M19 10h-4"/><circle cx="12" cy="12" r="2"/></svg></div>
-                                </div>
+                        <!-- Peruntukan -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
+                                Peruntukan <span class="text-red-500">*</span>
+                            </label>
+                            <div class="seg-pill-wrap">
+                                <label>
+                                    <input type="radio" name="pc_type" value="Operasional" class="seg-radio sr-only"
+                                           {% if not component or component.pc_type == 'Operasional' %}checked{% endif %}>
+                                    <div class="seg-pill-inner">Operasional</div>
+                                </label>
+                                <label>
+                                    <input type="radio" name="pc_type" value="Server" class="seg-radio sr-only"
+                                           {% if component and component.pc_type == 'Server' %}checked{% endif %}>
+                                    <div class="seg-pill-inner">Server</div>
+                                </label>
+                                <label>
+                                    <input type="radio" name="pc_type" value="Backup" class="seg-radio sr-only"
+                                           {% if component and component.pc_type == 'Backup' %}checked{% endif %}>
+                                    <div class="seg-pill-inner">Backup</div>
+                                </label>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- GRAFIS & TAMPILAN -->
-                    <div>
-                        <div class="section-eyebrow">Grafis & Tampilan</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Kartu Grafis (VGA)</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: NVIDIA RTX 3060 12GB</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="vga_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.vga_spec or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Monitor</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: LG 24MP400 24 Inch</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="monitor" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.monitor or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-                                </div>
+                        <!-- ─── SPESIFIKASI INTI ─── -->
+                        <div class="lg:col-span-3 mt-4 mb-1">
+                            <div class="section-eyebrow">Spesifikasi Inti</div>
+                            <div class="circuit-separator"></div>
+                        </div>
+
+                        <!-- Processor -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Processor (CPU)</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">Intel Core i5-12400F</p>
+                            <div class="relative field-wrap textarea-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>
+                                </span>
+                                <textarea name="processor_spec" rows="2" autocomplete="off" spellcheck="false"
+                                          data-diagram="cpu"
+                                          class="sync-input hw-input spec-input pl-10 pr-3 py-2.5 h-[56px] w-full bg-white border border-slate-200 rounded-[9px] shadow-sm resize-none thin-scroll leading-snug">{{ component.processor_spec or '' }}</textarea>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SISTEM & PERIFERAL -->
-                    <div>
-                        <div class="section-eyebrow">Sistem & Periferal</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <!-- OS sering panjang (Build, Architecture), full-width lebih aman secara tipografi -->
-                            <div class="sm:col-span-2">
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Sistem Operasi</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Windows 11 Pro 64-bit Build 22621</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="os_name" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.os_name or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Keyboard</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Logitech K120</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="keyboard" rows="2" autocomplete="off" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.keyboard or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"/></svg></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Mouse</label>
-                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Logitech B100</p>
-                                <div class="relative flex flex-col-reverse">
-                                    <textarea name="mouse" rows="2" autocomplete="off" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.mouse or '' }}</textarea>
-                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 2v8"/></svg></div>
-                                </div>
+                        <!-- RAM -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Memori (RAM)</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">16 GB DDR4 3200 MHz</p>
+                            <div class="relative field-wrap textarea-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M6 12v4M10 12v4M14 12v4M18 12v4"/></svg>
+                                </span>
+                                <textarea name="ram_spec" rows="2" autocomplete="off" spellcheck="false"
+                                          data-diagram="ram"
+                                          class="sync-input hw-input spec-input pl-10 pr-3 py-2.5 h-[56px] w-full bg-white border border-slate-200 rounded-[9px] shadow-sm resize-none thin-scroll leading-snug">{{ component.ram_spec or '' }}</textarea>
                             </div>
                         </div>
-                    </div>
 
-                    {% if is_edit %}
-                    <div class="mt-8 pt-6 border-t border-slate-200/60">
-                        <label class="block text-[13px] font-bold text-amber-700 mb-2">Catatan Pembaruan <span class="text-amber-500">*</span></label>
-                        <textarea name="update_reason" rows="2" required placeholder="Wajib diisi untuk audit log..." class="apple-input w-full px-4 py-3.5 border border-amber-300 rounded-[10px] text-[13px] font-medium focus:ring-[4px] focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm bg-amber-50/70 resize-none text-slate-800"></textarea>
-                    </div>
-                    {% endif %}
-
-                </div>
-
-                <!-- Footer dengan Progress Bar -->
-                <div class="px-8 py-5 bg-white border-t border-slate-200/80 flex flex-col sm:flex-row justify-between items-center gap-6">
-                    
-                    <div class="flex-1 w-full max-w-[240px]">
-                        <div class="flex justify-between items-end mb-1.5">
-                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kelengkapan</span>
-                            <span id="progress-text" class="text-[12px] font-bold text-[#0891B2]">1/11</span>
+                        <!-- Storage -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Penyimpanan</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">SSD NVMe 512 GB</p>
+                            <div class="relative field-wrap textarea-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
+                                </span>
+                                <textarea name="storage_spec" rows="2" autocomplete="off" spellcheck="false"
+                                          data-diagram="storage"
+                                          class="sync-input hw-input spec-input pl-10 pr-3 py-2.5 h-[56px] w-full bg-white border border-slate-200 rounded-[9px] shadow-sm resize-none thin-scroll leading-snug">{{ component.storage_spec or '' }}</textarea>
+                            </div>
                         </div>
-                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div id="progress-fill" class="bg-[#0891B2] h-full rounded-full progress-bar-fill w-[9%]"></div>
-                        </div>
-                    </div>
 
-                    <div class="flex items-center gap-3 w-full sm:w-auto">
-                        <button type="button" onclick="closeModal()" class="w-full sm:w-auto px-6 h-[44px] text-[13px] font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-[10px] hover:bg-slate-50 transition-colors shadow-sm">
+                        <!-- Mainboard -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Mainboard</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">MSI B760M Bomber</p>
+                            <div class="relative field-wrap textarea-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M14 9V5M10 9V5M14 19v-4M10 19v-4M5 14H9M5 10H9M19 14h-4M19 10h-4"/><circle cx="12" cy="12" r="2"/></svg>
+                                </span>
+                                <textarea name="mainboard_spec" rows="2" autocomplete="off" spellcheck="false"
+                                          data-diagram="mobo"
+                                          class="sync-input hw-input spec-input pl-10 pr-3 py-2.5 h-[56px] w-full bg-white border border-slate-200 rounded-[9px] shadow-sm resize-none thin-scroll leading-snug">{{ component.mainboard_spec or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- ─── GRAFIS & TAMPILAN ─── -->
+                        <div class="lg:col-span-3 mt-4 mb-1">
+                            <div class="section-eyebrow">Grafis &amp; Tampilan</div>
+                            <div class="circuit-separator"></div>
+                        </div>
+
+                        <!-- VGA -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Kartu Grafis (VGA)</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">NVIDIA RTX 3060 12GB</p>
+                            <div class="relative field-wrap textarea-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                                </span>
+                                <textarea name="vga_spec" rows="2" autocomplete="off" spellcheck="false"
+                                          data-diagram="gpu"
+                                          class="sync-input hw-input spec-input pl-10 pr-3 py-2.5 h-[56px] w-full bg-white border border-slate-200 rounded-[9px] shadow-sm resize-none thin-scroll leading-snug">{{ component.vga_spec or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Monitor -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Monitor</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">LG 24MP400 24 Inch</p>
+                            <div class="relative field-wrap textarea-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                </span>
+                                <textarea name="monitor" rows="2" autocomplete="off" spellcheck="false"
+                                          data-diagram="monitor"
+                                          class="sync-input hw-input spec-input pl-10 pr-3 py-2.5 h-[56px] w-full bg-white border border-slate-200 rounded-[9px] shadow-sm resize-none thin-scroll leading-snug">{{ component.monitor or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Spacer column -->
+                        <div class="hidden lg:block"></div>
+
+                        <!-- ─── SISTEM & PERIFERAL ─── -->
+                        <div class="lg:col-span-3 mt-4 mb-1">
+                            <div class="section-eyebrow">Sistem &amp; Periferal</div>
+                            <div class="circuit-separator"></div>
+                        </div>
+
+                        <!-- OS (full-width) -->
+                        <div class="lg:col-span-3">
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Sistem Operasi</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">Windows 11 Pro 64-bit Build 22621</p>
+                            <div class="relative field-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                </span>
+                                <input type="text" name="os_name" autocomplete="off"
+                                       value="{{ component.os_name or '' }}"
+                                       data-diagram="os"
+                                       placeholder="Windows 11 Pro 64-bit Build 22621"
+                                       class="sync-input hw-input spec-input w-full h-[42px] pl-10 pr-3 bg-white border border-slate-200 rounded-[9px] text-slate-800 shadow-sm">
+                            </div>
+                        </div>
+
+                        <!-- Keyboard -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Keyboard</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">Logitech K120</p>
+                            <div class="relative field-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"/></svg>
+                                </span>
+                                <input type="text" name="keyboard" autocomplete="off"
+                                       value="{{ component.keyboard or '' }}"
+                                       data-diagram="keyboard"
+                                       placeholder="Logitech K120"
+                                       class="sync-input hw-input spec-input w-full h-[42px] pl-10 pr-3 bg-white border border-slate-200 rounded-[9px] text-slate-800 shadow-sm">
+                            </div>
+                        </div>
+
+                        <!-- Mouse -->
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wide">Mouse</label>
+                            <p class="text-[10px] text-slate-400 mb-1.5 font-mono">Logitech B100</p>
+                            <div class="relative field-wrap">
+                                <span class="field-icon-chip">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 2v8"/></svg>
+                                </span>
+                                <input type="text" name="mouse" autocomplete="off"
+                                       value="{{ component.mouse or '' }}"
+                                       data-diagram="mouse"
+                                       placeholder="Logitech B100"
+                                       class="sync-input hw-input spec-input w-full h-[42px] pl-10 pr-3 bg-white border border-slate-200 rounded-[9px] text-slate-800 shadow-sm">
+                            </div>
+                        </div>
+
+                        <!-- Update reason (edit only) -->
+                        {% if is_edit %}
+                        <div class="lg:col-span-3 mt-4 pt-4 border-t border-amber-200/60">
+                            <label class="block text-[11px] font-bold text-amber-700 mb-1 uppercase tracking-wide">
+                                Catatan Pembaruan <span class="text-amber-500">*</span>
+                            </label>
+                            <textarea name="update_reason" rows="2" required
+                                      placeholder="Wajib diisi untuk audit log..."
+                                      class="hw-input spec-input w-full px-3 py-2.5 h-[54px] border border-amber-300 rounded-[9px] text-[12.5px] bg-amber-50/60 resize-none text-slate-800 shadow-sm outline-none thin-scroll"></textarea>
+                        </div>
+                        {% endif %}
+
+                    </div><!-- /grid -->
+                </div><!-- /scrollable -->
+
+                <!-- ── Footer ── -->
+                <div class="shrink-0 px-8 py-4 bg-white/90 backdrop-blur border-t border-slate-200/70 flex items-center justify-between gap-4">
+                    <!-- Progress -->
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="w-[180px] shrink-0">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kelengkapan</span>
+                                <span id="progress-text" class="text-[11px] font-bold text-cyan-600 tabular-nums">1/11</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div id="progress-fill" class="bg-gradient-to-r from-cyan-500 to-sky-400 h-full rounded-full progress-bar-fill" style="width:9%"></div>
+                            </div>
+                        </div>
+                        <p id="progress-hint" class="text-[11px] text-slate-400 hidden sm:block truncate"></p>
+                    </div>
+                    <!-- Buttons -->
+                    <div class="flex items-center gap-3 shrink-0">
+                        <button type="button" onclick="closeFsModal()"
+                                class="px-5 h-[40px] text-[13px] font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-[9px] hover:bg-slate-50 transition-colors shadow-sm">
                             Batal
                         </button>
-                        <button type="submit" class="w-full sm:w-auto px-6 h-[44px] text-[13px] font-bold text-white bg-[#0891B2] hover:bg-[#0E7490] active:scale-[0.98] rounded-[10px] transition-all shadow-md flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <button type="submit"
+                                class="px-6 h-[40px] text-[13px] font-bold text-white bg-gradient-to-r from-cyan-600 to-sky-500 hover:from-cyan-700 hover:to-sky-600 active:scale-[0.98] rounded-[9px] transition-all shadow-md flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             {% if is_edit %}Simpan Perubahan{% else %}Simpan Spesifikasi{% endif %}
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
 
-    </div>
-</div>
+            </form>
+        </div><!-- /form panel -->
+
+        <!-- ════════ RIGHT: LIVE PC DIAGRAM ════════ -->
+        <div class="diagram-panel w-[300px] xl:w-[340px] shrink-0 flex flex-col border-l border-white/5">
+
+            <!-- Diagram header -->
+            <div class="px-6 pt-5 pb-3 border-b border-white/5 shrink-0">
+                <div class="flex items-center gap-2 mb-0.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Live PC Diagram</span>
+                </div>
+                <p class="text-[11.5px] text-slate-500">Komponen menyala saat field terisi</p>
+            </div>
+
+            <!-- SVG Tower Diagram -->
+            <div class="flex items-center justify-center px-4 py-4 shrink-0">
+                <svg id="pc-diagram" viewBox="0 0 220 320" fill="none"
+                     xmlns="http://www.w3.org/2000/svg"
+                     class="w-full max-w-[200px]">
+
+                    <!-- Tower casing outline -->
+                    <rect x="30" y="10" width="160" height="300" rx="10"
+                          stroke="#1E3A4A" stroke-width="1.5" fill="#0A1628"/>
+                    <!-- Casing top bar -->
+                    <rect x="30" y="10" width="160" height="18" rx="8"
+                          fill="#111E30" stroke="#1E3A4A" stroke-width="1"/>
+                    <!-- Power button -->
+                    <circle cx="175" cy="19" r="4" stroke="#1E3A4A" stroke-width="1" fill="#0D2030"/>
+                    <!-- Drive slot -->
+                    <rect x="42" y="36" width="76" height="8" rx="2"
+                          stroke="#1E3A4A" stroke-width="1" fill="#0D2030"/>
+
+                    <!-- ── MOTHERBOARD ── -->
+                    <rect id="diag-mobo" x="44" y="58" width="132" height="180" rx="5"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="44" y="58" width="132" height="180" rx="5"
+                          id="diag-mobo-fill" class="pc-part-fill"/>
+                    <text x="50" y="70" class="pc-label" id="diag-mobo-lbl">MAINBOARD</text>
+
+                    <!-- ── CPU ── -->
+                    <rect id="diag-cpu" x="56" y="78" width="48" height="48" rx="4"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="56" y="78" width="48" height="48" rx="4"
+                          id="diag-cpu-fill" class="pc-part-fill"/>
+                    <line x1="68" y1="78" x2="68" y2="126" stroke="#1E3A4A" stroke-width="0.5"/>
+                    <line x1="80" y1="78" x2="80" y2="126" stroke="#1E3A4A" stroke-width="0.5"/>
+                    <line x1="92" y1="78" x2="92" y2="126" stroke="#1E3A4A" stroke-width="0.5"/>
+                    <line x1="56" y1="90" x2="104" y2="90" stroke="#1E3A4A" stroke-width="0.5"/>
+                    <line x1="56" y1="102" x2="104" y2="102" stroke="#1E3A4A" stroke-width="0.5"/>
+                    <line x1="56" y1="114" x2="104" y2="114" stroke="#1E3A4A" stroke-width="0.5"/>
+                    <text x="68" y="106" class="pc-label" id="diag-cpu-lbl">CPU</text>
+
+                    <!-- ── RAM slots ── -->
+                    <rect id="diag-ram-1" x="116" y="78" width="12" height="56" rx="2"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="116" y="78" width="12" height="56" rx="2"
+                          id="diag-ram1-fill" class="pc-part-fill"/>
+                    <rect id="diag-ram-2" x="132" y="78" width="12" height="56" rx="2"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="132" y="78" width="12" height="56" rx="2"
+                          id="diag-ram2-fill" class="pc-part-fill"/>
+                    <text x="112" y="146" class="pc-label" id="diag-ram-lbl">RAM</text>
+
+                    <!-- ── GPU ── -->
+                    <rect id="diag-gpu" x="52" y="148" width="120" height="30" rx="4"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="52" y="148" width="120" height="30" rx="4"
+                          id="diag-gpu-fill" class="pc-part-fill"/>
+                    <circle cx="80" cy="163" r="9" stroke="#1E3A4A" stroke-width="0.8" fill="none"/>
+                    <circle cx="80" cy="163" r="3.5" stroke="#1E3A4A" stroke-width="0.8" fill="none"/>
+                    <circle cx="106" cy="163" r="9" stroke="#1E3A4A" stroke-width="0.8" fill="none"/>
+                    <circle cx="106" cy="163" r="3.5" stroke="#1E3A4A" stroke-width="0.8" fill="none"/>
+                    <text x="126" y="167" class="pc-label" id="diag-gpu-lbl">GPU</text>
+
+                    <!-- ── Storage (M.2) ── -->
+                    <rect id="diag-storage" x="56" y="190" width="56" height="13" rx="3"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="56" y="190" width="56" height="13" rx="3"
+                          id="diag-storage-fill" class="pc-part-fill"/>
+                    <text x="57" y="214" class="pc-label" id="diag-storage-lbl">STORAGE</text>
+
+                    <!-- ── OS chip ── -->
+                    <rect id="diag-os" x="122" y="190" width="44" height="13" rx="3"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="122" y="190" width="44" height="13" rx="3"
+                          id="diag-os-fill" class="pc-part-fill"/>
+                    <text x="125" y="214" class="pc-label" id="diag-os-lbl">OS</text>
+
+                    <!-- ── Peripherals ── -->
+                    <!-- Monitor -->
+                    <rect id="diag-monitor" x="36" y="250" width="56" height="34" rx="4"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="36" y="250" width="56" height="34" rx="4"
+                          id="diag-monitor-fill" class="pc-part-fill"/>
+                    <line x1="62" y1="284" x2="62" y2="294" stroke="#1E3A4A" stroke-width="1"/>
+                    <line x1="54" y1="294" x2="70" y2="294" stroke="#1E3A4A" stroke-width="1"/>
+                    <text x="38" y="302" class="pc-label" id="diag-monitor-lbl">MONITOR</text>
+
+                    <!-- Keyboard -->
+                    <rect id="diag-keyboard" x="102" y="254" width="50" height="20" rx="3"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="102" y="254" width="50" height="20" rx="3"
+                          id="diag-keyboard-fill" class="pc-part-fill"/>
+                    <line x1="106" y1="260" x2="148" y2="260" stroke="#1E3A4A" stroke-width="0.7"/>
+                    <line x1="106" y1="266" x2="148" y2="266" stroke="#1E3A4A" stroke-width="0.7"/>
+                    <text x="104" y="284" class="pc-label" id="diag-keyboard-lbl">KEYBOARD</text>
+
+                    <!-- Mouse -->
+                    <rect id="diag-mouse" x="160" y="248" width="24" height="34" rx="8"
+                          class="pc-part" stroke-width="1.5" fill="none"/>
+                    <rect x="160" y="248" width="24" height="34" rx="8"
+                          id="diag-mouse-fill" class="pc-part-fill"/>
+                    <line x1="172" y1="248" x2="172" y2="260" stroke="#1E3A4A" stroke-width="0.8"/>
+                    <text x="157" y="292" class="pc-label" id="diag-mouse-lbl">MOUSE</text>
+
+                </svg>
+            </div>
+
+            <!-- Summary cards -->
+            <div class="flex-1 min-h-0 px-5 pb-5 overflow-y-auto thin-scroll border-t border-white/5 pt-4">
+                <p class="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-3">Spec Summary</p>
+                <div id="summary-cards" class="space-y-2"></div>
+            </div>
+
+        </div><!-- /diagram panel -->
+
+    </div><!-- /inner shell -->
+</div><!-- /fs-overlay -->
 
 <script>
-    function closeModal() {
-        const backdrop = document.getElementById('modal-backdrop');
-        const modal = document.getElementById('modal-content');
-        backdrop.classList.add('animate-backdrop-exit');
-        modal.classList.add('animate-modal-exit');
-        setTimeout(() => backdrop.remove(), 250);
+/* ─── Close with exit animation ─── */
+function closeFsModal() {
+    const overlay = document.getElementById('fs-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('animate-fs-entry');
+    overlay.classList.add('animate-fs-exit');
+    setTimeout(() => overlay.remove(), 240);
+}
+
+/* ─── Diagram + Progress Engine ─── */
+(function() {
+    const FIELDS = [
+        { name: 'name',           diag: 'name',     label: 'Nama PC' },
+        { name: 'pc_type',        diag: null,        label: 'Peruntukan' },
+        { name: 'processor_spec', diag: 'cpu',       label: 'CPU' },
+        { name: 'ram_spec',       diag: 'ram',       label: 'RAM' },
+        { name: 'storage_spec',   diag: 'storage',   label: 'Storage' },
+        { name: 'mainboard_spec', diag: 'mobo',      label: 'Mainboard' },
+        { name: 'vga_spec',       diag: 'gpu',       label: 'GPU' },
+        { name: 'monitor',        diag: 'monitor',   label: 'Monitor' },
+        { name: 'os_name',        diag: 'os',        label: 'OS' },
+        { name: 'keyboard',       diag: 'keyboard',  label: 'Keyboard' },
+        { name: 'mouse',          diag: 'mouse',     label: 'Mouse' },
+    ];
+
+    /* SVG element IDs per diagram key */
+    const DIAG_IDS = {
+        name:     [],
+        cpu:      ['diag-cpu','diag-cpu-fill','diag-cpu-lbl'],
+        ram:      ['diag-ram-1','diag-ram-2','diag-ram1-fill','diag-ram2-fill','diag-ram-lbl'],
+        storage:  ['diag-storage','diag-storage-fill','diag-storage-lbl'],
+        mobo:     ['diag-mobo','diag-mobo-fill','diag-mobo-lbl'],
+        gpu:      ['diag-gpu','diag-gpu-fill','diag-gpu-lbl'],
+        monitor:  ['diag-monitor','diag-monitor-fill','diag-monitor-lbl'],
+        os:       ['diag-os','diag-os-fill','diag-os-lbl'],
+        keyboard: ['diag-keyboard','diag-keyboard-fill','diag-keyboard-lbl'],
+        mouse:    ['diag-mouse','diag-mouse-fill','diag-mouse-lbl'],
+    };
+
+    const form = document.getElementById('pc-form');
+    if (!form) return;
+
+    function getVal(fieldName) {
+        if (fieldName === 'pc_type') {
+            const checked = form.querySelector('[name="pc_type"]:checked');
+            return checked ? checked.value : '';
+        }
+        const el = form.querySelector(`[name="${fieldName}"]`);
+        return el ? el.value.trim() : '';
     }
 
-    (function initProgressTracker() {
-        const form = document.getElementById('pc-form');
-        if (!form) return;
-        
-        const inputs = form.querySelectorAll('.sync-input');
-        // Total field adalah 11 (10 text/textarea + 1 segmented radio yang pasti terisi)
-        const totalFields = 11; 
+    function lightParts(diagKey, on) {
+        const ids = DIAG_IDS[diagKey];
+        if (!ids) return;
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            on ? el.classList.add('lit') : el.classList.remove('lit');
+        });
+    }
 
-        window.updateProgress = function() {
-            let filled = 1; // Segmented radio 'Peruntukan' selalu ada value default
-            inputs.forEach(input => {
-                if (input.tagName !== 'INPUT' || input.type === 'radio') {
-                    if (input.value.trim() !== '') filled++;
-                } else if (input.type === 'text') {
-                    if (input.value.trim() !== '') filled++;
-                }
-            });
+    function updateSummary() {
+        const container = document.getElementById('summary-cards');
+        if (!container) return;
+        container.innerHTML = '';
+        FIELDS.forEach(f => {
+            const v = getVal(f.name);
+            if (!v) return;
+            const row = document.createElement('div');
+            row.className = 'flex items-start gap-2';
+            row.innerHTML = `
+                <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wide w-[60px] shrink-0 pt-0.5 leading-tight">${f.label}</span>
+                <span class="text-[10.5px] font-medium text-cyan-300 break-all leading-snug" style="font-family:'JetBrains Mono',monospace;letter-spacing:-0.01em">${v}</span>
+            `;
+            container.appendChild(row);
+        });
+    }
 
-            const pct = Math.round((filled / totalFields) * 100) || 0;
-            const fillEl = document.getElementById('progress-fill');
-            const textEl = document.getElementById('progress-text');
-            
-            if(fillEl) fillEl.style.width = pct + '%';
-            if(textEl) textEl.textContent = `${filled}/${totalFields}`;
-        };
+    function refresh() {
+        let filled = 0;
+        let nextEmpty = null;
 
-        inputs.forEach(input => {
-            input.addEventListener('input', window.updateProgress);
-            input.addEventListener('change', window.updateProgress);
+        FIELDS.forEach(f => {
+            const v = getVal(f.name);
+            const isFilled = v.length > 0;
+            if (isFilled) filled++;
+            else if (!nextEmpty) nextEmpty = f.label;
+
+            if (f.diag) lightParts(f.diag, isFilled);
         });
 
-        window.updateProgress();
-    })();
+        const total = FIELDS.length;
+        const pct   = Math.round((filled / total) * 100);
+
+        const fillEl = document.getElementById('progress-fill');
+        const textEl = document.getElementById('progress-text');
+        const hintEl = document.getElementById('progress-hint');
+
+        if (fillEl) fillEl.style.width = pct + '%';
+        if (textEl) textEl.textContent  = `${filled}/${total}`;
+        if (hintEl) {
+            if (nextEmpty) {
+                hintEl.textContent  = `Berikutnya: ${nextEmpty}`;
+                hintEl.className    = 'text-[11px] text-slate-400 hidden sm:block truncate';
+            } else {
+                hintEl.textContent  = '✓ Semua field terisi';
+                hintEl.className    = 'text-[11px] text-emerald-400 hidden sm:block truncate font-semibold';
+            }
+        }
+
+        updateSummary();
+    }
+
+    /* Attach listeners */
+    form.querySelectorAll('input, textarea, select').forEach(el => {
+        el.addEventListener('input',  refresh);
+        el.addEventListener('change', refresh);
+    });
+
+    /* Initial render */
+    refresh();
+})();
 </script>
