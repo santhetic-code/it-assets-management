@@ -2,84 +2,112 @@
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
     
     .modal-font { 
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
     }
     
-    /* Apple-like Hover & Focus Ring */
+    .section-eyebrow {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #94A3B8;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-eyebrow::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #F1F5F9;
+    }
+
+    .field-icon-chip {
+        position: absolute;
+        left: 12px;
+        top: 12px;
+        width: 24px; 
+        height: 24px;
+        border-radius: 6px;
+        background: rgba(8,145,178,0.08);
+        color: #0891B2;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        pointer-events: none;
+        z-index: 10;
+        transition: all 0.2s ease;
+    }
+
     .apple-input {
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         transform-origin: center;
-        outline: none !important; /* Fix brutal untuk menghilangkan border hitam bawaan browser */
+        outline: none !important; 
     }
-    
     .apple-input:hover {
-        transform: scale(1.02);
-        box-shadow: 0 8px 24px rgba(8, 145, 178, 0.12); 
-        border-color: #0891B2;
+        transform: scale(1.015);
+        box-shadow: 0 6px 20px rgba(8, 145, 178, 0.08); 
+        border-color: #cbd5e1;
     }
-    
     .apple-input:focus { 
-        box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.2) !important; 
+        box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.15) !important; 
         border-color: #0891B2 !important; 
         background-color: #ffffff;
-        transform: scale(1.02);
+        transform: scale(1.015);
+    }
+    .apple-input:focus + .field-icon-chip {
+        background: #0891B2;
+        color: #ffffff;
     }
     
-    /* Entry Animations */
+    .progress-bar-fill {
+        transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
     @keyframes modalEntry { 
-        from { opacity: 0; transform: scale(0.95) translateY(15px); } 
+        from { opacity: 0; transform: scale(0.96) translateY(10px); } 
         to { opacity: 1; transform: scale(1) translateY(0); } 
     }
     @keyframes backdropEntry {
         from { opacity: 0; } to { opacity: 1; }
     }
-
-    /* Exit Animations */
     @keyframes modalExit { 
         from { opacity: 1; transform: scale(1) translateY(0); } 
-        to { opacity: 0; transform: scale(0.95) translateY(15px); } 
+        to { opacity: 0; transform: scale(0.96) translateY(10px); } 
     }
     @keyframes backdropExit {
         from { opacity: 1; } to { opacity: 0; }
     }
-
-    .animate-modal-exit {
-        animation: modalExit 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.9) forwards !important;
-    }
-    .animate-backdrop-exit {
-        animation: backdropExit 0.3s ease-out forwards !important;
-    }
+    .animate-modal-exit { animation: modalExit 0.25s cubic-bezier(0.1, 0.76, 0.55, 0.9) forwards !important; }
+    .animate-backdrop-exit { animation: backdropExit 0.25s ease-out forwards !important; }
 </style>
 
-<div id="modal-backdrop" class="modal-font fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 animate-[backdropEntry_0.3s_ease-out_forwards]">
-    <!-- Modal Container: Diperlebar ke max-w-4xl agar sangat lega untuk data panjang -->
-    <div id="modal-content" class="bg-white rounded-[28px] shadow-2xl ring-1 ring-slate-900/10 w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden animate-[modalEntry_0.4s_cubic-bezier(0.1,0.76,0.55,0.9)_forwards] relative">
+<div id="modal-backdrop" class="modal-font fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 animate-[backdropEntry_0.3s_ease-out_forwards]">
+    
+    <div id="modal-content" class="bg-white rounded-[24px] shadow-2xl ring-1 ring-slate-900/10 w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden animate-[modalEntry_0.4s_cubic-bezier(0.1,0.76,0.55,0.9)_forwards] relative">
 
-        <!-- PANEL TUNGGAL: FORMULIR -->
-        <div class="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-cyan-50/60 to-cyan-200/40 relative">
+        <div class="flex-1 flex flex-col min-w-0 bg-[#FAFAFA] relative">
             
             <!-- Header -->
-            <div class="px-8 pt-8 pb-5 flex justify-between items-start shrink-0">
+            <div class="px-8 pt-8 pb-6 flex justify-between items-start shrink-0 bg-white border-b border-slate-100">
                 <div class="flex items-center gap-5">
-                    <div class="w-14 h-14 rounded-[16px] bg-white text-cyan-600 flex items-center justify-center shrink-0 shadow-sm border border-cyan-100/50">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="3"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                    <div class="w-12 h-12 rounded-[12px] bg-[#E6F7F8] text-[#0891B2] flex items-center justify-center shrink-0 border border-cyan-100/50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
                     </div>
                     <div>
-                        <h2 class="text-[24px] font-bold text-slate-800 tracking-tight leading-tight flex items-center gap-3">
+                        <h2 class="text-[20px] font-bold text-slate-800 tracking-tight leading-tight flex items-center gap-3">
                             {% if is_edit %}Edit Spesifikasi PC{% else %}Registrasi PC Baru{% endif %}
-                            {% if is_edit %}
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">Edit Mode</span>
-                            {% endif %}
                         </h2>
-                        <p class="text-[14px] text-slate-500 mt-1.5 font-medium">Lengkapi parameter teknis aset di bawah ini.</p>
+                        <p class="text-[13px] text-slate-500 mt-1 font-medium">Standardisasi parameter teknis aset IT.</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-700 hover:bg-white/60 p-2.5 rounded-full transition-colors z-50">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors z-50">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
-            <!-- Body Form -->
+            <!-- Form -->
             <form id="pc-form"
                   hx-post="{% if is_edit %}/ui/components/{{ component.id }}/update{% else %}/ui/components/create{% endif %}"
                   hx-target="#table-container"
@@ -87,131 +115,162 @@
                   hx-on::after-request="if(event.detail.successful) closeModal();"
                   class="flex-1 flex flex-col overflow-hidden">
 
-                <div class="flex-1 overflow-y-auto px-8 pb-8 space-y-6 custom-scrollbar">
+                <div class="flex-1 overflow-y-auto px-8 py-8 space-y-10 custom-scrollbar">
                     
-                    <!-- Section 1: Identitas -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div class="sm:col-span-1">
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Nama PC / Identifier <span class="text-red-500">*</span></label>
-                            <input type="text" name="name" required autocomplete="off" value="{{ component.name or '' }}" class="apple-input w-full px-4 h-[48px] bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm">
-                        </div>
-                        <div class="sm:col-span-1">
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Peruntukan <span class="text-red-500">*</span></label>
-                            <select name="pc_type" required class="apple-input w-full px-4 h-[48px] bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 cursor-pointer appearance-none shadow-sm">
-                                <option value="Operasional" {% if component and component.pc_type == 'Operasional' %}selected{% endif %}>Operasional</option>
-                                <option value="Server" {% if component and component.pc_type == 'Server' %}selected{% endif %}>Server</option>
-                                <option value="Backup" {% if component and component.pc_type == 'Backup' %}selected{% endif %}>Backup</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Divider -->
-                    <div class="h-px w-full bg-slate-200/50"></div>
-
-                    <!-- Section 2: Komponen Inti (Menggunakan Textarea agar teks wrap otomatis) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <!-- CPU -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Processor (CPU)</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>
-                                <textarea name="processor_spec" rows="2" autocomplete="off" spellcheck="false" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.processor_spec or '' }}</textarea>
+                    <!-- INFORMASI DASAR -->
+                    <div>
+                        <div class="section-eyebrow">Informasi Dasar</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-2">Nama PC / Identifier <span class="text-red-500">*</span></label>
+                                <input type="text" name="name" required autocomplete="off" value="{{ component.name or '' }}" class="sync-input apple-input w-full px-4 h-[48px] bg-white border border-slate-200 rounded-[10px] text-[14px] font-medium text-slate-800 shadow-sm">
                             </div>
-                        </div>
-                        <!-- RAM -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Memori (RAM)</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M6 12v4M10 12v4M14 12v4M18 12v4"/></svg>
-                                <textarea name="ram_spec" rows="2" autocomplete="off" spellcheck="false" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.ram_spec or '' }}</textarea>
-                            </div>
-                        </div>
-                        <!-- Storage -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Penyimpanan</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
-                                <textarea name="storage_spec" rows="2" autocomplete="off" spellcheck="false" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.storage_spec or '' }}</textarea>
-                            </div>
-                        </div>
-                        <!-- Mainboard -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Mainboard</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M14 9V5M10 9V5M14 19v-4M10 19v-4M5 14H9M5 10H9M19 14h-4M19 10h-4"/><circle cx="12" cy="12" r="2"/></svg>
-                                <textarea name="mainboard_spec" rows="2" autocomplete="off" spellcheck="false" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.mainboard_spec or '' }}</textarea>
-                            </div>
-                        </div>
-                        <!-- VGA -->
-                        <div class="sm:col-span-2">
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Kartu Grafis (VGA)</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                                <textarea name="vga_spec" rows="2" autocomplete="off" spellcheck="false" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.vga_spec or '' }}</textarea>
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-2">Peruntukan <span class="text-red-500">*</span></label>
+                                <!-- Segmented Pill -->
+                                <div class="flex p-1 bg-slate-100/80 border border-slate-200/60 rounded-[12px]">
+                                    <label class="flex-1 text-center cursor-pointer relative">
+                                        <input type="radio" name="pc_type" value="Operasional" class="peer sr-only" {% if not component or component.pc_type == 'Operasional' %}checked{% endif %}>
+                                        <div class="py-2.5 text-[13px] font-bold text-slate-500 peer-checked:text-cyan-700 peer-checked:bg-white peer-checked:shadow-sm rounded-[8px] transition-all">Operasional</div>
+                                    </label>
+                                    <label class="flex-1 text-center cursor-pointer relative">
+                                        <input type="radio" name="pc_type" value="Server" class="peer sr-only" {% if component and component.pc_type == 'Server' %}checked{% endif %}>
+                                        <div class="py-2.5 text-[13px] font-bold text-slate-500 peer-checked:text-cyan-700 peer-checked:bg-white peer-checked:shadow-sm rounded-[8px] transition-all">Server</div>
+                                    </label>
+                                    <label class="flex-1 text-center cursor-pointer relative">
+                                        <input type="radio" name="pc_type" value="Backup" class="peer sr-only" {% if component and component.pc_type == 'Backup' %}checked{% endif %}>
+                                        <div class="py-2.5 text-[13px] font-bold text-slate-500 peer-checked:text-cyan-700 peer-checked:bg-white peer-checked:shadow-sm rounded-[8px] transition-all">Backup</div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Divider -->
-                    <div class="h-px w-full bg-slate-200/50"></div>
-
-                    <!-- Section 3: Layar & OS -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Monitor</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                                <textarea name="monitor" rows="2" autocomplete="off" spellcheck="false" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.monitor or '' }}</textarea>
+                    <!-- SPESIFIKASI INTI -->
+                    <div>
+                        <div class="section-eyebrow">Spesifikasi Inti</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Processor (CPU)</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Intel Core i5-12400F</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="processor_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.processor_spec or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg></div>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Sistem Operasi</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                                <textarea name="os_name" rows="2" autocomplete="off" spellcheck="false" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.os_name or '' }}</textarea>
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Memori (RAM)</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: 16 GB DDR4 3200 MHz</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="ram_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.ram_spec or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M6 12v4M10 12v4M14 12v4M18 12v4"/></svg></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Penyimpanan</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: SSD NVMe 512 GB</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="storage_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.storage_spec or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Mainboard</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: MSI B760M Bomber</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="mainboard_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.mainboard_spec or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M14 9V5M10 9V5M14 19v-4M10 19v-4M5 14H9M5 10H9M19 14h-4M19 10h-4"/><circle cx="12" cy="12" r="2"/></svg></div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Divider -->
-                    <div class="h-px w-full bg-slate-200/50"></div>
-
-                    <!-- Section 4: Periferal Input -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Keyboard</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"/></svg>
-                                <textarea name="keyboard" rows="2" autocomplete="off" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.keyboard or '' }}</textarea>
+                    <!-- GRAFIS & TAMPILAN -->
+                    <div>
+                        <div class="section-eyebrow">Grafis & Tampilan</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Kartu Grafis (VGA)</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: NVIDIA RTX 3060 12GB</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="vga_spec" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.vga_spec or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Monitor</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: LG 24MP400 24 Inch</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="monitor" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.monitor or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-600 mb-2">Mouse</label>
-                            <div class="relative">
-                                <svg class="w-4 h-4 absolute left-4 top-[15px] text-slate-400 z-10 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 2v8"/></svg>
-                                <textarea name="mouse" rows="2" autocomplete="off" class="apple-input pl-11 pr-4 py-3 h-[64px] w-full bg-white border border-slate-200/80 rounded-[12px] text-[14px] font-medium text-slate-800 shadow-sm relative resize-none custom-scrollbar leading-snug">{{ component.mouse or '' }}</textarea>
+                    </div>
+
+                    <!-- SISTEM & PERIFERAL -->
+                    <div>
+                        <div class="section-eyebrow">Sistem & Periferal</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <!-- OS sering panjang (Build, Architecture), full-width lebih aman secara tipografi -->
+                            <div class="sm:col-span-2">
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Sistem Operasi</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Windows 11 Pro 64-bit Build 22621</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="os_name" rows="2" autocomplete="off" spellcheck="false" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.os_name or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Keyboard</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Logitech K120</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="keyboard" rows="2" autocomplete="off" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.keyboard or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"/></svg></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[13px] font-semibold text-slate-700 mb-1">Mouse</label>
+                                <p class="text-[11px] text-slate-400 mb-2">Contoh: Logitech B100</p>
+                                <div class="relative flex flex-col-reverse">
+                                    <textarea name="mouse" rows="2" autocomplete="off" class="sync-input apple-input pl-12 pr-4 py-3.5 h-[64px] w-full bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-800 shadow-sm resize-none custom-scrollbar leading-snug">{{ component.mouse or '' }}</textarea>
+                                    <div class="field-icon-chip"><svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 2v8"/></svg></div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {% if is_edit %}
-                    <div class="mt-8">
-                        <label class="block text-[13px] font-bold text-amber-700 mb-2">Alasan Pembaruan <span class="text-amber-500">*</span></label>
-                        <textarea name="update_reason" rows="2" required class="apple-input w-full px-5 py-3.5 border border-amber-300 rounded-[12px] text-[14px] font-medium outline-none shadow-sm bg-amber-50/70 resize-none text-slate-800"></textarea>
+                    <div class="mt-8 pt-6 border-t border-slate-200/60">
+                        <label class="block text-[13px] font-bold text-amber-700 mb-2">Catatan Pembaruan <span class="text-amber-500">*</span></label>
+                        <textarea name="update_reason" rows="2" required placeholder="Wajib diisi untuk audit log..." class="apple-input w-full px-4 py-3.5 border border-amber-300 rounded-[10px] text-[13px] font-medium focus:ring-[4px] focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm bg-amber-50/70 resize-none text-slate-800"></textarea>
                     </div>
                     {% endif %}
 
                 </div>
 
-                <!-- Footer / Actions -->
-                <div class="px-8 py-5 bg-white/70 backdrop-blur-xl border-t border-slate-200/60 flex flex-col sm:flex-row justify-end items-center gap-4">
-                    <button type="button" onclick="closeModal()" class="w-full sm:w-auto px-8 h-[48px] text-[14px] font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-[14px] hover:bg-slate-50 transition-colors shadow-sm">
-                        Batal
-                    </button>
-                    <button type="submit" class="w-full sm:w-auto px-8 h-[48px] text-[14px] font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.98] rounded-[14px] transition-all shadow-md flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        {% if is_edit %}Simpan Perubahan{% else %}Simpan Spesifikasi{% endif %}
-                    </button>
+                <!-- Footer dengan Progress Bar -->
+                <div class="px-8 py-5 bg-white border-t border-slate-200/80 flex flex-col sm:flex-row justify-between items-center gap-6">
+                    
+                    <div class="flex-1 w-full max-w-[240px]">
+                        <div class="flex justify-between items-end mb-1.5">
+                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kelengkapan</span>
+                            <span id="progress-text" class="text-[12px] font-bold text-[#0891B2]">1/11</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div id="progress-fill" class="bg-[#0891B2] h-full rounded-full progress-bar-fill w-[9%]"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button type="button" onclick="closeModal()" class="w-full sm:w-auto px-6 h-[44px] text-[13px] font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-[10px] hover:bg-slate-50 transition-colors shadow-sm">
+                            Batal
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-6 h-[44px] text-[13px] font-bold text-white bg-[#0891B2] hover:bg-[#0E7490] active:scale-[0.98] rounded-[10px] transition-all shadow-md flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            {% if is_edit %}Simpan Perubahan{% else %}Simpan Spesifikasi{% endif %}
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -220,16 +279,45 @@
 </div>
 
 <script>
-    // Fungsi untuk animasi exit modal
     function closeModal() {
         const backdrop = document.getElementById('modal-backdrop');
         const modal = document.getElementById('modal-content');
-        
         backdrop.classList.add('animate-backdrop-exit');
         modal.classList.add('animate-modal-exit');
-        
-        setTimeout(() => {
-            backdrop.remove();
-        }, 300);
+        setTimeout(() => backdrop.remove(), 250);
     }
+
+    (function initProgressTracker() {
+        const form = document.getElementById('pc-form');
+        if (!form) return;
+        
+        const inputs = form.querySelectorAll('.sync-input');
+        // Total field adalah 11 (10 text/textarea + 1 segmented radio yang pasti terisi)
+        const totalFields = 11; 
+
+        window.updateProgress = function() {
+            let filled = 1; // Segmented radio 'Peruntukan' selalu ada value default
+            inputs.forEach(input => {
+                if (input.tagName !== 'INPUT' || input.type === 'radio') {
+                    if (input.value.trim() !== '') filled++;
+                } else if (input.type === 'text') {
+                    if (input.value.trim() !== '') filled++;
+                }
+            });
+
+            const pct = Math.round((filled / totalFields) * 100) || 0;
+            const fillEl = document.getElementById('progress-fill');
+            const textEl = document.getElementById('progress-text');
+            
+            if(fillEl) fillEl.style.width = pct + '%';
+            if(textEl) textEl.textContent = `${filled}/${totalFields}`;
+        };
+
+        inputs.forEach(input => {
+            input.addEventListener('input', window.updateProgress);
+            input.addEventListener('change', window.updateProgress);
+        });
+
+        window.updateProgress();
+    })();
 </script>
