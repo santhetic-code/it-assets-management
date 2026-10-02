@@ -254,7 +254,7 @@ def create_component_action(
         context={"components": components, "current_user": current_user}
     )
     
-    toast_payload = {"title": "Berhasil Didaftarkan", "message": f"PC '{new_comp.name}' disimpan.", "type": "success"}
+    toast_payload = {"title": "Berhasil Didaftarkan", "message": f"Spesifikasi PC '{new_comp.name}' berhasil disimpan.", "type": "success"}
     response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload, "refreshKPIs": True})
     return response
 
@@ -310,7 +310,7 @@ def update_component_action(
         context={"components": components, "current_user": current_user}
     )
     
-    toast_payload = {"title": "Perubahan Tersimpan", "message": f"PC '{updated_comp.name}' diperbarui.", "type": "success"}
+    toast_payload = {"title": "Perubahan Tersimpan", "message": f"Spesifikasi PC '{updated_comp.name}' berhasil diperbarui.", "type": "success"}
     response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload, "refreshKPIs": True})
     return response
 
