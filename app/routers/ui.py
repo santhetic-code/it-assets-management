@@ -17,6 +17,24 @@ from app.services import asset_service, component_service
 router = APIRouter(prefix="/ui", tags=["UI HTMX"])
 templates = Jinja2Templates(directory="views")
 
+import re
+
+def parse_spec_parts(value: Optional[str]) -> tuple:
+    """Pemisah nilai utama dan sub-spesifikasi dengan fallback aman tanpa regex crash."""
+    if not value or not str(value).strip():
+        return ("-", "")
+    val = str(value).strip()
+    m = re.match(r"^(\d+\s*(?:GB|TB|MB|GHz|MHz|Core|W))\s*[-–—/]?\s*(.*)$", val, re.IGNORECASE)
+    if m:
+        return (m.group(1).strip(), m.group(2).strip())
+    for sep in [" - ", " / ", " | "]:
+        if sep in val:
+            parts = val.split(sep, 1)
+            return (parts[0].strip(), parts[1].strip())
+    return (val, "")
+
+templates.env.filters["parse_spec"] = parse_spec_parts
+
 
 def render_template(request: Request, name: str, context: Optional[dict] = None) -> Response:
     """Helper Jinja2 render untuk fragmen DOM HTMX dengan perlindungan CSRF."""
@@ -48,23 +66,29 @@ def _norm(val: Optional[str]) -> Optional[str]:
 # 1. Endpoint untuk memuat kerangka Modul & Stats Cards
 @router.get("/components", response_class=HTMLResponse)
 async def load_components_module(request: Request, db: Session = Depends(get_db)):
-    # Hitung statistik langsung dari database (hanya yang belum dihapus)
-    base_query = db.query(Component).filter(Component.is_deleted == False)
-    
-    total_all = base_query.count()
-    total_operasional = base_query.filter(Component.pc_type == "Operasional").count()
-    total_server = base_query.filter(Component.pc_type == "Server").count()
-    total_backup = base_query.filter(Component.pc_type == "Backup").count()
+    stats = component_service.get_component_stats(db)
+    recent_activities = component_service.get_recent_activities(db, limit=5)
+    needs_attention = component_service.get_components_needing_attention(db, limit=5)
 
     return render_template(
         request=request,
         name="partials/components.html", 
         context={
-            "total_all": total_all,
-            "total_operasional": total_operasional,
-            "total_server": total_server,
-            "total_backup": total_backup,
+            **stats,
+            "recent_activities": recent_activities,
+            "needs_attention": needs_attention,
         }
+    )
+
+
+# Endpoint untuk memperbarui kartu KPI secara reaktif (HTMX trigger refreshKPIs)
+@router.get("/components/kpis", response_class=HTMLResponse)
+async def load_components_kpis(request: Request, db: Session = Depends(get_db)):
+    stats = component_service.get_component_stats(db)
+    return render_template(
+        request=request,
+        name="partials/components_kpis.html",
+        context=stats,
     )
 
 
@@ -81,7 +105,7 @@ async def load_components_table(
     query = db.query(Component).filter(Component.is_deleted == False)
     
     selected_type = type_filter or type or category
-    if selected_type and selected_type.strip() and selected_type.strip() != "Semua Kategori":
+    if selected_type and selected_type.strip() and selected_type.strip() not in ["All", "Semua", "Semua Kategori"]:
         query = query.filter(Component.pc_type == selected_type.strip())
     if search and search.strip():
         term = f"%{search.strip()}%"
@@ -93,6 +117,10 @@ async def load_components_table(
                 Component.storage_spec.ilike(term),
                 Component.mainboard_spec.ilike(term),
                 Component.pc_type.ilike(term),
+                Component.os_name.ilike(term),
+                Component.monitor.ilike(term),
+                Component.keyboard.ilike(term),
+                Component.mouse.ilike(term),
             )
         )
         
@@ -102,6 +130,29 @@ async def load_components_table(
         request=request,
         name="partials/components_table.html", 
         context={"components": components}
+    )
+
+
+# Endpoint untuk slide-out side panel inspection
+@router.get("/components/{component_id}/side-panel", response_class=HTMLResponse)
+async def get_component_side_panel(
+    request: Request,
+    component_id: int,
+    db: DbSession,
+    current_user: CurrentUser,
+):
+    comp = component_service.get_component(db, component_id)
+    if not comp:
+        raise HTTPException(status_code=404, detail="Spesifikasi PC tidak ditemukan")
+    history = component_service.get_component_history(db, component_id)
+    return render_template(
+        request=request,
+        name="partials/component_side_panel.html",
+        context={
+            "comp": comp,
+            "history": history,
+            "current_user": current_user,
+        },
     )
 
 
@@ -194,22 +245,17 @@ def create_component_action(
     )
     new_comp = component_service.create_component(db, component_in, current_user_id=current_user.id)
 
-    # Render ulang tabel komponen ke #table-container
-    components = component_service.get_components_filtered(db)
+    # PERBAIKAN: Gunakan query ORM langsung, hindari pemanggilan method yang tidak konsisten
+    components = db.query(Component).filter(Component.is_deleted == False).order_by(Component.id.desc()).all()
+    
     response = render_template(
-        request=request,
-        name="partials/components_table.html",
-        context={
-            "components": components,
-            "current_user": current_user,
-        },
+        request=request, 
+        name="partials/components_table.html", 
+        context={"components": components, "current_user": current_user}
     )
-    toast_payload = {
-        "title": "Berhasil Didaftarkan",
-        "message": f"Spesifikasi PC '{new_comp.name}' berhasil disimpan.",
-        "type": "success",
-    }
-    response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload})
+    
+    toast_payload = {"title": "Berhasil Didaftarkan", "message": f"PC '{new_comp.name}' disimpan.", "type": "success"}
+    response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload, "refreshKPIs": True})
     return response
 
 
@@ -251,28 +297,21 @@ def update_component_action(
         casing=_norm(casing),
         update_reason=_norm(update_reason) or "Update spesifikasi rutin",
     )
-    updated_comp = component_service.update_component(
-        db, component_id=component_id, component_data=component_update, current_user_id=current_user.id
-    )
+    updated_comp = component_service.update_component(db, component_id=component_id, component_data=component_update, current_user_id=current_user.id)
     if not updated_comp:
         raise HTTPException(status_code=404, detail="Spesifikasi PC tidak ditemukan")
 
-    # Render ulang tabel komponen ke #table-container
-    components = component_service.get_components_filtered(db)
+    # PERBAIKAN: Gunakan query ORM langsung
+    components = db.query(Component).filter(Component.is_deleted == False).order_by(Component.id.desc()).all()
+    
     response = render_template(
-        request=request,
-        name="partials/components_table.html",
-        context={
-            "components": components,
-            "current_user": current_user,
-        },
+        request=request, 
+        name="partials/components_table.html", 
+        context={"components": components, "current_user": current_user}
     )
-    toast_payload = {
-        "title": "Perubahan Tersimpan",
-        "message": f"Spesifikasi PC '{updated_comp.name}' berhasil diperbarui.",
-        "type": "success",
-    }
-    response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload})
+    
+    toast_payload = {"title": "Perubahan Tersimpan", "message": f"PC '{updated_comp.name}' diperbarui.", "type": "success"}
+    response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload, "refreshKPIs": True})
     return response
 
 
@@ -288,15 +327,14 @@ def delete_component_action(
     if not deleted_comp:
         raise HTTPException(status_code=404, detail="Spesifikasi PC tidak ditemukan")
 
-    components = component_service.get_components(db)
-    stats = component_service.get_component_stats(db)
+    # PERBAIKAN: Gunakan query ORM langsung
+    components = db.query(Component).filter(Component.is_deleted == False).order_by(Component.id.desc()).all()
     response = render_template(
         request=request,
-        name="partials/components.html",
+        name="partials/components_table.html",
         context={
             "components": components,
             "current_user": current_user,
-            **stats,  # total_all, total_operasional, total_server, total_backup
         },
     )
     toast_payload = {
@@ -304,7 +342,7 @@ def delete_component_action(
         "message": f"Spesifikasi PC '{deleted_comp.name}' berhasil dinonaktifkan.",
         "type": "warning",
     }
-    response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload})
+    response.headers["HX-Trigger"] = json.dumps({"showToast": toast_payload, "refreshKPIs": True})
     return response
 
 

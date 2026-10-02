@@ -281,6 +281,43 @@ def soft_delete_component(db: Session, component_id: int, user_id: int | None = 
     return delete_component(db, component_id, current_user_id=user_id)
 
 
+def get_recent_activities(db: Session, limit: int = 5):
+    """Mengambil riwayat aktivitas perubahan komponen terbaru untuk dashboard widget."""
+    return (
+        db.query(ComponentHistory)
+        .options(
+            joinedload(ComponentHistory.user),
+            joinedload(ComponentHistory.component),
+        )
+        .order_by(ComponentHistory.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def get_components_needing_attention(db: Session, limit: int = 5):
+    """Mengidentifikasi unit PC yang membutuhkan perhatian (spesifikasi kosong, tidak ada aset, dll)."""
+    return (
+        db.query(Component)
+        .options(joinedload(Component.asset))
+        .filter(
+            Component.is_deleted == False,
+            or_(
+                Component.asset_id.is_(None),
+                Component.ram_spec.is_(None),
+                Component.ram_spec == "",
+                Component.storage_spec.is_(None),
+                Component.storage_spec == "",
+                Component.os_name.ilike("%windows 7%"),
+                Component.os_name.ilike("%windows 8%"),
+                Component.os_name.ilike("%windows xp%"),
+            ),
+        )
+        .limit(limit)
+        .all()
+    )
+
+
 # CATATAN PERBAIKAN:
 # Sebelumnya ada 2 fungsi `get_component_stats` di file ini (definisi kedua otomatis
 # menimpa yang pertama di Python). Definisi kedua mengembalikan key "count_total",

@@ -5,77 +5,426 @@
     }
 </script>
 
-<div>
-    <!-- Stats Cards Grid (DYNAMIC JINJA) -->
-    <div class="grid grid-cols-4 gap-6 mb-8">
-        
-        <!-- Card 1: Total Semua PC -->
-        <div hx-get="/ui/components/table" hx-target="#table-container" class="relative overflow-hidden bg-white p-5 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-gray-800 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
-            <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-gray-50 opacity-50 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM4 9a2 2 0 100 4h12a2 2 0 100-4H4zM4 15a2 2 0 100 4h12a2 2 0 100-4H4z"></path></svg>
-            <div class="relative z-10 flex justify-between items-start mb-2">
-                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Semua PC</h3>
-                <span class="text-2xl font-black text-gray-800">{{ total_all | default(0) }}</span>
+<style>
+    /* Hide scrollbar for side panel */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Table row hover action reveal */
+    .row-actions { opacity: 0; transition: opacity 0.2s; }
+    tr:hover .row-actions { opacity: 1; }
+
+    /* Touch screen fallback */
+    @media (hover: none) {
+        .row-actions { opacity: 1; }
+    }
+</style>
+
+<!-- Main Container -->
+<div class="max-w-7xl mx-auto flex flex-col space-y-6 pb-12">
+    
+    <!-- 1. Header -->
+    <header class="flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-itam-500 flex items-center justify-center shadow-xs">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                </svg>
             </div>
-            <div class="relative z-10 flex items-center gap-2 mb-3">
-                {% if total_all|default(0) > 0 %}
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">▲ Active</span>
-                {% else %}
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-500">- Kosong</span>
-                {% endif %}
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight leading-tight">Spesifikasi Komponen PC</h1>
+                <p class="text-sm text-slate-500 font-normal">Kelola dan pantau parameter teknis aset perangkat keras IT.</p>
             </div>
-            <div class="relative z-10 w-full bg-gray-100 rounded-full h-1.5 mb-1">
-                <div class="bg-gray-800 h-1.5 rounded-full" style="width: {{ (total_all / total_all * 100) if total_all|default(0) > 0 else 0 }}%"></div>
+        </div>
+    </header>
+
+    <!-- 2. KPI Cards Grid (HTMX Auto-Refresh on 'refreshKPIs' event) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0" 
+         id="kpi-container" 
+         hx-get="/ui/components/kpis" 
+         hx-trigger="refreshKPIs from:body">
+        {% include "partials/components_kpis.html" %}
+    </div>
+
+    <!-- 3. Lighter Toolbar (Decoupled from HTMX #table-container swap target) -->
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <!-- Search Input with Keyboard Shortcut '/' and Debounce -->
+            <div class="relative w-full sm:w-72">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" 
+                       id="searchInput" 
+                       name="search" 
+                       placeholder="Cari spesifikasi atau nama PC..." 
+                       class="w-full pl-9 pr-10 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-itam-500 focus:border-transparent transition-all placeholder:text-slate-400 shadow-2xs"
+                       hx-get="/ui/components/table" 
+                       hx-trigger="input changed delay:300ms, search" 
+                       hx-target="#table-container"
+                       hx-sync="this:replace"
+                       hx-include="#categoryFilterInput">
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded border border-slate-200 bg-slate-50 text-[10px] text-slate-400 font-mono font-medium pointer-events-none">/</div>
+            </div>
+
+            <!-- Hidden input to store active category filter state -->
+            <input type="hidden" id="categoryFilterInput" name="type_filter" value="">
+
+            <!-- Category Pills -->
+            <div class="hidden md:flex items-center bg-slate-100/90 p-1 rounded-lg border border-slate-200/50" id="category-pills">
+                <button type="button" 
+                        onclick="setCategoryFilter('')" 
+                        class="pill-btn active px-3 py-1 text-xs font-semibold bg-white text-slate-900 rounded-md shadow-xs transition-all cursor-pointer" 
+                        data-cat="">
+                    Semua {{ total_all | default(0) }}
+                </button>
+                <button type="button" 
+                        onclick="setCategoryFilter('Operasional')" 
+                        class="pill-btn px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-md transition-all cursor-pointer" 
+                        data-cat="Operasional">
+                    Operasional {{ total_operasional | default(0) }}
+                </button>
+                <button type="button" 
+                        onclick="setCategoryFilter('Server')" 
+                        class="pill-btn px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-md transition-all cursor-pointer" 
+                        data-cat="Server">
+                    Server {{ total_server | default(0) }}
+                </button>
+                <button type="button" 
+                        onclick="setCategoryFilter('Backup')" 
+                        class="pill-btn px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-md transition-all cursor-pointer" 
+                        data-cat="Backup">
+                    Backup {{ total_backup | default(0) }}
+                </button>
             </div>
         </div>
 
-        <!-- Card 2: PC Operasional -->
-        <div hx-get="/ui/components/table?type=Operasional" hx-target="#table-container" class="relative overflow-hidden bg-white p-5 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
-            <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-blue-50 opacity-50 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg>
-            <div class="relative z-10 flex justify-between items-start mb-2">
-                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">PC Operasional</h3>
-                <span class="text-2xl font-black text-blue-600">{{ total_operasional | default(0) }}</span>
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <!-- Export Dropdown -->
+            <div class="relative">
+                <button type="button" 
+                        id="exportBtn"
+                        onclick="toggleExportMenu(event)" 
+                        class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg shadow-2xs hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Export</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                
+                <div id="exportMenu" class="hidden absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-30 transition-all">
+                    <button type="button" 
+                            onclick="confirmAction('Apakah anda yakin ingin mengunduh data dalam format CSV/Excel?', () => exportTableToCSV('Data_Spesifikasi_PC.csv')); toggleExportMenu()" 
+                            class="w-full px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span>Unduh CSV / Excel</span>
+                    </button>
+                    <button type="button" 
+                            onclick="confirmAction('Apakah anda yakin ingin mencetak data spesifikasi?', () => window.print()); toggleExportMenu()" 
+                            class="w-full px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors">
+                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        <span>Cetak / Cetak PDF</span>
+                    </button>
+                </div>
             </div>
-            <div class="relative z-10 flex items-center gap-2 mb-3">
-                <span class="text-[10px] text-gray-400 font-medium">Unit beroperasi</span>
-            </div>
-            <div class="relative z-10 w-full bg-gray-100 rounded-full h-1.5 mb-1">
-                <div class="bg-blue-500 h-1.5 rounded-full" style="width: {{ (total_operasional|default(0) / total_all * 100) if total_all|default(0) > 0 else 0 }}%"></div>
-            </div>
-        </div>
 
-        <!-- Card 3: PC Server -->
-        <div hx-get="/ui/components/table?type=Server" hx-target="#table-container" class="relative overflow-hidden bg-white p-5 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-red-500 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
-            <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-red-50 opacity-50 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1a1 1 0 11-2 0 1 1 0 012 0zM2 13a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm14 1a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"></path></svg>
-            <div class="relative z-10 flex justify-between items-start mb-2">
-                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">PC Server</h3>
-                <span class="text-2xl font-black text-red-600">{{ total_server | default(0) }}</span>
-            </div>
-            <div class="relative z-10 flex items-center gap-2 mb-3">
-                <span class="text-[10px] text-gray-400 font-medium">Unit beroperasi</span>
-            </div>
-            <div class="relative z-10 w-full bg-gray-100 rounded-full h-1.5 mb-1">
-                <div class="bg-red-500 h-1.5 rounded-full" style="width: {{ (total_server|default(0) / total_all * 100) if total_all|default(0) > 0 else 0 }}%"></div>
-            </div>
-        </div>
-
-        <!-- Card 4: PC Backup / Maintenance -->
-        <div hx-get="/ui/components/table?type=Backup" hx-target="#table-container" class="relative overflow-hidden bg-white p-5 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-yellow-400 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
-            <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-yellow-50 opacity-50 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
-            <div class="relative z-10 flex justify-between items-start mb-2">
-                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">PC Backup / Maint.</h3>
-                <span class="text-2xl font-black text-yellow-500">{{ total_backup | default(0) }}</span>
-            </div>
-            <div class="relative z-10 flex items-center gap-2 mb-3">
-                <span class="text-[10px] text-gray-400 font-medium">Unit cadangan</span>
-            </div>
-            <div class="relative z-10 w-full bg-gray-100 rounded-full h-1.5 mb-1">
-                <div class="bg-yellow-400 h-1.5 rounded-full" style="width: {{ (total_backup|default(0) / total_all * 100) if total_all|default(0) > 0 else 0 }}%"></div>
-            </div>
+            <!-- Add Specification Button -->
+            <button type="button"
+                    hx-get="/ui/components/modal/add" 
+                    hx-target="#modal-container" 
+                    class="px-4 py-2 text-sm font-semibold text-white bg-itam-500 rounded-lg shadow-xs hover:bg-itam-700 flex items-center gap-2 transition-colors cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Tambah Spesifikasi</span>
+            </button>
         </div>
     </div>
 
-    <!-- Container Tabel -->
+    <!-- 4. Table Area (HTMX Swap Target) -->
     <div id="table-container" hx-get="/ui/components/table" hx-trigger="load">
-        <div class="text-center py-8 text-gray-400 text-sm animate-pulse">Menyiapkan data tabel...</div>
+        <div class="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-xs">
+            <svg class="animate-spin h-7 w-7 text-itam-500 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-xs font-semibold text-slate-500 tracking-wide uppercase">Memuat Data Spesifikasi...</p>
+        </div>
+    </div>
+
+    <!-- 5. Bottom Context Panels -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 shrink-0">
+        <!-- Recent Activity Panel -->
+        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-itam-500"></span>
+                    Aktivitas Perubahan Terbaru
+                </h3>
+            </div>
+            
+            {% if recent_activities and recent_activities|length > 0 %}
+                <ul class="space-y-3.5">
+                    {% for act in recent_activities %}
+                    <li class="flex items-start gap-3 text-sm">
+                        <div class="w-2 h-2 rounded-full mt-1.5 shrink-0
+                            {% if act.action_type == 'CREATE' %}bg-emerald-500
+                            {% elif 'UPGRADE' in act.action_type or 'UPDATE' in act.action_type %}bg-itam-500
+                            {% elif act.action_type == 'DECOMMISSION' %}bg-rose-500
+                            {% else %}bg-slate-400{% endif %}">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs text-slate-800 leading-snug">
+                                <span class="font-semibold text-slate-900">{{ act.user.username if act.user else 'Admin' }}</span>
+                                <span class="text-slate-600">
+                                    {% if act.action_type == 'CREATE' %}mendaftarkan PC
+                                    {% elif act.action_type == 'DECOMMISSION' %}menonaktifkan PC
+                                    {% else %}memperbarui spesifikasi
+                                    {% endif %}
+                                </span>
+                                <span class="font-semibold text-slate-900">{{ act.component.name if act.component else 'PC' }}</span>
+                            </div>
+                            {% set reason = act.changes_detail.get('reason') if act.changes_detail is mapping else '' %}
+                            {% if reason and reason != '-' and reason != 'Update spesifikasi rutin' %}
+                                <p class="text-[11px] text-slate-400 truncate mt-0.5">"{{ reason }}"</p>
+                            {% endif %}
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono shrink-0">
+                            {{ act.created_at.strftime('%d %b %H:%M') if act.created_at else '' }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="py-6 text-center text-slate-400">
+                    <p class="text-xs">Belum ada riwayat aktivitas terbaru.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Needs Attention Panel -->
+        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Perlu Perhatian (Health Check)
+                </h3>
+            </div>
+
+            {% if needs_attention and needs_attention|length > 0 %}
+                <ul class="space-y-3">
+                    {% for item in needs_attention %}
+                    <li class="flex items-start gap-3 text-sm">
+                        <div class="p-1 bg-amber-50 border border-amber-200 text-amber-600 rounded-md shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <div class="text-xs leading-snug">
+                            <span class="font-semibold text-slate-900">{{ item.name }}</span>
+                            <span class="text-slate-600">
+                                {% if not item.asset_id %}
+                                    belum ditautkan ke inventaris fisik.
+                                {% elif not item.ram_spec or not item.storage_spec %}
+                                    memiliki data spesifikasi memori/penyimpanan yang belum lengkap.
+                                {% elif 'windows 7' in (item.os_name or '')|lower or 'windows xp' in (item.os_name or '')|lower %}
+                                    menggunakan versi sistem operasi legacy/usang.
+                                {% else %}
+                                    membutuhkan verifikasi teknis berkala.
+                                {% endif %}
+                            </span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="py-6 flex flex-col items-center justify-center text-center">
+                    <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <p class="text-xs font-medium text-slate-700">Semua unit dalam kondisi optimal.</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Seluruh unit PC telah ditautkan ke inventaris dengan spesifikasi lengkap.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- 6. Slide-Out Side Panel (Drawer) -->
+<div id="sidePanel" 
+     class="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col border-l border-slate-200">
+    <div id="sidePanelContent" class="h-full flex flex-col">
+        <!-- Initial Loading Skeleton -->
+        <div class="p-6 flex flex-col items-center justify-center h-full text-slate-400 space-y-3">
+            <svg class="animate-spin h-7 w-7 text-itam-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-xs font-medium tracking-wide">Memuat rincian spesifikasi...</span>
+        </div>
     </div>
 </div>
+
+<!-- Panel Overlay Backdrop -->
+<div id="panelBackdrop" 
+     onclick="closePanel()" 
+     class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-300">
+</div>
+
+<!-- Dashboard Scripts -->
+<script>
+    // 1. Keyboard Shortcut '/' untuk Focus Search Input
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+        }
+        if (e.key === 'Escape') {
+            closePanel();
+        }
+    });
+
+    // 2. Filter Kategori Terpadu (KPI Cards + Pills + HTMX Table)
+    function setCategoryFilter(category) {
+        const catInput = document.getElementById('categoryFilterInput');
+        if (catInput) catInput.value = category;
+
+        // Update Category Pills
+        document.querySelectorAll('.pill-btn').forEach(btn => {
+            if (btn.getAttribute('data-cat') === category) {
+                btn.classList.add('active', 'bg-white', 'text-slate-900', 'shadow-xs', 'font-semibold');
+                btn.classList.remove('text-slate-600', 'font-medium');
+            } else {
+                btn.classList.remove('active', 'bg-white', 'text-slate-900', 'shadow-xs', 'font-semibold');
+                btn.classList.add('text-slate-600', 'font-medium');
+            }
+        });
+
+        // Update KPI Card Highlights
+        document.querySelectorAll('.kpi-card').forEach(card => {
+            if (card.getAttribute('data-cat') === category) {
+                card.classList.add('border-2', 'border-itam-500');
+                card.classList.remove('border-slate-200');
+            } else {
+                card.classList.remove('border-2', 'border-itam-500');
+                card.classList.add('border', 'border-slate-200');
+            }
+        });
+
+        // Reload Table via HTMX
+        const searchVal = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+        htmx.ajax('GET', `/ui/components/table?type_filter=${encodeURIComponent(category)}&search=${encodeURIComponent(searchVal)}`, '#table-container');
+    }
+
+    // 3. Side-Out Inspection Panel Controls
+    function openPanel() {
+        const panel = document.getElementById('sidePanel');
+        const backdrop = document.getElementById('panelBackdrop');
+        if (!panel || !backdrop) return;
+
+        backdrop.classList.remove('hidden');
+        setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+        panel.classList.remove('translate-x-full');
+    }
+
+    function closePanel() {
+        const panel = document.getElementById('sidePanel');
+        const backdrop = document.getElementById('panelBackdrop');
+        if (!panel || !backdrop) return;
+
+        panel.classList.add('translate-x-full');
+        backdrop.classList.add('opacity-0');
+        setTimeout(() => backdrop.classList.add('hidden'), 300);
+    }
+
+    // 4. Tab Switcher inside Side Panel
+    function switchPanelTab(tab) {
+        const specsContent = document.getElementById('tabContentSpecs');
+        const historyContent = document.getElementById('tabContentHistory');
+        const specsBtn = document.getElementById('tabBtnSpecs');
+        const historyBtn = document.getElementById('tabBtnHistory');
+
+        if (!specsContent || !historyContent || !specsBtn || !historyBtn) return;
+
+        if (tab === 'specs') {
+            specsContent.classList.remove('hidden');
+            historyContent.classList.add('hidden');
+            specsBtn.classList.add('border-itam-500', 'text-itam-700', 'font-semibold');
+            specsBtn.classList.remove('border-transparent', 'text-slate-500');
+            historyBtn.classList.remove('border-itam-500', 'text-itam-700', 'font-semibold');
+            historyBtn.classList.add('border-transparent', 'text-slate-500');
+        } else {
+            specsContent.classList.add('hidden');
+            historyContent.classList.remove('hidden');
+            historyBtn.classList.add('border-itam-500', 'text-itam-700', 'font-semibold');
+            historyBtn.classList.remove('border-transparent', 'text-slate-500');
+            specsBtn.classList.remove('border-itam-500', 'text-itam-700', 'font-semibold');
+            specsBtn.classList.add('border-transparent', 'text-slate-500');
+        }
+    }
+
+    // 5. Salin Format Spesifikasi ke Clipboard
+    function copySpecsToClipboard(name, cpu, ram, storage, mainboard, vga, os) {
+        const text = `Spesifikasi Komputer: ${name}\n` +
+                     `• Processor: ${cpu}\n` +
+                     `• RAM: ${ram}\n` +
+                     `• Storage: ${storage}\n` +
+                     `• Mainboard: ${mainboard}\n` +
+                     `• VGA: ${vga}\n` +
+                     `• OS: ${os}`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            Swal.fire({
+                title: 'Tersalin',
+                text: 'Spesifikasi berhasil disalin ke clipboard.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }).catch(() => {
+            Swal.fire({
+                title: 'Gagal',
+                text: 'Tidak dapat menyalin teks.',
+                icon: 'error',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    }
+
+    // 6. Toggle Export Dropdown
+    function toggleExportMenu(e) {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById('exportMenu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    }
+
+    // Tutup menu export saat klik di luar
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('exportMenu');
+        const btn = document.getElementById('exportBtn');
+        if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            menu.classList.add('hidden');
+        }
+    });
+</script>

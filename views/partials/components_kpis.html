@@ -1,0 +1,69 @@
+<!-- Card 1: Total Semua PC -->
+<div onclick="setCategoryFilter('')" 
+     class="kpi-card bg-white rounded-xl p-5 border-2 border-itam-500 shadow-sm cursor-pointer relative overflow-hidden transition-all duration-200 hover:shadow-md group select-none" 
+     data-cat="">
+  <div class="flex justify-between items-start mb-2">
+    <div class="p-2 bg-itam-50 rounded-lg text-itam-700">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+      </svg>
+    </div>
+    <span class="text-2xl font-bold text-slate-900 tracking-tight">{{ total_all | default(0) }}</span>
+  </div>
+  <h3 class="text-xs font-semibold text-slate-700">Total Semua PC</h3>
+  <p class="text-[11px] text-slate-500 mt-1">100% total aset terdaftar</p>
+</div>
+
+<!-- Card 2: PC Operasional -->
+<div onclick="setCategoryFilter('Operasional')" 
+     class="kpi-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200 group select-none" 
+     data-cat="Operasional">
+  <div class="flex justify-between items-start mb-2">
+    <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+      </svg>
+    </div>
+    <span class="text-2xl font-bold text-slate-900 tracking-tight">{{ total_operasional | default(0) }}</span>
+  </div>
+  <h3 class="text-xs font-semibold text-slate-700">PC Operasional</h3>
+  <p class="text-[11px] text-slate-500 mt-1">
+    {{ ((total_operasional / total_all) * 100) | round | int if total_all|default(0) > 0 else 0 }}% dari total
+  </p>
+</div>
+
+<!-- Card 3: Infrastruktur Server -->
+<div onclick="setCategoryFilter('Server')" 
+     class="kpi-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200 group select-none" 
+     data-cat="Server">
+  <div class="flex justify-between items-start mb-2">
+    <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+      </svg>
+    </div>
+    <span class="text-2xl font-bold text-slate-900 tracking-tight">{{ total_server | default(0) }}</span>
+  </div>
+  <h3 class="text-xs font-semibold text-slate-700">Infrastruktur Server</h3>
+  <p class="text-[11px] text-slate-500 mt-1">
+    {{ ((total_server / total_all) * 100) | round | int if total_all|default(0) > 0 else 0 }}% dari total
+  </p>
+</div>
+
+<!-- Card 4: Backup & Cadangan -->
+<div onclick="setCategoryFilter('Backup')" 
+     class="kpi-card bg-white rounded-xl p-5 border border-slate-200 shadow-sm cursor-pointer hover:border-slate-300 hover:shadow-md transition-all duration-200 group select-none" 
+     data-cat="Backup">
+  <div class="flex justify-between items-start mb-2">
+    <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+      </svg>
+    </div>
+    <span class="text-2xl font-bold text-slate-900 tracking-tight">{{ total_backup | default(0) }}</span>
+  </div>
+  <h3 class="text-xs font-semibold text-slate-700">Backup & Cadangan</h3>
+  <p class="text-[11px] text-slate-500 mt-1">
+    {{ ((total_backup / total_all) * 100) | round | int if total_all|default(0) > 0 else 0 }}% dari total
+  </p>
+</div>

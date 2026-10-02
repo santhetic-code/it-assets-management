@@ -1,113 +1,152 @@
-<div class="bg-white rounded-xl shadow-sm border border-gray-200">
-    <!-- Header Tabel -->
-    <div class="flex justify-between items-center p-6 border-b border-gray-100">
-        <h2 class="text-lg font-bold text-gray-800">Tabel Data PC</h2>
-        <button hx-get="/ui/components/modal/add" hx-target="#modal-container" class="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Add Data
-        </button>
-    </div>
-
-    <!-- Toolbar Controls -->
-    <div class="flex flex-none flex-wrap justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50/50 gap-4">
-        <div class="flex items-center gap-4 flex-wrap">
-            <div class="flex rounded-lg shadow-sm border border-gray-200 overflow-hidden bg-white whitespace-nowrap">
-                <button onclick="confirmAction('Apakah anda yakin ingin mengunduh data dalam format Excel/CSV?', () => exportTableToCSV('Data_PC_ITAM.csv'))" class="px-3 py-1.5 text-xs font-semibold text-green-600 border-r border-gray-200 hover:bg-green-50 flex items-center gap-1.5 transition-colors">Excel</button>
-                <button onclick="confirmAction('Apakah anda yakin ingin mencetak data sebagai PDF?', () => window.print())" class="px-3 py-1.5 text-xs font-semibold text-red-600 border-r border-gray-200 hover:bg-red-50 flex items-center gap-1.5 transition-colors">PDF</button>
-                <button onclick="confirmAction('Apakah anda yakin ingin mencetak data tabel ini?', () => window.print())" class="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 flex items-center gap-1.5 transition-colors">Print</button>
-            </div>
-
-            <select name="type_filter" hx-get="/ui/components/table" hx-target="#table-container" hx-trigger="change" class="text-sm border-gray-200 rounded-lg text-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 pl-3 pr-8 min-w-[150px]">
-                <option value="">Semua Kategori</option>
-                <option value="Operasional">PC Operasional</option>
-                <option value="Server">PC Server</option>
-                <option value="Backup">PC Backup</option>
-            </select>
-        </div>
-
-        <div class="flex items-center gap-2 whitespace-nowrap mt-4 sm:mt-0">
-            <label class="text-sm text-gray-600 font-medium">Search:</label>
-            <input type="text" name="search" hx-get="/ui/components/table" hx-trigger="keyup changed delay:300ms" hx-target="#table-container" placeholder="Cari Spesifikasi..." class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm w-full sm:w-64">
-        </div>
-    </div>
-
-    <!-- Data Table -->
-    <div class="p-6 overflow-x-auto">
-        <table class="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-                <tr class="bg-[#dbeafe] text-[#1e3a8a] text-[11px] uppercase tracking-wider">
-                    <th class="py-3.5 px-4 font-bold rounded-tl-lg">Identitas PC</th>
-                    <th class="py-3.5 px-4 font-bold">Processor PC</th>
-                    <th class="py-3.5 px-4 font-bold">RAM</th>
-                    <th class="py-3.5 px-4 font-bold">Penyimpanan</th>
-                    <th class="py-3.5 px-4 font-bold">Mainboard</th>
-                    <th class="py-3.5 px-4 font-bold">Kategori</th>
-                    <th class="py-3.5 px-4 font-bold text-center rounded-tr-lg">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="table-body" class="divide-y divide-gray-100 text-sm text-gray-700">
-                {% if components %}
-                    {% for comp in components %}
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <!-- Identitas & Ikon -->
-                        <td class="py-3 px-4 flex items-center gap-3">
-                            {% if comp.pc_type == 'Server' %}
-                                <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 shadow-inner">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
-                                </div>
-                            {% elif comp.pc_type == 'Backup' %}
-                                <div class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center shrink-0 shadow-inner">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
-                                </div>
-                            {% else %}
-                                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                </div>
-                            {% endif %}
-                            <span class="font-bold text-gray-800">{{ comp.name }}</span>
-                        </td>
-                        <!-- Spesifikasi -->
-                        <td class="py-3 px-4 text-gray-600 max-w-[200px] truncate" title="{{ comp.processor_spec }}">{{ comp.processor_spec or '-' }}</td>
-                        <td class="py-3 px-4 text-blue-600 font-medium max-w-[200px] truncate" title="{{ comp.ram_spec }}">{{ comp.ram_spec or '-' }}</td>
-                        <td class="py-3 px-4 text-gray-600 max-w-[200px] truncate" title="{{ comp.storage_spec }}">{{ comp.storage_spec or '-' }}</td>
-                        <td class="py-3 px-4 text-gray-500 text-xs max-w-[200px] truncate" title="{{ comp.mainboard_spec }}">{{ comp.mainboard_spec or '-' }}</td>
-                        
-                        <!-- Kategori Badge -->
-                        <td class="py-3 px-4">
-                            {% if comp.pc_type == 'Server' %}
-                                <span class="px-2 py-1 text-[10px] font-bold text-red-600 border border-red-200 bg-white rounded">PC Server</span>
-                            {% elif comp.pc_type == 'Backup' %}
-                                <span class="px-2 py-1 text-[10px] font-bold text-yellow-600 border border-yellow-200 bg-white rounded">PC Backup</span>
-                            {% else %}
-                                <span class="px-2 py-1 text-[10px] font-bold text-blue-600 border border-blue-200 bg-white rounded">PC Operasional</span>
-                            {% endif %}
-                        </td>
-                        
-                        <!-- 3 Tombol Aksi -->
-                        <td class="py-3 px-4 flex justify-center items-center gap-1.5">
-                            <!-- Tombol View -->
-                            <button hx-get="/ui/components/{{ comp.id }}/view" hx-target="#modal-container" class="p-1.5 text-cyan-600 hover:bg-cyan-50 border border-transparent hover:border-cyan-200 rounded transition-all" title="View Detail">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            </button>
-                            <!-- Tombol Edit (Akan memicu konfirmasi saat form disubmit nanti) -->
-                            <button hx-get="/ui/components/{{ comp.id }}/edit" hx-target="#modal-container" class="p-1.5 text-yellow-600 hover:bg-yellow-50 border border-transparent hover:border-yellow-200 rounded transition-all" title="Edit Data">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            </button>
-                            <!-- Tombol Delete (Dilindungi HTMX Confirm -> SweetAlert) -->
-                            <button hx-delete="/api/components/{{ comp.id }}" hx-confirm="Data PC '{{ comp.name }}' akan dihapus dan dipindahkan ke riwayat. Apakah anda yakin untuk menghapus data?" hx-target="closest tr" hx-swap="outerHTML" class="p-1.5 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 rounded transition-all" title="Hapus Data">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
+<div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-slate-200 text-left border-collapse">
+      <thead class="bg-slate-50/80">
+        <tr>
+          <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 tracking-normal">Identity</th>
+          <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 tracking-normal">Category</th>
+          <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 tracking-normal">Memory (RAM)</th>
+          <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 tracking-normal">Storage</th>
+          <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 tracking-normal">Processor</th>
+          <th scope="col" class="relative px-6 py-3.5 text-right text-xs font-semibold text-slate-500"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody id="table-body" class="divide-y divide-slate-100 bg-white text-sm">
+        {% if components and components|length > 0 %}
+          {% for comp in components %}
+          <tr class="hover:bg-slate-50/90 group cursor-pointer transition-colors"
+              hx-get="/ui/components/{{ comp.id }}/side-panel"
+              hx-target="#sidePanelContent"
+              hx-swap="innerHTML"
+              onclick="openPanel()">
+            
+            <!-- Identity -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-semibold text-slate-900 group-hover:text-itam-700 transition-colors">{{ comp.name }}</div>
+              <div class="text-xs text-slate-500 mt-0.5">
+                {% if comp.asset %}
+                  <span class="font-medium text-slate-600">{{ comp.asset.asset_tag or comp.asset.name }}</span>
+                  <span class="text-slate-300 mx-1">•</span>
+                  <span>{{ comp.asset.assigned_to or 'Unassigned' }}</span>
                 {% else %}
-                    <tr>
-                        <td colspan="7" class="py-8 text-center text-gray-500 bg-gray-50/30">
-                            No data available in table
-                        </td>
-                    </tr>
+                  <span class="text-slate-400">Stand-alone • ID #{{ comp.id }}</span>
                 {% endif %}
-            </tbody>
-        </table>
+              </div>
+            </td>
+
+            <!-- Category -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              {% if comp.pc_type == 'Server' %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100/60">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Server
+                </span>
+              {% elif comp.pc_type == 'Backup' %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100/60">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Backup
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/60">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Operational
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Memory (RAM) -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              {% set ram_p, ram_s = comp.ram_spec | parse_spec %}
+              <div class="text-sm font-medium text-slate-900">{{ ram_p }}</div>
+              {% if ram_s %}
+                <div class="text-xs text-slate-500 mt-0.5 truncate max-w-[170px]" title="{{ comp.ram_spec }}">{{ ram_s }}</div>
+              {% endif %}
+            </td>
+
+            <!-- Storage -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              {% set st_p, st_s = comp.storage_spec | parse_spec %}
+              <div class="text-sm font-medium text-slate-900">{{ st_p }}</div>
+              {% if st_s %}
+                <div class="text-xs text-slate-500 mt-0.5 truncate max-w-[170px]" title="{{ comp.storage_spec }}">{{ st_s }}</div>
+              {% endif %}
+            </td>
+
+            <!-- Processor -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              {% set cpu_p, cpu_s = comp.processor_spec | parse_spec %}
+              <div class="text-sm font-medium text-slate-900 truncate max-w-[180px]" title="{{ comp.processor_spec }}">{{ cpu_p }}</div>
+              {% if cpu_s %}
+                <div class="text-xs text-slate-500 mt-0.5 truncate max-w-[180px]" title="{{ comp.processor_spec }}">{{ cpu_s }}</div>
+              {% endif %}
+            </td>
+
+            <!-- Row Actions (Hover-revealed) -->
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <div class="row-actions flex justify-end gap-1.5" onclick="event.stopPropagation()">
+                <!-- Inspect/Side panel -->
+                <button type="button"
+                        hx-get="/ui/components/{{ comp.id }}/side-panel"
+                        hx-target="#sidePanelContent"
+                        onclick="openPanel(); event.stopPropagation()"
+                        class="p-1.5 text-slate-400 hover:text-itam-700 rounded-md hover:bg-itam-50 transition-colors"
+                        title="Detail Spesifikasi (Side Panel)">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                </button>
+
+                <!-- Edit -->
+                <button type="button"
+                        hx-get="/ui/components/{{ comp.id }}/edit"
+                        hx-target="#modal-container"
+                        onclick="event.stopPropagation()"
+                        class="p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors"
+                        title="Edit Data">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                  </svg>
+                </button>
+
+                <!-- Delete -->
+                <button type="button"
+                        hx-delete="/ui/components/{{ comp.id }}"
+                        hx-confirm="Data spesifikasi PC '{{ comp.name }}' akan dinonaktifkan dan dipindahkan ke riwayat. Apakah Anda yakin?"
+                        hx-target="#table-container"
+                        onclick="event.stopPropagation()"
+                        class="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"
+                        title="Hapus Data">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+              <div class="flex flex-col items-center justify-center">
+                <svg class="w-10 h-10 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-sm font-medium text-slate-600">Tidak ada data spesifikasi PC ditemukan</p>
+                <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau pilih kategori lain.</p>
+              </div>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Footer -->
+  <div class="bg-slate-50/80 border-t border-slate-200 px-6 py-3 flex items-center justify-between shrink-0">
+    <p class="text-xs text-slate-500">
+      Menampilkan <span class="font-semibold text-slate-800">{{ components|length }}</span> unit PC
+    </p>
+    <div class="flex items-center gap-1.5 text-xs text-slate-400">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="text-[11px] font-medium text-slate-500">Sinkron Otomatis</span>
     </div>
+  </div>
 </div>
